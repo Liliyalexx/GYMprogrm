@@ -37,6 +37,8 @@ class WorkoutProgram(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='programs')
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
+    training_days = models.PositiveSmallIntegerField(default=3)
+    nutrition_plan = models.JSONField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
 

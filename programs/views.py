@@ -33,8 +33,9 @@ def program_generate(request, student_pk):
     student = get_object_or_404(Student, pk=student_pk)
 
     if request.method == 'POST' and 'generate' in request.POST:
+        training_days = int(request.POST.get('training_days', 3))
         try:
-            ai_result = suggest_program(student)
+            ai_result = suggest_program(student, training_days)
         except Exception as e:
             return render(request, 'programs/program_generate.html', {
                 'student': student,
@@ -46,6 +47,8 @@ def program_generate(request, student_pk):
             student=student,
             name=ai_result['program_name'],
             description=ai_result.get('description', ''),
+            training_days=training_days,
+            nutrition_plan=ai_result.get('nutrition'),
         )
 
         exercise_library = {ex.name.lower(): ex for ex in ExerciseLibrary.objects.all()}

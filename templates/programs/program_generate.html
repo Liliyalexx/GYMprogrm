@@ -34,10 +34,47 @@
 
   <form method="post">
     {% csrf_token %}
+    <div class="form-group" style="margin-bottom:1.25rem;">
+      <label class="form-label" style="font-weight:600;">How many days per week will the student train?</label>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem;">
+        {% for d in "2345678" %}
+        <label style="cursor:pointer;">
+          <input type="radio" name="training_days" value="{{ d }}" {% if d == "3" %}checked{% endif %} style="display:none;" class="days-radio">
+          <span class="days-btn" style="display:inline-block;padding:.5rem 1.1rem;border-radius:8px;border:2px solid var(--border);font-weight:600;font-size:1rem;transition:all .15s;">{{ d }}</span>
+        </label>
+        {% endfor %}
+      </div>
+      <div style="font-size:.82rem;color:var(--text-muted);margin-top:.4rem;">days / week</div>
+    </div>
     <button type="submit" name="generate" value="1" class="btn btn-accent" style="font-size:1rem;padding:.75rem 1.5rem;">
       🤖 Generate Program
     </button>
   </form>
+
+  <style>
+    input.days-radio:checked + .days-btn {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: #fff;
+    }
+  </style>
+  <script>
+    document.querySelectorAll('.days-radio').forEach(r => {
+      r.addEventListener('change', () => {
+        document.querySelectorAll('.days-btn').forEach(b => {
+          b.style.borderColor = ''; b.style.background = ''; b.style.color = '';
+        });
+        r.nextElementSibling.style.borderColor = 'var(--primary)';
+        r.nextElementSibling.style.background = 'var(--primary)';
+        r.nextElementSibling.style.color = '#fff';
+      });
+      if (r.checked) {
+        r.nextElementSibling.style.borderColor = 'var(--primary)';
+        r.nextElementSibling.style.background = 'var(--primary)';
+        r.nextElementSibling.style.color = '#fff';
+      }
+    });
+  </script>
 </div>
 
 {% else %}
