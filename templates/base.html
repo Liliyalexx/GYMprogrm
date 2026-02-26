@@ -16,7 +16,12 @@
   <div class="nav-links">
     <a href="{% url 'students:list' %}"><span>Students</span></a>
     <a href="{% url 'programs:exercise_library' %}"><span>Exercises</span></a>
-    <a href="{% url 'logout' %}"><span>Logout</span></a>
+    <form method="post" action="{% url 'logout' %}" style="margin:0;">
+      {% csrf_token %}
+      <button type="submit" style="background:none;border:none;cursor:pointer;color:inherit;font:inherit;padding:0;">
+        <span>Logout</span>
+      </button>
+    </form>
   </div>
 </nav>
 {% endif %}
