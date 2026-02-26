@@ -85,12 +85,14 @@ def program_generate(request, student_pk):
                     suggestions.append({
                         'id': pe.pk,
                         'name': library_ex.name,
+                        'name_ru': ex_data.get('name_ru', library_ex.name),
                         'muscle_group': library_ex.get_muscle_group_display(),
                         'photo_url': library_ex.photo_url,
                         'description': library_ex.description,
                         'sets': pe.sets,
                         'reps': pe.reps,
                         'reason': ex_data.get('reason', ''),
+                        'reason_ru': ex_data.get('reason_ru', ''),
                         'day_name': day.name,
                     })
 

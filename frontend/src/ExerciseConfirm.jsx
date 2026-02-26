@@ -12,6 +12,38 @@ const BADGE_COLORS = {
   full_body: '#334155',
 }
 
+function MediaBlock({ photoUrl, name }) {
+  if (!photoUrl) {
+    return (
+      <div style={{ height: 200, background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem' }}>
+        💪
+      </div>
+    )
+  }
+  if (photoUrl.endsWith('.mp4')) {
+    return (
+      <div style={{ height: 200, background: '#f1f5f9', overflow: 'hidden' }}>
+        <video
+          src={photoUrl}
+          autoPlay muted loop playsInline
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          onError={e => { e.target.parentElement.innerHTML = '<div style="height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;">💪</div>' }}
+        />
+      </div>
+    )
+  }
+  return (
+    <div style={{ height: 200, background: '#f1f5f9', overflow: 'hidden' }}>
+      <img
+        src={photoUrl}
+        alt={name}
+        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        onError={e => { e.target.parentElement.innerHTML = '<div style="height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;">💪</div>' }}
+      />
+    </div>
+  )
+}
+
 function ExerciseCard({ ex, onConfirm, onSkip }) {
   const [sets, setSets] = useState(ex.sets)
   const [reps, setReps] = useState(ex.reps)
@@ -20,28 +52,22 @@ function ExerciseCard({ ex, onConfirm, onSkip }) {
   const [loading, setLoading] = useState(false)
 
   const muscleColor = BADGE_COLORS[ex.muscle_group?.toLowerCase().replace(' ', '_')] || '#334155'
+  const displayName = ex.name_ru || ex.name
 
   return (
     <div style={{
       background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0',
       boxShadow: '0 2px 8px rgba(0,0,0,.08)', overflow: 'hidden', marginBottom: '1.25rem',
     }}>
-      {/* Photo */}
-      {ex.photo_url && (
-        <div style={{ height: 200, background: '#f1f5f9', overflow: 'hidden' }}>
-          <img
-            src={ex.photo_url}
-            alt={ex.name}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            onError={e => { e.target.parentElement.innerHTML = '<div style="height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;">💪</div>' }}
-          />
-        </div>
-      )}
+      <MediaBlock photoUrl={ex.photo_url} name={displayName} />
 
       <div style={{ padding: '1.25rem' }}>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '.75rem', gap: '.5rem' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0 }}>{ex.name}</h3>
+          <div>
+            <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0 }}>{displayName}</h3>
+            {ex.name_ru && <div style={{ fontSize: '.78rem', color: '#94a3b8', marginTop: '.15rem' }}>{ex.name}</div>}
+          </div>
           <span style={{
             background: muscleColor + '22', color: muscleColor, borderRadius: 999,
             padding: '.2rem .65rem', fontSize: '.75rem', fontWeight: 600,
@@ -54,25 +80,20 @@ function ExerciseCard({ ex, onConfirm, onSkip }) {
         {/* Day */}
         <div style={{ fontSize: '.82rem', color: '#64748b', marginBottom: '.5rem' }}>📅 {ex.day_name}</div>
 
-        {/* Description */}
-        <p style={{ fontSize: '.88rem', color: '#64748b', lineHeight: 1.55, marginBottom: '.75rem' }}>
-          {ex.description}
-        </p>
-
-        {/* AI reason */}
-        {ex.reason && (
+        {/* AI reason in Russian */}
+        {(ex.reason_ru || ex.reason) && (
           <div style={{
             background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 8,
             padding: '.65rem .85rem', fontSize: '.83rem', color: '#1e40af', marginBottom: '1rem',
           }}>
-            🤖 <strong>Why:</strong> {ex.reason}
+            🎯 <strong>Почему это упражнение:</strong> {ex.reason_ru || ex.reason}
           </div>
         )}
 
         {/* Sets / Reps / Weight inputs */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '.75rem', marginBottom: '1rem' }}>
           <div>
-            <label style={{ display: 'block', fontSize: '.78rem', fontWeight: 600, color: '#64748b', marginBottom: '.3rem' }}>SETS</label>
+            <label style={{ display: 'block', fontSize: '.78rem', fontWeight: 600, color: '#64748b', marginBottom: '.3rem' }}>ПОДХОДЫ</label>
             <input
               type="number" min="1" max="20" value={sets}
               onChange={e => setSets(e.target.value)}
@@ -80,31 +101,31 @@ function ExerciseCard({ ex, onConfirm, onSkip }) {
             />
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: '.78rem', fontWeight: 600, color: '#64748b', marginBottom: '.3rem' }}>REPS</label>
+            <label style={{ display: 'block', fontSize: '.78rem', fontWeight: 600, color: '#64748b', marginBottom: '.3rem' }}>ПОВТОРЕНИЯ</label>
             <input
               type="text" value={reps}
               onChange={e => setReps(e.target.value)}
-              placeholder="e.g. 10-12"
+              placeholder="напр. 10-12"
               style={{ width: '100%', padding: '.45rem .65rem', border: '1.5px solid #e2e8f0', borderRadius: 7, fontSize: '.95rem' }}
             />
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: '.78rem', fontWeight: 600, color: '#64748b', marginBottom: '.3rem' }}>WEIGHT (kg)</label>
+            <label style={{ display: 'block', fontSize: '.78rem', fontWeight: 600, color: '#64748b', marginBottom: '.3rem' }}>ВЕС (кг)</label>
             <input
               type="number" step="0.5" min="0" value={weight}
               onChange={e => setWeight(e.target.value)}
-              placeholder="optional"
+              placeholder="необязательно"
               style={{ width: '100%', padding: '.45rem .65rem', border: '1.5px solid #e2e8f0', borderRadius: 7, fontSize: '.95rem' }}
             />
           </div>
         </div>
 
         <div style={{ marginBottom: '1rem' }}>
-          <label style={{ display: 'block', fontSize: '.78rem', fontWeight: 600, color: '#64748b', marginBottom: '.3rem' }}>NOTES (optional)</label>
+          <label style={{ display: 'block', fontSize: '.78rem', fontWeight: 600, color: '#64748b', marginBottom: '.3rem' }}>ЗАМЕТКИ (необязательно)</label>
           <input
             type="text" value={notes}
             onChange={e => setNotes(e.target.value)}
-            placeholder="e.g. use resistance band, slow tempo..."
+            placeholder="напр. использовать резинку, медленный темп..."
             style={{ width: '100%', padding: '.45rem .65rem', border: '1.5px solid #e2e8f0', borderRadius: 7, fontSize: '.9rem' }}
           />
         </div>
@@ -119,7 +140,7 @@ function ExerciseCard({ ex, onConfirm, onSkip }) {
               border: 'none', borderRadius: 8, fontWeight: 700, fontSize: '.95rem', cursor: 'pointer',
             }}
           >
-            ✓ Add to Program
+            ✓ Добавить в программу
           </button>
           <button
             onClick={() => { setLoading(true); onSkip(ex.id) }}
@@ -129,7 +150,7 @@ function ExerciseCard({ ex, onConfirm, onSkip }) {
               border: '1.5px solid #e2e8f0', borderRadius: 8, fontWeight: 600, fontSize: '.9rem', cursor: 'pointer',
             }}
           >
-            Skip
+            Пропустить
           </button>
         </div>
       </div>
@@ -158,7 +179,7 @@ export default function ExerciseConfirm({ suggestions, confirmUrl, skipUrl, prog
       setDone(d => [...d, { id, action: 'confirmed' }])
       setRemaining(r => r.filter(e => e.id !== id))
     } catch {
-      setError('Failed to save. Please try again.')
+      setError('Ошибка сохранения. Попробуйте ещё раз.')
     }
   }
 
@@ -168,7 +189,7 @@ export default function ExerciseConfirm({ suggestions, confirmUrl, skipUrl, prog
       setDone(d => [...d, { id, action: 'skipped' }])
       setRemaining(r => r.filter(e => e.id !== id))
     } catch {
-      setError('Failed to skip. Please try again.')
+      setError('Ошибка. Попробуйте ещё раз.')
     }
   }
 
@@ -177,16 +198,16 @@ export default function ExerciseConfirm({ suggestions, confirmUrl, skipUrl, prog
     return (
       <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
         <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🎉</div>
-        <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '.75rem' }}>Program ready!</h2>
+        <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '.75rem' }}>Программа готова!</h2>
         <p style={{ color: '#64748b', marginBottom: '1.5rem' }}>
-          {confirmed} exercise{confirmed !== 1 ? 's' : ''} added to the program.
+          {confirmed} упражнени{confirmed === 1 ? 'е добавлено' : confirmed < 5 ? 'я добавлено' : 'й добавлено'} в программу.
         </p>
         <a href={programUrl} style={{
           display: 'inline-block', padding: '.75rem 1.75rem',
           background: '#2563eb', color: '#fff', borderRadius: 8,
           fontWeight: 700, textDecoration: 'none', fontSize: '1rem',
         }}>
-          View Program →
+          Открыть программу →
         </a>
       </div>
     )
@@ -201,7 +222,7 @@ export default function ExerciseConfirm({ suggestions, confirmUrl, skipUrl, prog
       )}
 
       <div style={{ fontSize: '.9rem', color: '#64748b', marginBottom: '1.25rem' }}>
-        {remaining.length} exercise{remaining.length !== 1 ? 's' : ''} to review · {done.filter(d => d.action === 'confirmed').length} confirmed
+        Осталось проверить: {remaining.length} · Подтверждено: {done.filter(d => d.action === 'confirmed').length}
       </div>
 
       {remaining.map(ex => (
