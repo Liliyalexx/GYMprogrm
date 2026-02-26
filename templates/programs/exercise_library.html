@@ -1,14 +1,14 @@
 {% extends 'base.html' %}
-{% block title %}Exercise Library — GYMprogrm{% endblock %}
+{% block title %}Библиотека упражнений — GYMprogrm{% endblock %}
 
 {% block content %}
 <div class="page-header">
-  <h1 class="page-title">Exercise Library</h1>
+  <h1 class="page-title">Библиотека упражнений</h1>
 </div>
 
-<!-- Filter -->
+<!-- Muscle filter -->
 <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem;">
-  <a href="{% url 'programs:exercise_library' %}" class="btn {% if not muscle_filter %}btn-primary{% else %}btn-outline{% endif %} btn-sm">All</a>
+  <a href="{% url 'programs:exercise_library' %}" class="btn {% if not muscle_filter %}btn-primary{% else %}btn-outline{% endif %} btn-sm">Все</a>
   {% for val, label in muscle_choices %}
   <a href="?muscle={{ val }}" class="btn {% if muscle_filter == val %}btn-primary{% else %}btn-outline{% endif %} btn-sm">{{ label }}</a>
   {% endfor %}
@@ -16,21 +16,73 @@
 
 <div class="card-grid">
   {% for ex in exercises %}
-  <div class="card">
+  <div class="card" style="display:flex;flex-direction:column;">
+
+    <!-- Video / Image -->
     {% if ex.photo_url %}
-    <div style="border-radius:8px;overflow:hidden;height:160px;background:#f1f5f9;margin-bottom:1rem;">
-      <img src="{{ ex.photo_url }}" alt="{{ ex.name }}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='<div style=\'height:100%;display:flex;align-items:center;justify-content:center;font-size:2rem;\'>💪</div>'">
+    <div style="border-radius:8px;overflow:hidden;height:160px;background:#f1f5f9;margin-bottom:1rem;flex-shrink:0;">
+      {% if ".mp4" in ex.photo_url %}
+        <video src="{{ ex.photo_url }}" autoplay muted loop playsinline
+          style="width:100%;height:100%;object-fit:cover;"
+          onerror="this.parentElement.innerHTML='<div style=\'height:100%;display:flex;align-items:center;justify-content:center;font-size:2rem;\'>💪</div>'">
+        </video>
+      {% else %}
+        <img src="{{ ex.photo_url }}" alt="{{ ex.name }}"
+          style="width:100%;height:100%;object-fit:cover;"
+          onerror="this.parentElement.innerHTML='<div style=\'height:100%;display:flex;align-items:center;justify-content:center;font-size:2rem;\'>💪</div>'">
+      {% endif %}
     </div>
     {% endif %}
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.4rem;">
+
+    <!-- Name & badge -->
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.4rem;gap:.4rem;">
       <strong style="font-size:.95rem;">{{ ex.name }}</strong>
       <span class="badge badge-{{ ex.muscle_group }}">{{ ex.get_muscle_group_display }}</span>
     </div>
     <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:.6rem;text-transform:capitalize;">{{ ex.difficulty }}</div>
-    <p style="font-size:.83rem;color:var(--text-muted);line-height:1.5;">{{ ex.description|truncatechars:160 }}</p>
+    <p style="font-size:.83rem;color:var(--text-muted);line-height:1.5;flex:1;">{{ ex.description|truncatechars:140 }}</p>
+
+    <!-- Add to program -->
+    <div style="margin-top:1rem;padding-top:.85rem;border-top:1px solid var(--border);">
+      <details>
+        <summary style="cursor:pointer;font-size:.85rem;font-weight:600;color:var(--primary);list-style:none;display:flex;align-items:center;gap:.4rem;">
+          <span>＋ Добавить в программу</span>
+        </summary>
+
+        <div style="margin-top:.75rem;">
+          {% if students %}
+            {% for student in students %}
+              {% if student.programs.all %}
+                <div style="margin-bottom:.6rem;">
+                  <div style="font-size:.8rem;font-weight:600;color:var(--text-muted);margin-bottom:.3rem;">{{ student.name }}</div>
+                  {% for program in student.programs.all %}
+                    {% if program.days.all %}
+                      {% for day in program.days.all %}
+                      <form method="post" action="{% url 'programs:add_exercise_to_program' %}" style="margin-bottom:.25rem;">
+                        {% csrf_token %}
+                        <input type="hidden" name="exercise_pk" value="{{ ex.pk }}">
+                        <input type="hidden" name="day_pk" value="{{ day.pk }}">
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button type="submit" style="width:100%;text-align:left;background:#f8fafc;border:1px solid var(--border);border-radius:6px;padding:.35rem .65rem;font-size:.8rem;cursor:pointer;color:inherit;">
+                          {{ program.name }} — {{ day.name }}
+                        </button>
+                      </form>
+                      {% endfor %}
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endfor %}
+          {% else %}
+            <p style="font-size:.82rem;color:var(--text-muted);">Нет активных студентов с программами.</p>
+          {% endif %}
+        </div>
+      </details>
+    </div>
+
   </div>
   {% empty %}
-  <div class="empty-state" style="grid-column:1/-1;">No exercises found.</div>
+  <div class="empty-state" style="grid-column:1/-1;">Упражнения не найдены.</div>
   {% endfor %}
 </div>
 {% endblock %}

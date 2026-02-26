@@ -10,4 +10,5 @@ urlpatterns = [
     path('confirm-exercise/', views.confirm_exercise, name='confirm_exercise'),
     path('skip-exercise/', views.skip_exercise, name='skip_exercise'),
     path('exercises/', views.exercise_library, name='exercise_library'),
+    path('exercises/add-to-program/', views.add_exercise_to_program, name='add_exercise_to_program'),
 ]

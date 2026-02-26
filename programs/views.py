@@ -137,8 +137,34 @@ def exercise_library(request):
     muscle_filter = request.GET.get('muscle', '')
     if muscle_filter:
         exercises = exercises.filter(muscle_group=muscle_filter)
+
+    from students.models import Student
+    students = Student.objects.filter(is_active=True).prefetch_related(
+        'programs__days'
+    )
+
     return render(request, 'programs/exercise_library.html', {
         'exercises': exercises,
         'muscle_filter': muscle_filter,
         'muscle_choices': ExerciseLibrary.MUSCLE_GROUP_CHOICES,
+        'students': students,
     })
+
+
+@login_required
+@require_POST
+def add_exercise_to_program(request):
+    exercise_pk = request.POST.get('exercise_pk')
+    day_pk = request.POST.get('day_pk')
+    exercise = get_object_or_404(ExerciseLibrary, pk=exercise_pk)
+    day = get_object_or_404(ProgramDay, pk=day_pk)
+    order = day.exercises.count()
+    ProgramExercise.objects.create(
+        program_day=day,
+        exercise=exercise,
+        sets=3,
+        reps='10-12',
+        order=order,
+        confirmed=True,
+    )
+    return redirect(request.POST.get('next', 'programs:exercise_library'))
