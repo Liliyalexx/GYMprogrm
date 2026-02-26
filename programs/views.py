@@ -43,10 +43,11 @@ def program_generate(request, student_pk):
             })
 
         # Create program
+        key_findings = ai_result.get('key_findings', [])
         program = WorkoutProgram.objects.create(
             student=student,
             name=ai_result['program_name'],
-            description=ai_result.get('description', ''),
+            description='\n'.join(key_findings) if key_findings else ai_result.get('description', ''),
             training_days=training_days,
             nutrition_plan=ai_result.get('nutrition'),
         )
@@ -76,6 +77,8 @@ def program_generate(request, student_pk):
                         exercise=library_ex,
                         sets=ex_data.get('sets', 3),
                         reps=str(ex_data.get('reps', '10')),
+                        name_ru=ex_data.get('name_ru', ''),
+                        reason_ru=ex_data.get('reason_ru', ''),
                         order=order,
                         confirmed=False,
                     )

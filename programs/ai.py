@@ -8,7 +8,6 @@ import anthropic
 
 
 def _encode_file(path):
-    """Return (base64_data, mime_type) for a file on disk."""
     mime_type, _ = mimetypes.guess_type(path)
     if not mime_type:
         mime_type = 'application/octet-stream'
@@ -18,31 +17,24 @@ def _encode_file(path):
 
 
 def suggest_program(student, training_days=3):
-    """
-    Call Claude API to suggest a workout program + nutrition plan.
-    Reads uploaded blood test (PDF or image) if present.
-    Applies special hormone-awareness logic for women aged 40+.
-    """
     client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
 
     age = student.age or 0
-    gender = student.get_gender_display() if student.gender else 'Unknown'
+    gender = student.get_gender_display() if student.gender else 'Не указан'
     is_woman_40_plus = student.gender == 'F' and age >= 40
 
     profile = f"""
-Student name: {student.name}
-Gender: {gender}
-Age: {age if age else 'Unknown'}
-Training days per week: {training_days}
-Goals: {student.goals or 'Not specified'}
-Health issues / contraindications: {student.health_issues or 'None reported'}
-Additional notes: {student.notes or 'None'}
+Имя: {student.name}
+Пол: {gender}
+Возраст: {age if age else 'Не указан'}
+Дней тренировок в неделю: {training_days}
+Цели: {student.goals or 'Не указано'}
+Проблемы со здоровьем / противопоказания: {student.health_issues or 'Не выявлено'}
+Дополнительные заметки: {student.notes or 'Нет'}
 """.strip()
 
-    # Build the message content blocks
     content = []
 
-    # Attach blood test file if uploaded
     blood_test_attached = False
     if student.blood_test_file:
         try:
@@ -64,62 +56,66 @@ Additional notes: {student.notes or 'None'}
         except Exception:
             pass
 
-    # Hormone instructions for women 40+
     hormone_instructions = ''
     if is_woman_40_plus:
         hormone_instructions = """
-SPECIAL INSTRUCTIONS — Woman aged 40+:
-- Check hormone levels in blood test: estrogen, progesterone, FSH, LH, testosterone, DHEA
-- Check thyroid: TSH, free T3, free T4
-- Check bone markers: calcium, vitamin D (25-OH), ALP
-- Identify signs of perimenopause or menopause
-- Include weight-bearing exercises for bone density
-- Adjust recovery time accordingly (48h+ between same muscle groups)
-- In nutrition: consider phytoestrogens, calcium-rich foods, magnesium for hormonal support
-- Fasting: assess carefully — prolonged fasting may worsen hormonal imbalance for some women 40+
+ОСОБЫЕ ИНСТРУКЦИИ — Женщина 40+:
+- Проверить в анализе крови: эстроген, прогестерон, ФСГ, ЛГ, тестостерон, ДГЭА
+- Щитовидная железа: ТТГ, свободный Т3, свободный Т4
+- Костные маркеры: кальций, витамин D (25-OH), ЩФ
+- Определить признаки перименопаузы или менопаузы
+- Включить силовые упражнения для укрепления костей
+- Восстановление: минимум 48ч между тренировками одних и тех же мышц
+- В питании: фитоэстрогены, кальций, магний для гормональной поддержки
+- Интервальное голодание: оценить осторожно — может усугубить гормональный дисбаланс
 """
 
-    # Blood test analysis instructions
     if blood_test_attached:
         blood_test_instructions = """
-Blood test attached above. Analyse it for:
-- Anaemia (haemoglobin, ferritin, iron) — affects training intensity
-- Inflammation (CRP, ESR) — may require lower intensity and anti-inflammatory diet
-- Blood sugar / insulin resistance (glucose, HbA1c) — affects fasting recommendation and carb intake
-- Liver / kidney markers — contraindications for heavy loading or high protein
-- Hormonal imbalances (see above if applicable)
-- Vitamin/mineral deficiencies (vitamin D, B12, iron, magnesium) — impact recovery and nutrition
-- Lipid panel (cholesterol, triglycerides) — affects dietary fat recommendations
-Mention key findings in the description and reflect them in the nutrition plan.
+Анализ крови прикреплён выше. Необходимо проанализировать:
+- Анемия: гемоглобин, ферритин, железо — влияет на интенсивность тренировок
+- Воспаление: СРБ, СОЭ — при высоких значениях снизить интенсивность
+- Сахар крови / инсулинорезистентность: глюкоза, HbA1c — влияет на рекомендации по голоданию и углеводам
+- Печень / почки — противопоказания при высоких нагрузках и высоком белке
+- Гормональный дисбаланс (см. выше при необходимости)
+- Дефициты: витамин D, B12, железо, магний — влияют на восстановление и питание
+- Липидный профиль: холестерин, триглицериды — влияет на жировые рекомендации
+Ключевые находки отразить в блоке key_findings и в плане питания.
 """
     else:
-        blood_test_instructions = "No blood test uploaded — base all recommendations on profile only."
+        blood_test_instructions = "Анализ крови не загружен — рекомендации основаны только на профиле клиента."
 
-    prompt = f"""You are an expert personal trainer and sports nutritionist.
-Based on the student profile{' and blood test results' if blood_test_attached else ''} below, create:
-1. A personalised workout program for exactly {training_days} training days per week
-2. A detailed daily nutrition plan with meal-by-meal food list
-3. A fasting recommendation based on the client's health data
+    prompt = f"""Ты — профессиональный персональный тренер и спортивный диетолог.
+На основе профиля клиента{' и результатов анализа крови' if blood_test_attached else ''} создай:
+1. Персональную программу тренировок на {training_days} дней в неделю
+2. Детальный план питания с конкретным списком продуктов на каждый приём пищи
+3. Рекомендации по интервальному голоданию на основе данных клиента
 
-STUDENT PROFILE:
+ПРОФИЛЬ КЛИЕНТА:
 {profile}
 {hormone_instructions}
 {blood_test_instructions}
 
-Respond ONLY with valid JSON in this exact format (no extra text, no markdown fences):
+Отвечай ТОЛЬКО валидным JSON в точно таком формате (без лишнего текста, без markdown):
 {{
-  "program_name": "...",
-  "description": "2-3 sentence personalised summary. Mention blood test findings if available.",
+  "program_name": "Название программы на русском",
+  "key_findings": [
+    "Короткая находка или вывод 1 (одно предложение)",
+    "Короткая находка или вывод 2",
+    "Короткая находка или вывод 3",
+    "Цели и как программа на них направлена"
+  ],
   "days": [
     {{
       "day_number": 1,
-      "day_name": "Day 1 — Push / Upper Body",
+      "day_name": "День 1 — Ягодицы и ноги",
       "exercises": [
         {{
-          "name": "Exercise Name",
+          "name": "Barbell Hip Thrust",
+          "name_ru": "Тяга бедра со штангой",
           "sets": 3,
           "reps": "10-12",
-          "reason": "Why this exercise for this specific client"
+          "reason_ru": "Почему именно это упражнение для данного клиента (на русском)"
         }}
       ]
     }}
@@ -133,55 +129,57 @@ Respond ONLY with valid JSON in this exact format (no extra text, no markdown fe
     }},
     "meals": [
       {{
-        "meal": "Breakfast",
+        "meal": "Завтрак",
         "time": "7:00–8:00",
-        "foods": ["Oatmeal with berries and chia seeds", "2 boiled eggs", "Green tea"],
-        "notes": "High protein start, slow carbs for sustained energy"
+        "foods": ["Овсяная каша с ягодами и семенами чиа 200г", "2 варёных яйца", "Зелёный чай"],
+        "notes": "Высокобелковый старт, медленные углеводы для длительной энергии"
       }},
       {{
-        "meal": "Lunch",
+        "meal": "Обед",
         "time": "12:00–13:00",
-        "foods": ["Grilled chicken breast 150g", "Brown rice 100g", "Steamed broccoli", "Olive oil dressing"],
-        "notes": "Main meal, balanced macros"
+        "foods": ["Куриная грудка гриль 150г", "Бурый рис 100г", "Тушёная брокколи", "Заправка из оливкового масла"],
+        "notes": "Основной приём пищи, сбалансированные макронутриенты"
       }},
       {{
-        "meal": "Pre-workout snack",
+        "meal": "Перекус перед тренировкой",
         "time": "15:30–16:00",
-        "foods": ["Banana", "Rice cake with almond butter"],
-        "notes": "Fast carbs 30-60 min before training"
+        "foods": ["Банан", "Рисовый хлебец с миндальным маслом"],
+        "notes": "Быстрые углеводы за 30-60 мин до тренировки"
       }},
       {{
-        "meal": "Post-workout",
+        "meal": "После тренировки",
         "time": "18:30–19:00",
-        "foods": ["Protein shake with milk", "Rice cakes"],
-        "notes": "Protein within 30 min after training"
+        "foods": ["Протеиновый коктейль на молоке 250мл", "Рисовые хлебцы"],
+        "notes": "Белок в течение 30 мин после тренировки"
       }},
       {{
-        "meal": "Dinner",
+        "meal": "Ужин",
         "time": "20:00–20:30",
-        "foods": ["Salmon fillet 150g", "Sweet potato 150g", "Mixed salad with olive oil"],
-        "notes": "Omega-3 rich, light on digestion"
+        "foods": ["Филе лосося 150г", "Батат 150г", "Салат с оливковым маслом"],
+        "notes": "Богато омега-3, лёгкое для пищеварения"
       }}
     ],
     "fasting": {{
       "recommended": true,
-      "type": "16:8 intermittent fasting",
+      "type": "Интервальное голодание 16:8",
       "eating_window": "12:00–20:00",
-      "reasoning": "Based on blood glucose and goals, intermittent fasting supports fat loss and insulin sensitivity. Adjust if training is in the morning.",
-      "cautions": "Skip fasting on heavy training days if energy is low."
+      "reasoning": "Обоснование на основе анализа крови и целей клиента",
+      "cautions": "Предупреждения или противопоказания"
     }},
-    "supplements": ["Vitamin D 2000 IU", "Omega-3 1g", "Magnesium glycinate 300mg"],
-    "notes": "Drink 2–2.5L water daily. Adjust portions on rest days (reduce carbs by ~20%)."
+    "supplements": ["Витамин D 2000 МЕ", "Омега-3 1г", "Магний глицинат 300мг"],
+    "notes": "Пить 2–2.5л воды в день. В дни отдыха сократить углеводы на ~20%."
   }}
 }}
 
-Rules:
-- Exactly {training_days} workout days in "days" array
-- 4–6 exercises per day, avoid exercises that aggravate health issues
-- Use standard gym exercise names (barbell, dumbbell, cable, machine)
-- Nutrition must be specific to this client's goals and blood test findings
-- Fasting recommendation must consider gender, age, blood sugar, hormones
-- All food items should be specific (e.g. "Grilled salmon 150g" not just "protein")
+Правила:
+- Ровно {training_days} тренировочных дней в массиве "days"
+- 4–6 упражнений в день, избегать упражнений при проблемах со здоровьем
+- В поле "name" — стандартное английское название упражнения (для сопоставления с базой)
+- В поле "name_ru" — название упражнения на русском языке
+- В поле "reason_ru" — обоснование выбора упражнения на русском
+- Все остальные тексты — на русском языке
+- Продукты питания — конкретные с граммовкой (например "Куриная грудка гриль 150г", не просто "белок")
+- Рекомендации по голоданию должны учитывать пол, возраст, сахар крови, гормоны
 """
 
     content.append({'type': 'text', 'text': prompt})

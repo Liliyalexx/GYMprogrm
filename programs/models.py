@@ -68,6 +68,8 @@ class ProgramExercise(models.Model):
     reps = models.CharField(max_length=20, default='10', help_text='E.g. "10", "8-12", "30 sec"')
     weight_kg = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
     notes = models.TextField(blank=True)
+    name_ru = models.CharField(max_length=200, blank=True)
+    reason_ru = models.TextField(blank=True)
     order = models.PositiveSmallIntegerField(default=0)
     confirmed = models.BooleanField(default=False)
 

@@ -11,7 +11,12 @@
 
 {% if program.description %}
 <div class="card" style="margin-bottom:1.5rem;">
-  <p style="color:var(--text-muted);">{{ program.description }}</p>
+  <h2 style="font-size:1rem;font-weight:700;margin-bottom:.75rem;">📋 Анализ и выводы</h2>
+  <ul style="margin:0;padding-left:1.25rem;">
+    {% for line in program.description.splitlines %}
+      {% if line %}<li style="margin-bottom:.5rem;font-size:.92rem;color:var(--text-muted);line-height:1.5;">{{ line }}</li>{% endif %}
+    {% endfor %}
+  </ul>
 </div>
 {% endif %}
 
@@ -19,71 +24,87 @@
 {% with n=program.nutrition_plan %}
 <!-- Nutrition Plan -->
 <div class="card" style="margin-bottom:1.5rem;">
-  <h2 style="font-size:1.1rem;font-weight:700;margin-bottom:1.25rem;">🥗 Daily Nutrition Plan</h2>
+  <h2 style="font-size:1.1rem;font-weight:700;margin-bottom:1.25rem;">🥗 План питания на день</h2>
 
   <!-- Macros -->
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem;">
     <div style="text-align:center;padding:.75rem;background:#f0fdf4;border-radius:8px;">
       <div style="font-size:1.4rem;font-weight:700;color:#16a34a;">{{ n.daily_calories }}</div>
-      <div style="font-size:.78rem;color:var(--text-muted);">kcal / day</div>
+      <div style="font-size:.78rem;color:var(--text-muted);">ккал / день</div>
     </div>
     <div style="text-align:center;padding:.75rem;background:#eff6ff;border-radius:8px;">
-      <div style="font-size:1.4rem;font-weight:700;color:#2563eb;">{{ n.macros.protein_g }}g</div>
-      <div style="font-size:.78rem;color:var(--text-muted);">Protein</div>
+      <div style="font-size:1.4rem;font-weight:700;color:#2563eb;">{{ n.macros.protein_g }}г</div>
+      <div style="font-size:.78rem;color:var(--text-muted);">Белки</div>
     </div>
     <div style="text-align:center;padding:.75rem;background:#fefce8;border-radius:8px;">
-      <div style="font-size:1.4rem;font-weight:700;color:#ca8a04;">{{ n.macros.carbs_g }}g</div>
-      <div style="font-size:.78rem;color:var(--text-muted);">Carbs</div>
+      <div style="font-size:1.4rem;font-weight:700;color:#ca8a04;">{{ n.macros.carbs_g }}г</div>
+      <div style="font-size:.78rem;color:var(--text-muted);">Углеводы</div>
     </div>
     <div style="text-align:center;padding:.75rem;background:#fdf4ff;border-radius:8px;">
-      <div style="font-size:1.4rem;font-weight:700;color:#9333ea;">{{ n.macros.fat_g }}g</div>
-      <div style="font-size:.78rem;color:var(--text-muted);">Fat</div>
+      <div style="font-size:1.4rem;font-weight:700;color:#9333ea;">{{ n.macros.fat_g }}г</div>
+      <div style="font-size:.78rem;color:var(--text-muted);">Жиры</div>
     </div>
   </div>
 
   <!-- Meals -->
-  <h3 style="font-size:.95rem;font-weight:700;margin-bottom:.75rem;">Meals</h3>
+  <h3 style="font-size:.95rem;font-weight:700;margin-bottom:.75rem;">🍽 Приёмы пищи</h3>
   {% for meal in n.meals %}
-  <div style="padding:.75rem;border:1px solid var(--border);border-radius:8px;margin-bottom:.6rem;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem;">
-      <strong style="font-size:.92rem;">{{ meal.meal }}</strong>
-      <span style="font-size:.8rem;color:var(--text-muted);">🕐 {{ meal.time }}</span>
+  <div style="padding:.85rem;border:1px solid var(--border);border-radius:8px;margin-bottom:.65rem;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
+      <strong style="font-size:.95rem;">{{ meal.meal }}</strong>
+      <span style="font-size:.82rem;color:var(--text-muted);">🕐 {{ meal.time }}</span>
     </div>
-    <ul style="margin:0 0 .4rem 1.2rem;padding:0;font-size:.88rem;color:var(--text-muted);">
-      {% for food in meal.foods %}<li>{{ food }}</li>{% endfor %}
+    <ul style="margin:0 0 .4rem 1.2rem;padding:0;">
+      {% for food in meal.foods %}
+      <li style="font-size:.88rem;color:var(--text-muted);margin-bottom:.2rem;">{{ food }}</li>
+      {% endfor %}
     </ul>
-    {% if meal.notes %}<p style="font-size:.8rem;color:var(--primary);margin:0;">💡 {{ meal.notes }}</p>{% endif %}
+    {% if meal.notes %}
+    <p style="font-size:.82rem;color:var(--primary);margin:.3rem 0 0;">💡 {{ meal.notes }}</p>
+    {% endif %}
   </div>
   {% endfor %}
 
   <!-- Fasting -->
   {% if n.fasting %}
   <div style="margin-top:1.25rem;padding:1rem;border-radius:8px;{% if n.fasting.recommended %}background:#f0fdf4;border:1px solid #86efac;{% else %}background:#fef9c3;border:1px solid #fde047;{% endif %}">
-    <h3 style="font-size:.95rem;font-weight:700;margin-bottom:.5rem;">⏱ Fasting Recommendation</h3>
+    <h3 style="font-size:.95rem;font-weight:700;margin-bottom:.6rem;">⏱ Рекомендации по голоданию</h3>
     {% if n.fasting.recommended %}
-      <p style="font-size:.9rem;margin-bottom:.4rem;"><strong>✅ {{ n.fasting.type }}</strong>{% if n.fasting.eating_window %} — eating window: {{ n.fasting.eating_window }}{% endif %}</p>
+      <p style="font-size:.9rem;margin-bottom:.4rem;"><strong>✅ {{ n.fasting.type }}</strong>{% if n.fasting.eating_window %} — окно питания: {{ n.fasting.eating_window }}{% endif %}</p>
     {% else %}
-      <p style="font-size:.9rem;margin-bottom:.4rem;"><strong>❌ Fasting not recommended</strong></p>
+      <p style="font-size:.9rem;margin-bottom:.4rem;"><strong>❌ Голодание не рекомендуется</strong></p>
     {% endif %}
     <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:.3rem;">{{ n.fasting.reasoning }}</p>
-    {% if n.fasting.cautions %}<p style="font-size:.82rem;color:#b45309;">⚠️ {{ n.fasting.cautions }}</p>{% endif %}
+    {% if n.fasting.cautions %}
+    <p style="font-size:.82rem;color:#b45309;">⚠️ {{ n.fasting.cautions }}</p>
+    {% endif %}
   </div>
   {% endif %}
 
-  <!-- Supplements & Notes -->
+  <!-- Supplements -->
   {% if n.supplements %}
-  <div style="margin-top:1rem;">
-    <strong style="font-size:.88rem;">💊 Supplements:</strong>
-    <span style="font-size:.88rem;color:var(--text-muted);"> {{ n.supplements|join:", " }}</span>
+  <div style="margin-top:1rem;padding:.75rem;background:#f8fafc;border-radius:8px;">
+    <strong style="font-size:.88rem;">💊 Добавки:</strong>
+    <ul style="margin:.4rem 0 0 1.2rem;padding:0;">
+      {% for s in n.supplements %}
+      <li style="font-size:.88rem;color:var(--text-muted);margin-bottom:.2rem;">{{ s }}</li>
+      {% endfor %}
+    </ul>
   </div>
   {% endif %}
+
+  <!-- Notes -->
   {% if n.notes %}
-  <p style="font-size:.85rem;color:var(--text-muted);margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--border);">📝 {{ n.notes }}</p>
+  <div style="margin-top:.75rem;padding:.75rem;background:#f8fafc;border-radius:8px;">
+    <strong style="font-size:.88rem;">📝 Общие рекомендации:</strong>
+    <p style="font-size:.85rem;color:var(--text-muted);margin:.3rem 0 0;">{{ n.notes }}</p>
+  </div>
   {% endif %}
 </div>
 {% endwith %}
 {% endif %}
 
+<!-- Workout Days -->
 {% for day in program.days.all %}
 <div class="card" style="margin-bottom:1.5rem;">
   <h2 style="font-size:1.05rem;font-weight:700;margin-bottom:1.25rem;padding-bottom:.75rem;border-bottom:1px solid var(--border);">
@@ -91,36 +112,55 @@
   </h2>
 
   {% for pe in day.exercises.all %}
-  <div style="display:flex;gap:1rem;padding:.75rem 0;border-bottom:1px solid var(--border);align-items:flex-start;{% if not pe.confirmed %}opacity:.55;{% endif %}">
-    <!-- Photo -->
-    {% if pe.exercise.photo_url %}
-    <div style="flex-shrink:0;width:72px;height:72px;border-radius:8px;overflow:hidden;background:#f1f5f9;">
-      <img src="{{ pe.exercise.photo_url }}" alt="{{ pe.exercise.name }}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
+  <div style="display:grid;grid-template-columns:120px 1fr;gap:1.25rem;padding:1rem 0;border-bottom:1px solid var(--border);align-items:start;{% if not pe.confirmed %}opacity:.6;{% endif %}">
+
+    <!-- Video / Image -->
+    <div style="border-radius:10px;overflow:hidden;background:#f1f5f9;aspect-ratio:1;display:flex;align-items:center;justify-content:center;">
+      {% if pe.exercise.photo_url %}
+        {% if ".mp4" in pe.exercise.photo_url %}
+          <video src="{{ pe.exercise.photo_url }}" autoplay muted loop playsinline
+            style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='<span style=font-size:2rem>💪</span>'">
+          </video>
+        {% else %}
+          <img src="{{ pe.exercise.photo_url }}" alt="{{ pe.name_ru|default:pe.exercise.name }}"
+            style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='<span style=font-size:2rem>💪</span>'">
+        {% endif %}
+      {% else %}
+        <span style="font-size:2rem;">💪</span>
+      {% endif %}
     </div>
-    {% else %}
-    <div style="flex-shrink:0;width:72px;height:72px;border-radius:8px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:1.5rem;">💪</div>
-    {% endif %}
 
     <!-- Details -->
-    <div style="flex:1;">
-      <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.25rem;">
-        <strong>{{ pe.exercise.name }}</strong>
+    <div>
+      <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem;">
+        <strong style="font-size:.98rem;">{{ pe.name_ru|default:pe.exercise.name }}</strong>
         <span class="badge badge-{{ pe.exercise.muscle_group }}">{{ pe.exercise.get_muscle_group_display }}</span>
-        {% if pe.confirmed %}<span style="font-size:.75rem;color:var(--success);font-weight:600;">✓ Confirmed</span>{% else %}<span style="font-size:.75rem;color:var(--text-muted);">Pending</span>{% endif %}
+        {% if pe.confirmed %}
+          <span style="font-size:.75rem;color:var(--success);font-weight:600;">✓ Подтверждено</span>
+        {% else %}
+          <span style="font-size:.75rem;color:var(--text-muted);">Ожидает подтверждения</span>
+        {% endif %}
       </div>
+
       <div style="font-size:.85rem;color:var(--text-muted);margin-bottom:.4rem;">
-        {{ pe.sets }} sets × {{ pe.reps }} reps
-        {% if pe.weight_kg %} · {{ pe.weight_kg }} kg{% endif %}
+        {{ pe.sets }} подхода × {{ pe.reps }} повторений
+        {% if pe.weight_kg %} · {{ pe.weight_kg }} кг{% endif %}
       </div>
-      <p style="font-size:.82rem;color:var(--text-muted);">{{ pe.exercise.description|truncatechars:140 }}</p>
-      {% if pe.notes %}<p style="font-size:.82rem;color:var(--primary);margin-top:.25rem;">📝 {{ pe.notes }}</p>{% endif %}
+
+      {% if pe.reason_ru %}
+      <p style="font-size:.84rem;color:var(--primary);margin-bottom:.3rem;">🎯 {{ pe.reason_ru }}</p>
+      {% endif %}
+
+      {% if pe.notes %}
+      <p style="font-size:.82rem;color:var(--text-muted);">📝 {{ pe.notes }}</p>
+      {% endif %}
     </div>
   </div>
   {% empty %}
-  <p style="color:var(--text-muted);font-size:.9rem;">No exercises yet.</p>
+  <p style="color:var(--text-muted);font-size:.9rem;">Упражнения ещё не добавлены.</p>
   {% endfor %}
 </div>
 {% empty %}
-<div class="empty-state">No days in this program yet.</div>
+<div class="empty-state">Дни программы ещё не созданы.</div>
 {% endfor %}
 {% endblock %}
