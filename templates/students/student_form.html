@@ -19,7 +19,16 @@
       {% if form.name.errors %}<ul class="errorlist">{% for e in form.name.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;">
+      <div class="form-group">
+        <label class="form-label">Gender</label>
+        <select name="gender" class="form-control">
+          <option value="">—</option>
+          {% for val, label in form.fields.gender.choices %}
+            {% if val %}<option value="{{ val }}" {% if form.gender.value == val %}selected{% endif %}>{{ label }}</option>{% endif %}
+          {% endfor %}
+        </select>
+      </div>
       <div class="form-group">
         <label class="form-label">Email</label>
         <input type="email" name="email" class="form-control" value="{{ form.email.value|default:'' }}">

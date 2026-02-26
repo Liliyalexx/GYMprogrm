@@ -3,7 +3,10 @@ from datetime import date
 
 
 class Student(models.Model):
+    GENDER_CHOICES = [('M', 'Male'), ('F', 'Female'), ('O', 'Other')]
+
     name = models.CharField(max_length=200)
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True)
     email = models.EmailField(blank=True)
     phone = models.CharField(max_length=30, blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
