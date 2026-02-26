@@ -36,6 +36,17 @@
     </div>
 
     <div class="form-group">
+      <label class="form-label">📷 Photo</label>
+      {% if student and student.photo %}
+        <div style="margin-bottom:.75rem;">
+          <img src="{{ student.photo.url }}" alt="{{ student.name }}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--border);">
+        </div>
+      {% endif %}
+      <input type="file" name="photo" class="form-control" accept="image/*">
+      <div class="form-hint">JPG, PNG or WebP. Shown on the student profile.</div>
+    </div>
+
+    <div class="form-group">
       <label class="form-label">🩸 Blood Test Result (PDF or image)</label>
       {% if student and student.blood_test_file %}
         <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:.5rem;">Current file: <a href="{{ student.blood_test_file.url }}" target="_blank">{{ student.blood_test_file.name }}</a></p>

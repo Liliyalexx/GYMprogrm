@@ -7,6 +7,7 @@ class Student(models.Model):
     email = models.EmailField(blank=True)
     phone = models.CharField(max_length=30, blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
+    photo = models.ImageField(upload_to='student_photos/', null=True, blank=True)
     blood_test_file = models.FileField(upload_to='blood_tests/', null=True, blank=True)
     health_issues = models.TextField(blank=True, help_text='Injuries, conditions, contraindications')
     goals = models.TextField(blank=True, help_text='Client wishes: bigger glutes, lose fat, etc.')
