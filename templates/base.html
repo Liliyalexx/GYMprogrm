@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}GYMprogrm{% endblock %}</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+{% if user.is_authenticated %}
+<nav class="nav">
+  <a href="{% url 'students:list' %}" class="nav-brand">💪 GYMprogrm</a>
+  <div class="nav-links">
+    <a href="{% url 'students:list' %}"><span>Students</span></a>
+    <a href="{% url 'programs:exercise_library' %}"><span>Exercises</span></a>
+    <a href="{% url 'logout' %}"><span>Logout</span></a>
+  </div>
+</nav>
+{% endif %}
+
+<div class="container">
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  {% block content %}{% endblock %}
+</div>
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>

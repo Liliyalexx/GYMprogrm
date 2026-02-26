@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Students — GYMprogrm{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">My Students</h1>
+  <a href="{% url 'students:create' %}" class="btn btn-primary">+ Add Student</a>
+</div>
+
+{% if students %}
+<div class="card-grid">
+  {% for student in students %}
+  <a href="{% url 'students:detail' student.pk %}" style="text-decoration:none;color:inherit;">
+    <div class="card" style="cursor:pointer;transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.13)'" onmouseout="this.style.boxShadow=''">
+      <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;">
+        <div style="width:44px;height:44px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;flex-shrink:0;">
+          {{ student.name|slice:":1"|upper }}
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:1rem;">{{ student.name }}</div>
+          {% if student.age %}<div style="font-size:.85rem;color:var(--text-muted);">{{ student.age }} years old</div>{% endif %}
+        </div>
+      </div>
+      {% if student.goals %}
+      <p style="font-size:.88rem;color:var(--text-muted);margin-bottom:.75rem;">🎯 {{ student.goals|truncatechars:80 }}</p>
+      {% endif %}
+      {% if student.health_issues %}
+      <p style="font-size:.8rem;color:#b45309;background:#fef3c7;padding:.3rem .6rem;border-radius:6px;">⚠️ {{ student.health_issues|truncatechars:60 }}</p>
+      {% endif %}
+      <div style="margin-top:1rem;padding-top:.75rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:.8rem;color:var(--text-muted);">
+        <span>{{ student.programs.count }} program{{ student.programs.count|pluralize }}</span>
+        <span>Added {{ student.created_at|date:"d M Y" }}</span>
+      </div>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <p style="font-size:2rem;">👤</p>
+  <p>No students yet. Add your first student!</p>
+  <a href="{% url 'students:create' %}" class="btn btn-primary">+ Add Student</a>
+</div>
+{% endif %}
+{% endblock %}

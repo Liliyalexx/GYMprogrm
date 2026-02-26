@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}{{ student.name }} — GYMprogrm{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <a href="{% url 'students:list' %}" style="color:var(--text-muted);font-size:.9rem;text-decoration:none;">← Students</a>
+    <h1 class="page-title" style="margin-top:.25rem;">{{ student.name }}</h1>
+  </div>
+  <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+    <a href="{% url 'programs:generate' student.pk %}" class="btn btn-accent">🤖 Generate Program</a>
+    <a href="{% url 'programs:list' student.pk %}" class="btn btn-outline">📋 Programs</a>
+    <a href="{% url 'students:edit' student.pk %}" class="btn btn-outline">✏️ Edit</a>
+    <a href="{% url 'students:delete' student.pk %}" class="btn btn-danger btn-sm" style="align-self:center;">Delete</a>
+  </div>
+</div>
+
+<!-- Profile Info -->
+<div class="card" style="margin-bottom:1.5rem;">
+  <h2 style="font-size:1.1rem;margin-bottom:1.25rem;font-weight:700;">Profile</h2>
+  <div class="detail-grid">
+    <div>
+      <div class="detail-label">Age</div>
+      <div class="detail-value">{% if student.age %}{{ student.age }} years old{% else %}—{% endif %}</div>
+    </div>
+    <div>
+      <div class="detail-label">Date of Birth</div>
+      <div class="detail-value">{% if student.date_of_birth %}{{ student.date_of_birth|date:"d M Y" }}{% else %}—{% endif %}</div>
+    </div>
+    <div>
+      <div class="detail-label">Email</div>
+      <div class="detail-value">{% if student.email %}<a href="mailto:{{ student.email }}">{{ student.email }}</a>{% else %}—{% endif %}</div>
+    </div>
+    <div>
+      <div class="detail-label">Phone</div>
+      <div class="detail-value">{% if student.phone %}{{ student.phone }}{% else %}—{% endif %}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Health & Goals -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.5rem;">
+  <div class="card">
+    <h2 style="font-size:1rem;font-weight:700;margin-bottom:.75rem;">🎯 Goals & Wishes</h2>
+    <p style="color:var(--text-muted);font-size:.92rem;">{% if student.goals %}{{ student.goals|linebreaksbr }}{% else %}Not specified{% endif %}</p>
+  </div>
+  <div class="card">
+    <h2 style="font-size:1rem;font-weight:700;margin-bottom:.75rem;">⚠️ Health Issues</h2>
+    <p style="color:var(--text-muted);font-size:.92rem;">{% if student.health_issues %}{{ student.health_issues|linebreaksbr }}{% else %}None reported{% endif %}</p>
+  </div>
+</div>
+
+<!-- Blood Test -->
+<div class="card" style="margin-bottom:1.5rem;">
+  <h2 style="font-size:1rem;font-weight:700;margin-bottom:.75rem;">🩸 Blood Test</h2>
+  {% if student.blood_test_file %}
+    <a href="{{ student.blood_test_file.url }}" target="_blank" class="btn btn-outline btn-sm">📄 View File</a>
+  {% else %}
+    <p style="color:var(--text-muted);font-size:.9rem;">No file uploaded. <a href="{% url 'students:edit' student.pk %}">Upload now →</a></p>
+  {% endif %}
+</div>
+
+<!-- Notes -->
+{% if student.notes %}
+<div class="card" style="margin-bottom:1.5rem;">
+  <h2 style="font-size:1rem;font-weight:700;margin-bottom:.75rem;">📝 Notes</h2>
+  <p style="color:var(--text-muted);font-size:.92rem;">{{ student.notes|linebreaksbr }}</p>
+</div>
+{% endif %}
+
+<!-- Programs -->
+<div class="card">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+    <h2 style="font-size:1rem;font-weight:700;">📋 Programs</h2>
+    <a href="{% url 'programs:generate' student.pk %}" class="btn btn-accent btn-sm">🤖 Generate New</a>
+  </div>
+  {% with programs=student.programs.all %}
+  {% if programs %}
+    {% for program in programs %}
+    <a href="{% url 'programs:detail' program.pk %}" style="display:block;padding:.75rem;border:1px solid var(--border);border-radius:8px;text-decoration:none;color:inherit;margin-bottom:.5rem;transition:background .15s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background=''">
+      <div style="font-weight:600;">{{ program.name }}</div>
+      <div style="font-size:.82rem;color:var(--text-muted);">{{ program.days.count }} day{{ program.days.count|pluralize }} · Created {{ program.created_at|date:"d M Y" }}</div>
+    </a>
+    {% endfor %}
+  {% else %}
+    <p style="color:var(--text-muted);font-size:.9rem;">No programs yet. <a href="{% url 'programs:generate' student.pk %}">Generate one →</a></p>
+  {% endif %}
+  {% endwith %}
+</div>
+
+{% endblock %}
