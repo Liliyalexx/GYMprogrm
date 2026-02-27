@@ -7,6 +7,17 @@ from django.conf import settings
 import anthropic
 
 
+def _format_goals(text):
+    """Split numbered/bulleted goals into one-per-line format for the AI prompt."""
+    import re
+    if not text:
+        return text
+    # Split on patterns like "1." "2." "•" at word boundaries
+    parts = re.split(r'\s*(?=(?:\d+\.|•)\s)', text)
+    lines = [p.strip() for p in parts if p.strip()]
+    return '\n'.join(lines) if len(lines) > 1 else text
+
+
 def _encode_file(path):
     mime_type, _ = mimetypes.guess_type(path)
     if not mime_type:
@@ -50,6 +61,154 @@ def _parse_json(raw):
     return json.loads(raw)
 
 
+def correct_text(text, field):
+    """Rewrite health issues or goals in professional language."""
+    client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+    if field == 'health_issues':
+        instruction = (
+            'Ты — спортивный врач. Перепиши следующие жалобы/противопоказания клиента '
+            'используя точную медицинскую и клиническую терминологию. '
+            'Сохрани все факты дословно, только замени бытовые описания на профессиональные термины. '
+            'Каждую жалобу/противопоказание выводи с новой строки в формате "• жалоба". '
+            'Верни ТОЛЬКО список, без заголовков, без пояснений и без вступлений.'
+        )
+    else:
+        instruction = (
+            'Ты — профессиональный персональный тренер. Перепиши следующие пожелания клиента '
+            'используя профессиональный язык спортивной науки и фитнеса. '
+            'Сохрани суть пожеланий, сформулируй их как конкретные тренировочные цели. '
+            'Каждую цель выводи с новой строки в формате "• цель" (через маркер •). '
+            'Верни ТОЛЬКО список целей, без заголовков, без пояснений и без вступлений.'
+        )
+    msg = client.messages.create(
+        model='claude-haiku-4-5-20251001',
+        max_tokens=512,
+        messages=[{'role': 'user', 'content': instruction + '\n\n' + text}],
+    )
+    return msg.content[0].text.strip()
+
+
+def _normalize_health_issues(client, raw_text):
+    """Rewrite health issues in professional medical/clinical language."""
+    if not raw_text or not raw_text.strip():
+        return raw_text
+    msg = client.messages.create(
+        model='claude-haiku-4-5-20251001',
+        max_tokens=512,
+        messages=[{
+            'role': 'user',
+            'content': (
+                'Перепиши следующие жалобы/противопоказания клиента используя '
+                'корректную медицинскую и клиническую терминологию. '
+                'Сохрани все факты, добавь медицинские термины там, где это уместно. '
+                'Верни ТОЛЬКО переписанный текст, без пояснений.\n\n'
+                + raw_text
+            ),
+        }],
+    )
+    return msg.content[0].text.strip()
+
+
+def suggest_nutrition(student, findings_summary=''):
+    """Re-run only Call 2 (nutrition plan) for an existing program."""
+    client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+
+    age = student.age or 0
+    gender = student.get_gender_display() if student.gender else 'Не указан'
+    is_woman_40_plus = student.gender == 'F' and age >= 40
+
+    health_issues = _normalize_health_issues(client, student.health_issues) or 'Не выявлено'
+
+    profile = f"""Имя: {student.name}
+Пол: {gender}
+Возраст: {age if age else 'Не указан'}
+Рост: {f'{student.height_cm} см' if student.height_cm else 'Не указан'}
+Вес: {f'{student.weight_kg} кг' if student.weight_kg else 'Не указан'}
+Цели:\n{_format_goals(student.goals) or 'Не указано'}
+Проблемы со здоровьем / противопоказания: {health_issues}
+Дополнительные заметки: {student.notes or 'Нет'}"""
+
+    blood_blocks, blood_attached = _blood_test_block(student)
+
+    hormone_note = ''
+    if is_woman_40_plus:
+        hormone_note = """
+ОСОБЫЕ ИНСТРУКЦИИ — Женщина 40+:
+- Проверить: эстроген, прогестерон, ФСГ, ЛГ, тестостерон, ДГЭА, ТТГ, Т3, Т4
+- Костные маркеры: кальций, витамин D, ЩФ
+- Включить силовые упражнения для укрепления костей
+- Восстановление минимум 48ч между тренировками одних мышц
+"""
+
+    blood_note = (
+        "Анализ крови прикреплён — учти данные при составлении плана питания."
+        if blood_attached else
+        "Анализ крови не загружен — рекомендации по профилю клиента."
+    )
+
+    prompt = f"""Ты — профессиональный спортивный диетолог.
+На основе профиля клиента составь детальный план питания.
+
+ПРОФИЛЬ:
+{profile}
+{hormone_note}
+{blood_note}
+
+ВЫВОДЫ О ЗДОРОВЬЕ:
+{findings_summary}
+
+Отвечай ТОЛЬКО валидным JSON (без markdown, без пояснений):
+{{
+  "daily_calories": 2000,
+  "macros": {{
+    "protein_g": 150,
+    "carbs_g": 200,
+    "fat_g": 65
+  }},
+  "meals": [
+    {{
+      "meal": "Завтрак",
+      "time": "7:00–8:00",
+      "calories": 420,
+      "foods": ["Конкретный продукт с граммовкой", "Ещё продукт 100г"],
+      "notes": ["Совет 1 — почему этот приём пищи важен", "Совет 2 — связь с анализами крови или гормонами"]
+    }}
+  ],
+  "fasting": {{
+    "recommended": true,
+    "type": "Интервальное голодание 16:8",
+    "eating_window": "12:00–20:00",
+    "reasoning": ["Причина 1 — конкретный показатель из анализа крови", "Причина 2", "Причина 3"],
+    "cautions": "Предупреждения если есть"
+  }},
+  "supplements": ["Витамин D 2000 МЕ", "Омега-3 1г"],
+  "notes": [
+    {{"title": "ГИДРАТАЦИЯ", "text": "Подробная рекомендация"}},
+    {{"title": "ДЕФИЦИТ КАЛОРИЙ", "text": "Расчёт дефицита и сроки"}}
+  ]
+}}
+
+Правила:
+- 4–5 приёмов пищи с конкретными продуктами и граммовкой
+- Для каждого приёма пищи рассчитать "calories" — сумма калорий всех продуктов (целое число, ккал)
+- Сумма calories по всем приёмам пищи должна быть близка к daily_calories
+- "notes" каждого приёма пищи — СПИСОК строк, 1–3 коротких совета (ОБЯЗАТЕЛЬНО массив, не строка)
+- "fasting.reasoning" — СПИСОК строк, каждая строка = одна отдельная причина (ОБЯЗАТЕЛЬНО массив)
+- "notes" верхнего уровня — СПИСОК объектов {{title, text}} по темам: гидратация, дефицит калорий, дни отдыха, конкретные продукты, мониторинг и т.д.
+- Учитывать все находки из анализа крови
+- Если женщина 40+ — учитывать гормональный статус в питании
+- Рекомендации по голоданию — на основе сахара крови, гормонов, целей
+"""
+
+    content = blood_blocks + [{'type': 'text', 'text': prompt}]
+    msg = client.messages.create(
+        model='claude-sonnet-4-6',
+        max_tokens=8096,
+        messages=[{'role': 'user', 'content': content}],
+    )
+    return _parse_json(msg.content[0].text)
+
+
 def suggest_program(student, training_days=3):
     """
     Two separate Claude calls to avoid hitting the output token limit:
@@ -62,12 +221,16 @@ def suggest_program(student, training_days=3):
     gender = student.get_gender_display() if student.gender else 'Не указан'
     is_woman_40_plus = student.gender == 'F' and age >= 40
 
+    health_issues = _normalize_health_issues(client, student.health_issues) or 'Не выявлено'
+
     profile = f"""Имя: {student.name}
 Пол: {gender}
 Возраст: {age if age else 'Не указан'}
+Рост: {f'{student.height_cm} см' if student.height_cm else 'Не указан'}
+Вес: {f'{student.weight_kg} кг' if student.weight_kg else 'Не указан'}
 Дней тренировок в неделю: {training_days}
-Цели: {student.goals or 'Не указано'}
-Проблемы со здоровьем / противопоказания: {student.health_issues or 'Не выявлено'}
+Цели:\n{_format_goals(student.goals) or 'Не указано'}
+Проблемы со здоровьем / противопоказания: {health_issues}
 Дополнительные заметки: {student.notes or 'Нет'}"""
 
     blood_blocks, blood_attached = _blood_test_block(student)
@@ -171,23 +334,32 @@ def suggest_program(student, training_days=3):
     {{
       "meal": "Завтрак",
       "time": "7:00–8:00",
+      "calories": 420,
       "foods": ["Конкретный продукт с граммовкой", "Ещё продукт 100г"],
-      "notes": "Короткая заметка"
+      "notes": ["Совет 1 — почему этот приём пищи важен", "Совет 2 — связь с анализами крови или гормонами"]
     }}
   ],
   "fasting": {{
     "recommended": true,
     "type": "Интервальное голодание 16:8",
     "eating_window": "12:00–20:00",
-    "reasoning": "Обоснование на основе данных клиента",
-    "cautions": "Предупреждения"
+    "reasoning": ["Причина 1 — конкретный показатель из анализа крови", "Причина 2", "Причина 3"],
+    "cautions": "Предупреждения если есть"
   }},
   "supplements": ["Витамин D 2000 МЕ", "Омега-3 1г"],
-  "notes": "Общие рекомендации по гидратации и питанию в дни отдыха"
+  "notes": [
+    {{"title": "ГИДРАТАЦИЯ", "text": "Подробная рекомендация"}},
+    {{"title": "ДЕФИЦИТ КАЛОРИЙ", "text": "Расчёт дефицита и сроки"}}
+  ]
 }}
 
 Правила:
 - 4–5 приёмов пищи с конкретными продуктами и граммовкой
+- Для каждого приёма пищи рассчитать "calories" — сумма калорий всех продуктов этого приёма пищи (целое число, ккал)
+- Сумма calories по всем приёмам пищи должна быть близка к daily_calories
+- "notes" каждого приёма пищи — СПИСОК строк, 1–3 коротких совета (ОБЯЗАТЕЛЬНО массив, не строка)
+- "fasting.reasoning" — СПИСОК строк, каждая строка = одна отдельная причина (ОБЯЗАТЕЛЬНО массив)
+- "notes" верхнего уровня — СПИСОК объектов {{title, text}} по темам: гидратация, дефицит калорий, дни отдыха, конкретные продукты, мониторинг и т.д.
 - Учитывать все находки из анализа крови
 - Если женщина 40+ — учитывать гормональный статус в питании
 - Рекомендации по голоданию — на основе сахара крови, гормонов, целей

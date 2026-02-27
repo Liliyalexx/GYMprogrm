@@ -44,6 +44,97 @@
       <input type="date" name="date_of_birth" class="form-control" value="{{ form.date_of_birth.value|default:'' }}">
     </div>
 
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+      <div class="form-group">
+        <label class="form-label">📏 Height (cm)</label>
+        <input type="number" name="height_cm" id="id_height_cm" class="form-control" step="0.1" min="50" max="250" value="{{ form.height_cm.value|default:'' }}" placeholder="e.g. 168">
+      </div>
+      <div class="form-group">
+        <label class="form-label">⚖️ Weight (kg)</label>
+        <input type="number" name="weight_kg" id="id_weight_kg" class="form-control" step="0.1" min="20" max="300" value="{{ form.weight_kg.value|default:'' }}" placeholder="e.g. 62.5">
+      </div>
+    </div>
+
+    <div id="desirable-weight-box" style="display:none;margin-bottom:1.25rem;padding:.75rem 1rem;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;font-size:.88rem;">
+      <span style="color:#15803d;font-weight:600;">🎯 Desirable weight: </span>
+      <span id="desirable-weight-value" style="color:#15803d;font-weight:700;"></span>
+      <span id="desirable-weight-formula" style="color:var(--text-muted);margin-left:.5rem;"></span>
+    </div>
+
+    <script>
+    (function () {
+      // Teen BMI 50th-percentile targets (WHO)
+      var girlBMI = {13:18.1, 14:18.7, 15:19.2, 16:19.7, 17:20.2};
+      var boyBMI  = {13:17.8, 14:18.6, 15:19.5, 16:20.5, 17:21.0};
+
+      function calcAge(dob) {
+        if (!dob) return null;
+        var today = new Date(), b = new Date(dob);
+        var age = today.getFullYear() - b.getFullYear();
+        if (today.getMonth() < b.getMonth() ||
+            (today.getMonth() === b.getMonth() && today.getDate() < b.getDate())) age--;
+        return age;
+      }
+
+      function calcDesirable(height, age, gender) {
+        if (!height || height < 50) return null;
+        var h = parseFloat(height);
+        var label = '';
+        var kg;
+
+        if (age === null || age >= 18) {
+          // Broca–Brugsch formula
+          if (gender === 'F') {
+            kg = (h - 100) * 0.85;
+            label = 'Broca formula (F, 18+)';
+          } else if (gender === 'M') {
+            kg = (h - 100) * 0.90;
+            label = 'Broca formula (M, 18+)';
+          } else {
+            kg = (h - 100) * 0.875;
+            label = 'Broca formula (18+)';
+          }
+        } else if (age >= 13 && age <= 17) {
+          // BMI 50th-percentile (WHO)
+          var bmiTable = (gender === 'M') ? boyBMI : girlBMI;
+          var bmi = bmiTable[age] || (gender === 'M' ? 19.5 : 19.2);
+          kg = bmi * Math.pow(h / 100, 2);
+          label = 'BMI 50th percentile (WHO, age ' + age + ')';
+        } else {
+          return null; // under 13 — too young for this formula
+        }
+
+        return {kg: Math.round(kg * 10) / 10, label: label};
+      }
+
+      function update() {
+        var height  = document.getElementById('id_height_cm').value;
+        var dob     = document.querySelector('[name="date_of_birth"]').value;
+        var gender  = document.querySelector('[name="gender"]').value;
+        var age     = calcAge(dob);
+        var result  = calcDesirable(height, age, gender);
+        var box     = document.getElementById('desirable-weight-box');
+        var valEl   = document.getElementById('desirable-weight-value');
+        var fmlEl   = document.getElementById('desirable-weight-formula');
+
+        if (result) {
+          valEl.textContent = result.kg + ' kg';
+          fmlEl.textContent = '(' + result.label + ')';
+          box.style.display = 'block';
+        } else {
+          box.style.display = 'none';
+        }
+      }
+
+      ['id_height_cm', 'id_weight_kg'].forEach(function(id) {
+        document.getElementById(id).addEventListener('input', update);
+      });
+      document.querySelector('[name="date_of_birth"]').addEventListener('change', update);
+      document.querySelector('[name="gender"]').addEventListener('change', update);
+      update();
+    })();
+    </script>
+
     <div class="form-group">
       <label class="form-label">📷 Photo</label>
       {% if student and student.photo %}
@@ -65,14 +156,72 @@
     </div>
 
     <div class="form-group">
-      <label class="form-label">⚠️ Health Issues / Contraindications</label>
-      <textarea name="health_issues" class="form-control" rows="4" placeholder="E.g. lower back pain, knee injury, hypertension...">{{ form.health_issues.value|default:'' }}</textarea>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem;">
+        <label class="form-label" style="margin:0;">⚠️ Health Issues / Contraindications</label>
+        <button type="button" class="ai-correct-btn" data-field="health_issues" data-target="id_health_issues"
+          style="font-size:.78rem;padding:.25rem .65rem;border-radius:6px;border:1px solid #6366f1;background:#eef2ff;color:#4f46e5;cursor:pointer;display:flex;align-items:center;gap:.35rem;">
+          ✦ AI Correct
+        </button>
+      </div>
+      <textarea name="health_issues" id="id_health_issues" class="form-control" rows="4" placeholder="E.g. lower back pain, knee injury, hypertension...">{{ form.health_issues.value|default:'' }}</textarea>
+      <div class="ai-feedback" id="fb_health_issues" style="display:none;font-size:.8rem;margin-top:.35rem;color:#4f46e5;"></div>
     </div>
 
     <div class="form-group">
-      <label class="form-label">🎯 Goals & Wishes</label>
-      <textarea name="goals" class="form-control" rows="4" placeholder="E.g. make glutes bigger, reduce body fat, improve stamina...">{{ form.goals.value|default:'' }}</textarea>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem;">
+        <label class="form-label" style="margin:0;">🎯 Goals & Wishes</label>
+        <button type="button" class="ai-correct-btn" data-field="goals" data-target="id_goals"
+          style="font-size:.78rem;padding:.25rem .65rem;border-radius:6px;border:1px solid #6366f1;background:#eef2ff;color:#4f46e5;cursor:pointer;display:flex;align-items:center;gap:.35rem;">
+          ✦ AI Correct
+        </button>
+      </div>
+      <textarea name="goals" id="id_goals" class="form-control" rows="4" placeholder="E.g. make glutes bigger, reduce body fat, improve stamina...">{{ form.goals.value|default:'' }}</textarea>
+      <div class="ai-feedback" id="fb_goals" style="display:none;font-size:.8rem;margin-top:.35rem;color:#4f46e5;"></div>
     </div>
+
+    <script>
+    document.querySelectorAll('.ai-correct-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var field  = btn.dataset.field;
+        var target = document.getElementById(btn.dataset.target);
+        var fb     = document.getElementById('fb_' + field);
+        var text   = target.value.trim();
+        if (!text) return;
+
+        btn.disabled = true;
+        btn.textContent = '⏳ Correcting…';
+        fb.style.display = 'none';
+
+        fetch('{% url "programs:ai_correct_text" %}', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}',
+          },
+          body: JSON.stringify({text: text, field: field}),
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.corrected) {
+            target.value = data.corrected;
+            target.style.background = '#f5f3ff';
+            setTimeout(function() { target.style.background = ''; }, 1500);
+            fb.textContent = '✓ Rewritten in professional language';
+            fb.style.display = 'block';
+          }
+        })
+        .catch(function() {
+          fb.textContent = '✗ Error — try again';
+          fb.style.color = '#dc2626';
+          fb.style.display = 'block';
+        })
+        .finally(function() {
+          btn.disabled = false;
+          btn.innerHTML = '✦ AI Correct';
+        });
+      });
+    });
+    </script>
 
     <div class="form-group">
       <label class="form-label">📝 Additional Notes</label>

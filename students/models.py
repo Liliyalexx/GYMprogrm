@@ -12,6 +12,8 @@ class Student(models.Model):
     date_of_birth = models.DateField(null=True, blank=True)
     photo = models.ImageField(upload_to='student_photos/', null=True, blank=True)
     blood_test_file = models.FileField(upload_to='blood_tests/', null=True, blank=True)
+    height_cm = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True, help_text='Height in cm')
+    weight_kg = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True, help_text='Weight in kg')
     health_issues = models.TextField(blank=True, help_text='Injuries, conditions, contraindications')
     goals = models.TextField(blank=True, help_text='Client wishes: bigger glutes, lose fat, etc.')
     notes = models.TextField(blank=True)

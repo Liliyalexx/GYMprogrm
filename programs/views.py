@@ -7,7 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from students.models import Student
 from .models import ExerciseLibrary, WorkoutProgram, ProgramDay, ProgramExercise
-from .ai import suggest_program
+from .ai import suggest_program, suggest_nutrition, correct_text
 
 
 @login_required
@@ -107,6 +107,20 @@ def program_generate(request, student_pk):
 
 @login_required
 @require_POST
+def regenerate_nutrition(request, pk):
+    program = get_object_or_404(WorkoutProgram, pk=pk)
+    findings_summary = program.description or ''
+    try:
+        nutrition = suggest_nutrition(program.student, findings_summary)
+        program.nutrition_plan = nutrition
+        program.save(update_fields=['nutrition_plan'])
+    except Exception as e:
+        pass  # keep existing plan if AI fails
+    return redirect('programs:detail', pk=pk)
+
+
+@login_required
+@require_POST
 def confirm_exercise(request):
     """AJAX endpoint: trainer confirms an exercise, optionally updating weight/sets/reps."""
     data = json.loads(request.body)
@@ -168,3 +182,25 @@ def add_exercise_to_program(request):
         confirmed=True,
     )
     return redirect(request.POST.get('next', 'programs:exercise_library'))
+
+
+@login_required
+@require_POST
+def update_exercise_photo(request):
+    data = json.loads(request.body)
+    ex = get_object_or_404(ExerciseLibrary, pk=data['id'])
+    ex.photo_url = data.get('photo_url', '').strip()
+    ex.save(update_fields=['photo_url'])
+    return JsonResponse({'status': 'ok'})
+
+
+@login_required
+@require_POST
+def ai_correct_text(request):
+    data = json.loads(request.body)
+    text = data.get('text', '').strip()
+    field = data.get('field', '')
+    if not text:
+        return JsonResponse({'error': 'No text provided'}, status=400)
+    corrected = correct_text(text, field)
+    return JsonResponse({'corrected': corrected})

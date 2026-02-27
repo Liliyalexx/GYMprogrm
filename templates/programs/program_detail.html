@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load program_filters %}
 {% block title %}{{ program.name }}{% endblock %}
 
 {% block content %}
@@ -8,6 +9,17 @@
     <h1 class="page-title" style="margin-top:.25rem;">{{ program.name }}</h1>
   </div>
 </div>
+
+{% if program.student.goals %}
+<div class="card" style="margin-bottom:1.5rem;">
+  <h2 style="font-size:1rem;font-weight:700;margin-bottom:1rem;">🎯 Goals & Wishes</h2>
+  <ol style="margin:0;padding-left:1.25rem;display:flex;flex-direction:column;gap:.65rem;">
+    {% for goal in program.student.goals|split_goals %}
+      <li style="font-size:.92rem;color:var(--text-muted);line-height:1.55;">{{ goal }}</li>
+    {% endfor %}
+  </ol>
+</div>
+{% endif %}
 
 {% if program.description %}
 <div class="card" style="margin-bottom:1.5rem;">
@@ -24,7 +36,13 @@
 {% with n=program.nutrition_plan %}
 <!-- Nutrition Plan -->
 <div class="card" style="margin-bottom:1.5rem;">
-  <h2 style="font-size:1.1rem;font-weight:700;margin-bottom:1.25rem;">🥗 План питания на день</h2>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
+    <h2 style="font-size:1.1rem;font-weight:700;margin:0;">🥗 План питания на день</h2>
+    <form method="post" action="{% url 'programs:regenerate_nutrition' program.pk %}">
+      {% csrf_token %}
+      <button type="submit" style="font-size:.78rem;padding:.3rem .75rem;border-radius:6px;border:1px solid var(--border);background:#f8fafc;cursor:pointer;color:var(--text-muted);">↻ Обновить план</button>
+    </form>
+  </div>
 
   <!-- Macros -->
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem;">
@@ -51,7 +69,12 @@
   {% for meal in n.meals %}
   <div style="padding:.85rem;border:1px solid var(--border);border-radius:8px;margin-bottom:.65rem;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
-      <strong style="font-size:.95rem;">{{ meal.meal }}</strong>
+      <div style="display:flex;align-items:center;gap:.6rem;">
+        <strong style="font-size:.95rem;">{{ meal.meal }}</strong>
+        {% if meal.calories %}
+        <span style="font-size:.78rem;font-weight:700;color:#16a34a;background:#f0fdf4;padding:.15rem .45rem;border-radius:5px;">{{ meal.calories }} ккал</span>
+        {% endif %}
+      </div>
       <span style="font-size:.82rem;color:var(--text-muted);">🕐 {{ meal.time }}</span>
     </div>
     <ul style="margin:0 0 .4rem 1.2rem;padding:0;">
@@ -60,7 +83,11 @@
       {% endfor %}
     </ul>
     {% if meal.notes %}
-    <p style="font-size:.82rem;color:var(--primary);margin:.3rem 0 0;">💡 {{ meal.notes }}</p>
+    <ul style="margin:.4rem 0 0 1.1rem;padding:0;">
+      {% for tip in meal.notes|ensure_list %}
+      <li style="font-size:.82rem;color:var(--primary);margin-bottom:.2rem;">{{ tip }}</li>
+      {% endfor %}
+    </ul>
     {% endif %}
   </div>
   {% endfor %}
@@ -74,7 +101,11 @@
     {% else %}
       <p style="font-size:.9rem;margin-bottom:.4rem;"><strong>❌ Голодание не рекомендуется</strong></p>
     {% endif %}
-    <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:.3rem;">{{ n.fasting.reasoning }}</p>
+    <ul style="margin:.3rem 0 .3rem 1.1rem;padding:0;">
+      {% for reason in n.fasting.reasoning|split_numbered %}
+      <li style="font-size:.85rem;color:var(--text-muted);margin-bottom:.3rem;">{{ reason }}</li>
+      {% endfor %}
+    </ul>
     {% if n.fasting.cautions %}
     <p style="font-size:.82rem;color:#b45309;">⚠️ {{ n.fasting.cautions }}</p>
     {% endif %}
@@ -97,7 +128,16 @@
   {% if n.notes %}
   <div style="margin-top:.75rem;padding:.75rem;background:#f8fafc;border-radius:8px;">
     <strong style="font-size:.88rem;">📝 Общие рекомендации:</strong>
-    <p style="font-size:.85rem;color:var(--text-muted);margin:.3rem 0 0;">{{ n.notes }}</p>
+    {% for section in n.notes|as_sections %}
+      {% if section.title %}
+      <div style="margin-top:.65rem;">
+        <div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:.2rem;">{{ section.title }}</div>
+        <p style="font-size:.84rem;color:var(--text-muted);margin:0;">{{ section.text }}</p>
+      </div>
+      {% else %}
+      <p style="font-size:.84rem;color:var(--text-muted);margin:.3rem 0 0;">{{ section.text }}</p>
+      {% endif %}
+    {% endfor %}
   </div>
   {% endif %}
 </div>
@@ -154,6 +194,19 @@
       {% if pe.notes %}
       <p style="font-size:.82rem;color:var(--text-muted);">📝 {{ pe.notes }}</p>
       {% endif %}
+
+      {% if not pe.confirmed %}
+      <div style="display:flex;gap:.5rem;margin-top:.75rem;flex-wrap:wrap;">
+        <button onclick="confirmExercise({{ pe.pk }}, this)"
+          style="font-size:.8rem;padding:.35rem .8rem;border-radius:7px;border:1px solid #16a34a;background:#f0fdf4;color:#15803d;cursor:pointer;font-weight:600;">
+          ✓ Confirm
+        </button>
+        <button onclick="skipExercise({{ pe.pk }}, this)"
+          style="font-size:.8rem;padding:.35rem .8rem;border-radius:7px;border:1px solid var(--border);background:#f8fafc;color:var(--text-muted);cursor:pointer;">
+          ✕ Skip
+        </button>
+      </div>
+      {% endif %}
     </div>
   </div>
   {% empty %}
@@ -163,4 +216,47 @@
 {% empty %}
 <div class="empty-state">Дни программы ещё не созданы.</div>
 {% endfor %}
+
+<script>
+const CSRF = '{{ csrf_token }}';
+
+function confirmExercise(id, btn) {
+  const row = btn.closest('[style*="display:grid"]');
+  btn.disabled = true;
+  btn.textContent = '…';
+  fetch('{% url "programs:confirm_exercise" %}', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF},
+    body: JSON.stringify({id: id}),
+  }).then(r => r.json()).then(data => {
+    if (data.status === 'ok') {
+      row.style.opacity = '1';
+      const badge = row.querySelector('span[style*="text-muted"]');
+      if (badge) {
+        badge.style.color = 'var(--success)';
+        badge.style.fontWeight = '600';
+        badge.textContent = '✓ Подтверждено';
+      }
+      btn.closest('div[style*="display:flex;gap"]').remove();
+    }
+  });
+}
+
+function skipExercise(id, btn) {
+  const row = btn.closest('[style*="display:grid"]');
+  btn.disabled = true;
+  btn.textContent = '…';
+  fetch('{% url "programs:skip_exercise" %}', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF},
+    body: JSON.stringify({id: id}),
+  }).then(r => r.json()).then(data => {
+    if (data.status === 'ok') {
+      row.style.transition = 'opacity .3s';
+      row.style.opacity = '0';
+      setTimeout(() => row.remove(), 300);
+    }
+  });
+}
+</script>
 {% endblock %}
