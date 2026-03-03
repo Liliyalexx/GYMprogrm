@@ -4,8 +4,46 @@
 {% block content %}
 <div class="page-header">
   <h1 class="page-title">My Students</h1>
-  <a href="{% url 'students:create' %}" class="btn btn-primary">+ Add Student</a>
+  <div style="display:flex;gap:.6rem;align-items:center;">
+    <a href="/intake/" target="_blank" style="font-size:.82rem;padding:.35rem .8rem;border-radius:7px;border:1px solid var(--border);background:#f8fafc;color:var(--text-muted);text-decoration:none;" title="Copy this link and send to clients">
+      🔗 Client intake link
+    </a>
+    <a href="{% url 'students:create' %}" class="btn btn-primary">+ Add Student</a>
+  </div>
 </div>
+
+{% if pending %}
+<div style="margin-bottom:1.5rem;padding:1rem 1.25rem;background:#fefce8;border:1px solid #fde047;border-radius:12px;">
+  <div style="font-size:.88rem;font-weight:700;color:#92400e;margin-bottom:.75rem;">
+    📥 Новые заявки ({{ pending.count }})
+  </div>
+  {% for s in pending %}
+  <div style="display:flex;align-items:center;gap:.75rem;padding:.6rem .75rem;background:#fff;border:1px solid #fde047;border-radius:8px;margin-bottom:.4rem;">
+    <div style="width:34px;height:34px;border-radius:50%;background:#f59e0b;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.95rem;flex-shrink:0;">
+      {{ s.name|slice:":1"|upper }}
+    </div>
+    <div style="flex:1;min-width:0;">
+      <div style="font-weight:600;font-size:.9rem;">{{ s.name }}</div>
+      <div style="font-size:.78rem;color:var(--text-muted);">
+        {% if s.age %}{{ s.age }} лет · {% endif %}
+        {{ s.goals|truncatechars:60 }}
+      </div>
+    </div>
+    <div style="display:flex;gap:.4rem;flex-shrink:0;">
+      <a href="{% url 'students:detail' s.pk %}" style="font-size:.8rem;padding:.3rem .65rem;border-radius:6px;border:1px solid var(--border);background:#fff;text-decoration:none;color:inherit;">
+        Просмотр
+      </a>
+      <form method="post" action="{% url 'students:accept_intake' s.pk %}" style="margin:0;">
+        {% csrf_token %}
+        <button type="submit" style="font-size:.8rem;padding:.3rem .65rem;border-radius:6px;border:none;background:#16a34a;color:#fff;cursor:pointer;font-weight:600;">
+          ✓ Принять
+        </button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
 
 {% if students %}
 <div style="display:flex;flex-direction:column;gap:.5rem;">

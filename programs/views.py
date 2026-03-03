@@ -7,7 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from students.models import Student
 from .models import ExerciseLibrary, WorkoutProgram, ProgramDay, ProgramExercise
-from .ai import suggest_program, suggest_nutrition, correct_text
+from .ai import suggest_program, suggest_nutrition, correct_text, generate_exercise_illustration
 
 
 @login_required
@@ -34,8 +34,9 @@ def program_generate(request, student_pk):
 
     if request.method == 'POST' and 'generate' in request.POST:
         training_days = int(request.POST.get('training_days', 3))
+        training_location = request.POST.get('training_location', 'gym')
         try:
-            ai_result = suggest_program(student, training_days)
+            ai_result = suggest_program(student, training_days, training_location=training_location)
         except Exception as e:
             return render(request, 'programs/program_generate.html', {
                 'student': student,
@@ -55,6 +56,25 @@ def program_generate(request, student_pk):
         exercise_library = {ex.name.lower(): ex for ex in ExerciseLibrary.objects.all()}
         suggestions = []
 
+        # Muscle group key map for auto-created home exercises
+        MUSCLE_KEYWORDS = {
+            'glute': 'glutes', 'ягодиц': 'glutes', 'butt': 'glutes',
+            'leg': 'legs', 'squat': 'legs', 'lunge': 'legs', 'нога': 'legs', 'ног': 'legs',
+            'back': 'back', 'row': 'back', 'pull': 'back', 'спин': 'back',
+            'chest': 'chest', 'push': 'chest', 'грудь': 'chest',
+            'shoulder': 'shoulders', 'плеч': 'shoulders', 'press': 'shoulders',
+            'bicep': 'arms', 'tricep': 'arms', 'curl': 'arms', 'рук': 'arms',
+            'core': 'core', 'plank': 'core', 'crunch': 'core', 'пресс': 'core', 'ab': 'core',
+            'cardio': 'cardio', 'run': 'cardio', 'jump': 'cardio', 'кардио': 'cardio',
+        }
+
+        def _infer_muscle_group(name, day_name=''):
+            text = (name + ' ' + day_name).lower()
+            for kw, mg in MUSCLE_KEYWORDS.items():
+                if kw in text:
+                    return mg
+            return 'full_body'
+
         for day_data in ai_result['days']:
             day = ProgramDay.objects.create(
                 program=program,
@@ -66,10 +86,28 @@ def program_generate(request, student_pk):
                 # fuzzy match: try exact, then partial
                 library_ex = exercise_library.get(name_key)
                 if not library_ex:
+                    # Equipment words are too generic — skip them for matching
+                    _GENERIC = {'dumbbell', 'barbell', 'cable', 'lever', 'machine',
+                                'with', 'without', 'using', 'band', 'weight'}
+                    name_words = [w for w in name_key.split() if len(w) > 3 and w not in _GENERIC]
+                    best_key, best_score = None, 0
                     for key, val in exercise_library.items():
-                        if any(word in key for word in name_key.split() if len(word) > 3):
-                            library_ex = val
-                            break
+                        score = sum(1 for w in name_words if w in key)
+                        if score > best_score:
+                            best_score, best_key = score, key
+                    if best_score >= 2:
+                        library_ex = exercise_library[best_key]
+
+                # For home programs: auto-create missing exercises in the library
+                if not library_ex and training_location == 'home':
+                    mg = ex_data.get('muscle_group') or _infer_muscle_group(ex_data['name'], day_data['day_name'])
+                    library_ex = ExerciseLibrary.objects.create(
+                        name=ex_data['name'],
+                        muscle_group=mg,
+                        description=ex_data.get('reason_ru') or ex_data.get('reason') or ex_data['name'],
+                        difficulty='beginner',
+                    )
+                    exercise_library[ex_data['name'].lower()] = library_ex
 
                 if library_ex:
                     pe = ProgramExercise.objects.create(
@@ -182,6 +220,18 @@ def add_exercise_to_program(request):
         confirmed=True,
     )
     return redirect(request.POST.get('next', 'programs:exercise_library'))
+
+
+@login_required
+@require_POST
+def generate_illustration(request):
+    data = json.loads(request.body)
+    ex = get_object_or_404(ExerciseLibrary, pk=data['id'])
+    result = generate_exercise_illustration(ex.name, ex.get_muscle_group_display(), ex.description)
+    ex.photo_url = result['image_url']
+    ex.posture_tips = result['posture_tips']
+    ex.save(update_fields=['photo_url', 'posture_tips'])
+    return JsonResponse({'image_url': result['image_url'], 'posture_tips': result['posture_tips']})
 
 
 @login_required

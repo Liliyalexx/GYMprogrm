@@ -1,0 +1,299 @@
+{% extends 'base.html' %}
+{% block title %}Client Intake Form — GYMprogrm{% endblock %}
+
+{% block extra_css %}
+<style>
+  .intake-wrap {
+    max-width: 620px;
+    margin: 0 auto;
+    padding: 1.5rem 1.25rem 3rem;
+  }
+  .intake-hero {
+    text-align: center;
+    padding: 2rem 1rem 1.5rem;
+    margin-bottom: 2rem;
+  }
+  .intake-hero .logo { font-size: 2.5rem; margin-bottom: .5rem; }
+  .intake-hero h1 { font-size: 1.6rem; font-weight: 800; margin-bottom: .5rem; }
+  .intake-hero p { color: var(--text-muted); font-size: .95rem; line-height: 1.6; }
+
+  .intake-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+    box-shadow: var(--shadow);
+  }
+  .intake-section-title {
+    font-size: .78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--primary);
+    margin-bottom: 1.1rem;
+  }
+
+  .ifield { margin-bottom: 1rem; }
+  .ifield:last-child { margin-bottom: 0; }
+  .ifield label { display: block; font-size: .88rem; font-weight: 600; margin-bottom: .35rem; color: var(--text); }
+  .ifield label .opt { font-weight: 400; color: var(--text-muted); font-size: .8rem; }
+  .ifield input[type=text],
+  .ifield input[type=email],
+  .ifield input[type=tel],
+  .ifield input[type=date],
+  .ifield input[type=number],
+  .ifield select,
+  .ifield textarea {
+    width: 100%;
+    padding: .65rem .85rem;
+    border: 1.5px solid var(--border);
+    border-radius: 9px;
+    font-size: .95rem;
+    font-family: inherit;
+    color: var(--text);
+    background: #fff;
+    transition: border-color .15s;
+    box-sizing: border-box;
+  }
+  .ifield input:focus,
+  .ifield select:focus,
+  .ifield textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+  }
+  .ifield textarea { resize: vertical; min-height: 90px; line-height: 1.5; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+  @media (max-width: 480px) { .two-col { grid-template-columns: 1fr; } }
+
+  .pill-group { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .25rem; }
+  .pill-group input[type=radio] { display: none; }
+  .pill-group label {
+    display: inline-block;
+    padding: .45rem 1rem;
+    border: 2px solid var(--border);
+    border-radius: 999px;
+    font-size: .88rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: all .15s;
+    margin: 0;
+  }
+  .pill-group input[type=radio]:checked + label {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: #fff;
+  }
+
+  .yn-group { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; margin-top: .35rem; }
+  .yn-group input[type=radio] { display: none; }
+  .yn-group label {
+    display: block;
+    padding: .75rem;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    text-align: center;
+    font-size: .92rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: all .15s;
+    margin: 0;
+  }
+  .yn-group input[type=radio]:checked + label {
+    border-color: var(--primary);
+    background: #eff6ff;
+    color: var(--primary);
+  }
+
+  .file-label {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .75rem 1rem;
+    border: 2px dashed var(--border);
+    border-radius: 9px;
+    cursor: pointer;
+    font-size: .88rem;
+    color: var(--text-muted);
+    transition: border-color .15s;
+    margin-top: .25rem;
+  }
+  .file-label:hover { border-color: var(--primary); color: var(--primary); }
+  .file-label input[type=file] { display: none; }
+
+  .submit-btn {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.05rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--primary), #7c3aed);
+    color: #fff;
+    cursor: pointer;
+    margin-top: .5rem;
+    transition: opacity .2s;
+  }
+  .submit-btn:hover { opacity: .92; }
+  .submit-btn:active { opacity: .85; }
+
+  .error-box {
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+    border-radius: 9px;
+    padding: .75rem 1rem;
+    color: #b91c1c;
+    font-size: .9rem;
+    margin-bottom: 1rem;
+  }
+  .req { color: #dc2626; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="intake-wrap">
+  <div class="intake-hero">
+    <div class="logo">💪</div>
+    <h1>Client Intake Form</h1>
+    <p>Takes about 3 minutes to complete.<br>Your trainer will review this information and build a personalised program just for you.</p>
+  </div>
+
+  {% if error %}
+  <div class="error-box">{{ error }}</div>
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+
+    <!-- Personal -->
+    <div class="intake-section">
+      <div class="intake-section-title">👤 Personal information</div>
+
+      <div class="ifield">
+        <label for="id_name">Full name <span class="req">*</span></label>
+        <input type="text" name="name" id="id_name" required placeholder="Maria Johnson" value="{{ request.POST.name|default:'' }}">
+      </div>
+
+      <div class="two-col">
+        <div class="ifield">
+          <label for="id_dob">Date of birth <span class="req">*</span></label>
+          <input type="date" name="date_of_birth" id="id_dob" required value="{{ request.POST.date_of_birth|default:'' }}">
+        </div>
+        <div class="ifield">
+          <label for="id_gender">Gender <span class="opt">(optional)</span></label>
+          <select name="gender" id="id_gender">
+            <option value="">— not specified —</option>
+            <option value="F" {% if request.POST.gender == 'F' %}selected{% endif %}>Female</option>
+            <option value="M" {% if request.POST.gender == 'M' %}selected{% endif %}>Male</option>
+            <option value="O" {% if request.POST.gender == 'O' %}selected{% endif %}>Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="ifield">
+          <label for="id_email">Email <span class="opt">(optional)</span></label>
+          <input type="email" name="email" id="id_email" placeholder="you@example.com" value="{{ request.POST.email|default:'' }}">
+        </div>
+        <div class="ifield">
+          <label for="id_phone">Phone <span class="opt">(optional)</span></label>
+          <input type="tel" name="phone" id="id_phone" placeholder="+1 555 123-4567" value="{{ request.POST.phone|default:'' }}">
+        </div>
+      </div>
+    </div>
+
+    <!-- Physical -->
+    <div class="intake-section">
+      <div class="intake-section-title">📏 Body measurements</div>
+      <div class="two-col">
+        <div class="ifield">
+          <label for="id_height">Height, cm <span class="opt">(optional)</span></label>
+          <input type="number" name="height_cm" id="id_height" placeholder="168" min="100" max="250" step="0.1" value="{{ request.POST.height_cm|default:'' }}">
+        </div>
+        <div class="ifield">
+          <label for="id_weight">Weight, kg <span class="opt">(optional)</span></label>
+          <input type="number" name="weight_kg" id="id_weight" placeholder="62" min="30" max="300" step="0.1" value="{{ request.POST.weight_kg|default:'' }}">
+        </div>
+      </div>
+    </div>
+
+    <!-- Health -->
+    <div class="intake-section">
+      <div class="intake-section-title">🩺 Health & injuries</div>
+
+      <div class="ifield">
+        <label for="id_health">Health issues, injuries or contraindications <span class="opt">(optional)</span></label>
+        <textarea name="health_issues" id="id_health"
+          placeholder="e.g. lower back pain, varicose veins, high blood pressure, knee surgery in 2020…">{{ request.POST.health_issues|default:'' }}</textarea>
+      </div>
+
+      <div class="ifield">
+        <label>Blood test results <span class="opt">(optional — PDF or photo)</span></label>
+        <label class="file-label" for="id_blood">
+          <span style="font-size:1.2rem;">🩸</span>
+          <span id="blood-label-text">Attach file</span>
+          <input type="file" name="blood_test_file" id="id_blood" accept=".pdf,.jpg,.jpeg,.png">
+        </label>
+      </div>
+    </div>
+
+    <!-- Goals -->
+    <div class="intake-section">
+      <div class="intake-section-title">🎯 Your goals</div>
+      <div class="ifield">
+        <label for="id_goals">What do you want to achieve? <span class="req">*</span></label>
+        <textarea name="goals" id="id_goals" required
+          placeholder="e.g. lose 15 lbs, tone glutes and legs, improve posture, build muscle, increase stamina…">{{ request.POST.goals|default:'' }}</textarea>
+      </div>
+    </div>
+
+    <!-- Training -->
+    <div class="intake-section">
+      <div class="intake-section-title">🏋️ Training availability</div>
+
+      <div class="ifield">
+        <label>How many days per week can you train? <span class="req">*</span></label>
+        <div class="pill-group">
+          {% for d in "234567" %}
+          <input type="radio" name="training_days_per_week" id="days_{{ d }}" value="{{ d }}"
+            {% if request.POST.training_days_per_week == d %}checked{% elif not request.POST and d == "3" %}checked{% endif %}>
+          <label for="days_{{ d }}">{{ d }} days</label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="ifield" style="margin-top:1.25rem;">
+        <label>Are you willing to follow nutrition recommendations? <span class="req">*</span></label>
+        <p style="font-size:.82rem;color:var(--text-muted);margin:.2rem 0 .5rem;">
+          Your trainer may suggest a meal plan alongside your workouts.
+        </p>
+        <div class="yn-group">
+          <input type="radio" name="follow_nutrition" id="fn_yes" value="1"
+            {% if request.POST.follow_nutrition == '1' %}checked{% endif %}>
+          <label for="fn_yes">✅ Yes, I'm in</label>
+
+          <input type="radio" name="follow_nutrition" id="fn_no" value="0"
+            {% if request.POST.follow_nutrition == '0' %}checked{% endif %}>
+          <label for="fn_no">❌ Not right now</label>
+        </div>
+      </div>
+    </div>
+
+    <button type="submit" class="submit-btn">Submit my form →</button>
+    <p style="text-align:center;font-size:.8rem;color:var(--text-muted);margin-top:.75rem;">
+      Your information is private and will only be used by your trainer to build your program.
+    </p>
+  </form>
+</div>
+
+<script>
+  document.getElementById('id_blood').addEventListener('change', function() {
+    document.getElementById('blood-label-text').textContent =
+      this.files[0] ? this.files[0].name : 'Attach file';
+  });
+</script>
+{% endblock %}

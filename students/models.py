@@ -4,6 +4,10 @@ from datetime import date
 
 class Student(models.Model):
     GENDER_CHOICES = [('M', 'Male'), ('F', 'Female'), ('O', 'Other')]
+    INTAKE_STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('pending', 'Pending review'),
+    ]
 
     name = models.CharField(max_length=200)
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True)
@@ -16,7 +20,10 @@ class Student(models.Model):
     weight_kg = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True, help_text='Weight in kg')
     health_issues = models.TextField(blank=True, help_text='Injuries, conditions, contraindications')
     goals = models.TextField(blank=True, help_text='Client wishes: bigger glutes, lose fat, etc.')
+    training_days_per_week = models.PositiveSmallIntegerField(null=True, blank=True, help_text='How many days per week the client can train')
+    follow_nutrition = models.BooleanField(default=False, help_text='Client agrees to follow nutrition recommendations')
     notes = models.TextField(blank=True)
+    intake_status = models.CharField(max_length=20, choices=INTAKE_STATUS_CHOICES, default='active')
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
 
