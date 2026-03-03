@@ -3,14 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login — GYMprogrm</title>
+  <title>Login — GymProgram</title>
   {% load static %}
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
 </head>
 <body>
 <div class="login-wrap">
   <div class="login-card">
-    <h1 class="login-title">💪 GYMprogrm</h1>
+    <div style="text-align:center;margin-bottom:1.5rem;">
+      <img src="{% static 'images/logo.png' %}" alt="GymProgram"
+        style="width:min(280px,80vw);height:auto;display:inline-block;">
+    </div>
     <form method="post">
       {% csrf_token %}
       {% if form.errors %}
@@ -24,7 +27,7 @@
         <label class="form-label">Password</label>
         <input type="password" name="password" class="form-control" required>
       </div>
-      <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; padding:.75rem;">
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:.75rem;">
         Sign In
       </button>
     </form>

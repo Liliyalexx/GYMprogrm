@@ -154,12 +154,17 @@
 </style>
 {% endblock %}
 
+{% load static %}
 {% block content %}
 <div class="intake-wrap">
   <div class="intake-hero">
-    <div class="logo">💪</div>
-    <h1>Client Intake Form</h1>
-    <p>Takes about 3 minutes to complete.<br>Your trainer will review this information and build a personalised program just for you.</p>
+    <!-- Hero image: top half is the brand image, logo overlaid -->
+    <div style="border-radius:16px;overflow:hidden;margin-bottom:1.5rem;position:relative;max-height:340px;">
+      <img src="{% static 'images/logo.png' %}" alt="GymProgram"
+        style="width:100%;height:100%;object-fit:cover;object-position:top;display:block;">
+    </div>
+    <h1 style="font-size:1.4rem;">Your Personal Fitness Intake Form</h1>
+    <p>Takes about 3 minutes to complete.<br>Your trainer will review this and build a program tailored just for you.</p>
   </div>
 
   {% if error %}

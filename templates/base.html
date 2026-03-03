@@ -12,7 +12,9 @@
 
 {% if user.is_authenticated %}
 <nav class="nav">
-  <a href="{% url 'students:list' %}" class="nav-brand">💪 GYMprogrm</a>
+  <a href="{% url 'students:list' %}" class="nav-brand">
+    <img src="{% static 'images/logo.png' %}" alt="GymProgram" style="height:38px;width:auto;display:block;">
+  </a>
   <div class="nav-links">
     <a href="{% url 'students:list' %}"><span>Students</span></a>
     <a href="{% url 'programs:exercise_library' %}"><span>Exercises</span></a>

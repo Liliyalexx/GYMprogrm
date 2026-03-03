@@ -1,9 +1,12 @@
 {% extends 'base.html' %}
-{% block title %}Form Submitted — GYMprogrm{% endblock %}
+{% load static %}
+{% block title %}Form Submitted — GymProgram{% endblock %}
 
 {% block content %}
 <div style="max-width:520px;margin:4rem auto;text-align:center;padding:0 1.25rem;">
-  <div style="font-size:3.5rem;margin-bottom:1rem;">🎉</div>
+  <img src="{% static 'images/logo.png' %}" alt="GymProgram"
+    style="width:min(220px,60vw);height:auto;margin-bottom:1.25rem;display:inline-block;">
+  <div style="font-size:2.5rem;margin-bottom:.75rem;">🎉</div>
   <h1 style="font-size:1.6rem;font-weight:800;margin-bottom:.75rem;">You're all set!</h1>
   <p style="color:var(--text-muted);font-size:.97rem;line-height:1.7;margin-bottom:2rem;">
     Your trainer has received your intake form and will be in touch soon.<br>
