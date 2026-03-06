@@ -141,8 +141,37 @@ def _blood_test_block(student):
     return blocks, False
 
 
+def _close_truncated_json(raw):
+    """Close any open string and unclosed braces/brackets in a truncated JSON string."""
+    in_string = False
+    escaped = False
+    stack = []  # track opening delimiters in order
+    for c in raw:
+        if escaped:
+            escaped = False
+            continue
+        if c == '\\' and in_string:
+            escaped = True
+            continue
+        if c == '"':
+            in_string = not in_string
+        elif not in_string:
+            if c in ('{', '['):
+                stack.append(c)
+            elif c == '}' and stack and stack[-1] == '{':
+                stack.pop()
+            elif c == ']' and stack and stack[-1] == '[':
+                stack.pop()
+    if in_string:
+        raw += '"'
+    # Close in reverse order
+    for opener in reversed(stack):
+        raw += '}' if opener == '{' else ']'
+    return raw
+
+
 def _parse_json(raw, msg=None):
-    """Parse JSON from AI response. Uses json-repair to handle model quirks."""
+    """Parse JSON from AI response. Handles truncation and model quirks."""
     if msg is not None and getattr(msg, 'stop_reason', None) == 'max_tokens':
         raise ValueError(
             'AI response was cut off (too many blood markers or too large a document). '
@@ -159,16 +188,17 @@ def _parse_json(raw, msg=None):
         return json.loads(raw)
     except json.JSONDecodeError:
         import re
-        # Replace Python literals that are invalid JSON
         fixed = re.sub(r'\bNone\b', 'null', raw)
         fixed = re.sub(r'\bTrue\b', 'true', fixed)
         fixed = re.sub(r'\bFalse\b', 'false', fixed)
+        # Close truncated structure then try standard parse
+        closed = _close_truncated_json(fixed)
         try:
-            return json.loads(fixed)
+            return json.loads(closed)
         except json.JSONDecodeError:
-            # Last resort: full repair (handles trailing commas, missing quotes, etc.)
+            # Final fallback: json-repair returns a Python object directly
             from json_repair import repair_json
-            return json.loads(repair_json(fixed))
+            return repair_json(closed, return_objects=True)
 
 
 def correct_text(text, field):
