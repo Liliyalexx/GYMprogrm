@@ -556,15 +556,14 @@ def analyze_blood_test(student):
 Костные маркеры: кальций, витамин D, щелочная фосфатаза.
 """
 
-    prompt = f"""Ты — спортивный врач и клинический диетолог. Проанализируй анализ крови клиента.
+    prompt = f"""Ты — спортивный врач. Проанализируй анализ крови клиента.
 
-ПРОФИЛЬ КЛИЕНТА:
-{profile}
+ПРОФИЛЬ: {profile}
 {hormone_note}
 
-Верни ТОЛЬКО валидный JSON (без markdown, без пояснений):
+Верни ТОЛЬКО валидный JSON (без markdown):
 {{
-  "summary": "2–3 предложения — общее состояние здоровья и главные выводы",
+  "summary": "2 предложения — ключевые выводы",
   "markers": [
     {{
       "name": "Гемоглобин",
@@ -572,45 +571,34 @@ def analyze_blood_test(student):
       "reference": "120–160 г/л",
       "status": "low",
       "interpretation": "Лёгкая анемия — снижает выносливость"
-    }},
-    {{
-      "name": "Глюкоза",
-      "value": "4.8 ммоль/л",
-      "status": "normal"
     }}
   ],
   "deficiencies": [
     {{
       "nutrient": "Железо",
       "severity": "moderate",
-      "impact_on_training": "Быстрая утомляемость, медленное восстановление",
-      "food_sources": ["Говядина 150г", "Шпинат 100г", "Чечевица 200г"],
-      "supplement": "Феррум Лек 100 мг/день с едой, 3 месяца"
+      "impact_on_training": "Утомляемость, медленное восстановление",
+      "food_sources": ["Говядина 150г", "Шпинат 100г"],
+      "supplement": "Феррум Лек 100 мг/день, 3 месяца"
     }}
   ],
-  "exercise_recommendations": [
-    "Конкретная рекомендация по тренировкам"
-  ],
-  "nutrition_recommendations": [
-    "Конкретная рекомендация по питанию с продуктами"
-  ],
+  "exercise_recommendations": ["рекомендация 1", "рекомендация 2", "рекомендация 3"],
+  "nutrition_recommendations": ["рекомендация 1", "рекомендация 2", "рекомендация 3"],
   "urgent_attention": [],
-  "positive_findings": [
-    "Что в норме — мотивирует клиента"
-  ]
+  "positive_findings": ["вывод 1", "вывод 2"]
 }}
 
-Правила:
-- markers: ДВА формата:
-  * АНОМАЛЬНЫЕ (low/high/critical_low/critical_high): name + value + reference + status + interpretation (макс 10 слов)
-  * НОРМАЛЬНЫЕ: name + value + status — БЕЗ reference и interpretation
-- status: "normal" | "low" | "high" | "critical_low" | "critical_high"
-- Учитывай половые нормы и возраст {age} лет
-- deficiencies: только реальные дефициты (low/critical_low)
-- exercise_recommendations: 3–4 пункта
-- nutrition_recommendations: 3–4 пункта с продуктами и граммовкой
-- urgent_attention: только КРИТИЧЕСКИ важные значения (пустой массив если нет)
-- positive_findings: 2–3 пункта
+СТРОГИЕ ПРАВИЛА:
+- markers: ТОЛЬКО аномальные показатели (status = low/high/critical_low/critical_high)
+  Нормальные показатели НЕ включай в массив markers
+- status: "normal"|"low"|"high"|"critical_low"|"critical_high"
+- Учитывай нормы для пола и возраст {age} лет
+- deficiencies: максимум 5, только реальные дефициты
+- food_sources: максимум 3 продукта
+- exercise_recommendations: ровно 3 строки, макс 12 слов каждая
+- nutrition_recommendations: ровно 3 строки, макс 12 слов каждая
+- urgent_attention: пустой массив если нет критических значений
+- positive_findings: ровно 2 строки — группы показателей в норме
 """
 
     content = blood_blocks + [{'type': 'text', 'text': prompt}]
