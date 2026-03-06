@@ -141,7 +141,13 @@ def _blood_test_block(student):
     return blocks, False
 
 
-def _parse_json(raw):
+def _parse_json(raw, msg=None):
+    """Parse JSON from AI response. Raises ValueError with friendly message on truncation."""
+    if msg is not None and getattr(msg, 'stop_reason', None) == 'max_tokens':
+        raise ValueError(
+            'AI response was cut off (too many blood markers or too large a document). '
+            'Try uploading a shorter extract of the blood test.'
+        )
     raw = raw.strip()
     if raw.startswith('```'):
         parts = raw.split('```')
@@ -297,7 +303,7 @@ def suggest_nutrition(student, findings_summary=''):
         max_tokens=8096,
         messages=[{'role': 'user', 'content': content}],
     )
-    return _parse_json(msg.content[0].text)
+    return _parse_json(msg.content[0].text, msg)
 
 
 def _build_exercise_menu(training_location):
@@ -453,7 +459,7 @@ def suggest_program(student, training_days=3, training_location='gym'):
         max_tokens=8096,
         messages=[{'role': 'user', 'content': content1}],
     )
-    result = _parse_json(msg1.content[0].text)
+    result = _parse_json(msg1.content[0].text, msg1)
 
     # ── CALL 2: nutrition plan ───────────────────────────────────────────────
     findings_summary = ' '.join(result.get('key_findings', []))
@@ -517,7 +523,7 @@ def suggest_program(student, training_days=3, training_location='gym'):
         max_tokens=8096,
         messages=[{'role': 'user', 'content': content2}],
     )
-    nutrition = _parse_json(msg2.content[0].text)
+    nutrition = _parse_json(msg2.content[0].text, msg2)
     result['nutrition'] = nutrition
 
     return result
@@ -614,7 +620,7 @@ def analyze_blood_test(student):
     content = blood_blocks + [{'type': 'text', 'text': prompt}]
     msg = client.messages.create(
         model='claude-sonnet-4-6',
-        max_tokens=6000,
+        max_tokens=8096,
         messages=[{'role': 'user', 'content': content}],
     )
-    return _parse_json(msg.content[0].text)
+    return _parse_json(msg.content[0].text, msg)
