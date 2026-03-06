@@ -142,7 +142,7 @@ def _blood_test_block(student):
 
 
 def _parse_json(raw, msg=None):
-    """Parse JSON from AI response. Raises ValueError with friendly message on truncation."""
+    """Parse JSON from AI response. Uses json-repair to handle model quirks."""
     if msg is not None and getattr(msg, 'stop_reason', None) == 'max_tokens':
         raise ValueError(
             'AI response was cut off (too many blood markers or too large a document). '
@@ -155,7 +155,20 @@ def _parse_json(raw, msg=None):
         if raw.startswith('json'):
             raw = raw[4:]
         raw = raw.strip()
-    return json.loads(raw)
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        import re
+        # Replace Python literals that are invalid JSON
+        fixed = re.sub(r'\bNone\b', 'null', raw)
+        fixed = re.sub(r'\bTrue\b', 'true', fixed)
+        fixed = re.sub(r'\bFalse\b', 'false', fixed)
+        try:
+            return json.loads(fixed)
+        except json.JSONDecodeError:
+            # Last resort: full repair (handles trailing commas, missing quotes, etc.)
+            from json_repair import repair_json
+            return json.loads(repair_json(fixed))
 
 
 def correct_text(text, field):
