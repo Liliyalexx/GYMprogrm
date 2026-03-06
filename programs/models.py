@@ -21,8 +21,9 @@ class ExerciseLibrary(models.Model):
     ]
 
     name = models.CharField(max_length=200)
-    photo_url = models.URLField(blank=True)
+    photo_url = models.URLField(blank=True, max_length=2000)
     description = models.TextField(help_text='What to do and which muscles are worked')
+    posture_tips = models.TextField(blank=True, help_text='AI-generated posture & technique tips')
     muscle_group = models.CharField(max_length=50, choices=MUSCLE_GROUP_CHOICES)
     difficulty = models.CharField(max_length=20, choices=DIFFICULTY_CHOICES, default='beginner')
 

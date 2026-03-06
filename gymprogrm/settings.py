@@ -96,7 +96,7 @@ if CLOUDINARY_URL:
     import cloudinary.uploader
     import cloudinary.api
     cloudinary.config(cloudinary_url=CLOUDINARY_URL)
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.RawMediaCloudinaryStorage'
     INSTALLED_APPS += ['cloudinary_storage', 'cloudinary']
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

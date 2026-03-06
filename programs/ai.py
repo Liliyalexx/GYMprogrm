@@ -74,25 +74,70 @@ def _encode_file(path):
 
 
 def _blood_test_block(student):
-    """Return (content_blocks, attached_bool) for the blood test file."""
+    """Return (content_blocks, attached_bool) for the blood test file.
+    Handles both local storage and Cloudinary remote storage."""
     blocks = []
     if not student.blood_test_file:
         return blocks, False
+
+    # Try local path first (development / local storage)
     try:
         path = student.blood_test_file.path
-        if not os.path.exists(path):
+        if os.path.exists(path):
+            data, mime_type = _encode_file(path)
+            if mime_type == 'application/pdf':
+                blocks.append({'type': 'document',
+                               'source': {'type': 'base64', 'media_type': 'application/pdf', 'data': data}})
+                return blocks, True
+            elif mime_type.startswith('image/'):
+                blocks.append({'type': 'image',
+                               'source': {'type': 'base64', 'media_type': mime_type, 'data': data}})
+                return blocks, True
+    except Exception:
+        pass
+
+    # Fall back to remote URL (Cloudinary or any other remote storage)
+    try:
+        import httpx
+
+        base_url = student.blood_test_file.url
+        # Build candidate URLs to try: prefer raw/upload for non-image files
+        urls_to_try = [base_url]
+        if base_url and 'cloudinary.com' in base_url:
+            if '/image/upload/' in base_url:
+                urls_to_try.insert(0, base_url.replace('/image/upload/', '/raw/upload/'))
+            elif '/raw/upload/' in base_url:
+                urls_to_try.append(base_url.replace('/raw/upload/', '/image/upload/'))
+
+        resp = None
+        for url in urls_to_try:
+            try:
+                r = httpx.get(url, timeout=60, follow_redirects=True)
+                if r.status_code == 200:
+                    resp = r
+                    break
+            except Exception:
+                continue
+
+        if resp is None:
             return blocks, False
-        data, mime_type = _encode_file(path)
-        if mime_type == 'application/pdf':
+
+        content_type = resp.headers.get('content-type', '').split(';')[0].strip()
+        if not content_type or content_type == 'application/octet-stream':
+            ct, _ = mimetypes.guess_type(str(student.blood_test_file.name))
+            content_type = ct or 'application/octet-stream'
+        data = base64.standard_b64encode(resp.content).decode('utf-8')
+        if content_type == 'application/pdf':
             blocks.append({'type': 'document',
                            'source': {'type': 'base64', 'media_type': 'application/pdf', 'data': data}})
             return blocks, True
-        elif mime_type.startswith('image/'):
+        elif content_type.startswith('image/'):
             blocks.append({'type': 'image',
-                           'source': {'type': 'base64', 'media_type': mime_type, 'data': data}})
+                           'source': {'type': 'base64', 'media_type': content_type, 'data': data}})
             return blocks, True
     except Exception:
         pass
+
     return blocks, False
 
 
@@ -476,3 +521,100 @@ def suggest_program(student, training_days=3, training_location='gym'):
     result['nutrition'] = nutrition
 
     return result
+
+
+def analyze_blood_test(student):
+    """
+    Deep standalone analysis of a blood test file.
+    Returns structured JSON with every marker, deficiencies, and exercise/nutrition recommendations.
+    Returns None if no blood test file is attached or the file cannot be read.
+    """
+    client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY, timeout=240.0)
+
+    blood_blocks, blood_attached = _blood_test_block(student)
+    if not blood_attached:
+        return None
+
+    age = student.age or 0
+    gender = student.get_gender_display() if student.gender else 'Не указан'
+    is_woman_40_plus = student.gender == 'F' and age >= 40
+
+    profile = f"""Имя: {student.name}
+Пол: {gender}
+Возраст: {age if age else 'Не указан'}
+Рост: {f'{student.height_cm} см' if student.height_cm else 'Не указан'}
+Вес: {f'{student.weight_kg} кг' if student.weight_kg else 'Не указан'}
+Цели: {student.goals or 'Не указано'}
+Проблемы со здоровьем / противопоказания: {student.health_issues or 'Не указано'}"""
+
+    hormone_note = ''
+    if is_woman_40_plus:
+        hormone_note = """
+ВАЖНО — Женщина 40+: особое внимание уделить гормональному статусу.
+Проверить: эстроген, прогестерон, ФСГ, ЛГ, тестостерон, ДГЭА, ТТГ, Т3, Т4.
+Костные маркеры: кальций, витамин D, щелочная фосфатаза.
+"""
+
+    prompt = f"""Ты — спортивный врач и клинический диетолог. Проанализируй результаты анализа крови клиента МАКСИМАЛЬНО ДЕТАЛЬНО.
+
+ПРОФИЛЬ КЛИЕНТА:
+{profile}
+{hormone_note}
+
+ЗАДАЧА: Изучить КАЖДЫЙ показатель в анализе крови, выявить все отклонения от нормы, объяснить их влияние на тренировки и питание.
+
+Верни ТОЛЬКО валидный JSON (без markdown, без пояснений):
+{{
+  "summary": "Краткий итог анализа в 2–3 предложениях — общее состояние здоровья и ключевые выводы",
+  "markers": [
+    {{
+      "name": "Гемоглобин",
+      "value": "115 г/л",
+      "reference": "120–160 г/л",
+      "status": "low",
+      "interpretation": "Лёгкая анемия — снижает доставку кислорода к мышцам и переносимость нагрузок"
+    }}
+  ],
+  "deficiencies": [
+    {{
+      "nutrient": "Железо",
+      "severity": "moderate",
+      "impact_on_training": "Быстрая утомляемость, снижение аэробной выносливости, медленное восстановление",
+      "food_sources": ["Говядина 150г", "Шпинат 100г", "Чечевица 200г", "Тыквенные семечки 30г"],
+      "supplement": "Феррум Лек 100 мг в день с едой, курс 3 месяца"
+    }}
+  ],
+  "exercise_recommendations": [
+    "Конкретная рекомендация по тренировкам на основе показателей (например: ограничить интенсивность из-за анемии)"
+  ],
+  "nutrition_recommendations": [
+    "Конкретная рекомендация по питанию (например: увеличить потребление железа через красное мясо)"
+  ],
+  "urgent_attention": [
+    "Показатель, требующий срочной консультации врача — только если РЕАЛЬНО критично"
+  ],
+  "positive_findings": [
+    "Показатели в норме или выше нормы — что хорошо"
+  ]
+}}
+
+Строгие правила:
+- markers: включай КАЖДЫЙ показатель из анализа (не пропускай нормальные — они тоже важны)
+- status: "normal" | "low" | "high" | "critical_low" | "critical_high"
+- Для женщин: учитывай половые нормы (например, гемоглобин норма для женщин 120–160, для мужчин 130–170)
+- Для пациентов 40+: особое внимание гормонам и костной плотности
+- deficiencies: только реальные дефициты (status low/critical_low), с конкретными продуктами и дозировками
+- exercise_recommendations: минимум 3 конкретных пункта, связанных с найденными отклонениями
+- nutrition_recommendations: минимум 3 конкретных пункта с продуктами и граммовкой
+- urgent_attention: только РЕАЛЬНО критические значения (не запугивай без причины)
+- positive_findings: обязательно отметь, что в норме — мотивирует клиента
+- Все значения показателей включай в "value" так, как они написаны в анализе
+"""
+
+    content = blood_blocks + [{'type': 'text', 'text': prompt}]
+    msg = client.messages.create(
+        model='claude-sonnet-4-6',
+        max_tokens=6000,
+        messages=[{'role': 'user', 'content': content}],
+    )
+    return _parse_json(msg.content[0].text)

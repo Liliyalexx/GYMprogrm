@@ -41,7 +41,8 @@
 
     <div class="form-group">
       <label class="form-label">Date of Birth</label>
-      <input type="date" name="date_of_birth" class="form-control" value="{{ form.date_of_birth.value|default:'' }}">
+      <input type="date" name="date_of_birth" class="form-control"
+        value="{% if student and student.date_of_birth %}{{ student.date_of_birth|date:'Y-m-d' }}{% endif %}">
     </div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
@@ -137,9 +138,9 @@
 
     <div class="form-group">
       <label class="form-label">📷 Photo</label>
-      {% if student and student.photo %}
+      {% if student and student.photo and photo_url %}
         <div style="margin-bottom:.75rem;">
-          <img src="{{ student.photo.url }}" alt="{{ student.name }}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--border);">
+          <img src="{{ photo_url }}" alt="{{ student.name }}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--border);">
         </div>
       {% endif %}
       <input type="file" name="photo" class="form-control" accept="image/*">
@@ -149,7 +150,14 @@
     <div class="form-group">
       <label class="form-label">🩸 Blood Test Result (PDF or image)</label>
       {% if student and student.blood_test_file %}
-        <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:.5rem;">Current file: <a href="{{ student.blood_test_file.url }}" target="_blank">{{ student.blood_test_file.name }}</a></p>
+        <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:.5rem;">
+          Current file:
+          {% if blood_test_url %}
+            <a href="{{ blood_test_url }}" target="_blank">{{ student.blood_test_file.name }}</a>
+          {% else %}
+            {{ student.blood_test_file.name }} (re-upload to refresh link)
+          {% endif %}
+        </p>
       {% endif %}
       <input type="file" name="blood_test_file" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
       <div class="form-hint">Upload the lab results PDF or a photo.</div>

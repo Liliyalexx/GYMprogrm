@@ -4,7 +4,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "python manage.py migrate --noinput && python manage.py collectstatic --noinput && gunicorn gymprogrm.wsgi",
+    "startCommand": "python manage.py migrate --noinput && python manage.py collectstatic --noinput && gunicorn gymprogrm.wsgi --worker-class gthread --threads 4 --timeout 300",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 3
   }

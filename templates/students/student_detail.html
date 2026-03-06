@@ -18,8 +18,8 @@
 <!-- Profile Info -->
 <div class="card" style="margin-bottom:1.5rem;">
   <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.25rem;">
-    {% if student.photo %}
-      <img src="{{ student.photo.url }}" alt="{{ student.name }}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--border);flex-shrink:0;">
+    {% if student.photo and photo_url %}
+      <img src="{{ photo_url }}" alt="{{ student.name }}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--border);flex-shrink:0;">
     {% else %}
       <div style="width:72px;height:72px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:700;flex-shrink:0;">{{ student.name|slice:":1"|upper }}</div>
     {% endif %}
@@ -59,13 +59,87 @@
 
 <!-- Blood Test -->
 <div class="card" style="margin-bottom:1.5rem;">
-  <h2 style="font-size:1rem;font-weight:700;margin-bottom:.75rem;">🩸 Blood Test</h2>
-  {% if student.blood_test_file %}
-    <a href="{{ student.blood_test_file.url }}" target="_blank" class="btn btn-outline btn-sm">📄 View File</a>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:.5rem;">
+    <h2 style="font-size:1rem;font-weight:700;">🩸 Blood Test</h2>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;">
+      {% if student.blood_test_file %}
+        {% if blood_test_url %}
+          <a href="{{ blood_test_url }}" target="_blank" class="btn btn-outline btn-sm">📄 View File</a>
+        {% endif %}
+        <button id="analyze-btn" class="btn btn-accent btn-sm" onclick="analyzeBlood()">🔬 Analyze Blood Test</button>
+      {% endif %}
+      <a href="{% url 'students:edit' student.pk %}" class="btn btn-outline btn-sm">✏️ Upload / Replace</a>
+    </div>
+  </div>
+
+  {% if not student.blood_test_file %}
+  <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:.5rem;">
+    No blood test uploaded yet.
+    <a href="{% url 'students:edit' student.pk %}">Upload now →</a>
+    After uploading, click <strong>Analyze Blood Test</strong> to get a full AI breakdown of markers, deficiencies, and recommendations.
+  </p>
   {% else %}
-    <p style="color:var(--text-muted);font-size:.9rem;">No file uploaded. <a href="{% url 'students:edit' student.pk %}">Upload now →</a></p>
+    <div id="analysis-area">
+      {% if student.blood_analysis %}
+        {% include 'students/_blood_analysis.html' with analysis=student.blood_analysis %}
+      {% else %}
+        <p style="color:var(--text-muted);font-size:.9rem;">
+          Blood test file uploaded. Click <strong>"🔬 Analyze Blood Test"</strong> above to get a full AI analysis — markers, deficiencies, exercise and nutrition recommendations.
+        </p>
+      {% endif %}
+    </div>
   {% endif %}
 </div>
+
+<script>
+function analyzeBlood() {
+  var btn = document.getElementById('analyze-btn');
+  if (!btn) return;
+  btn.disabled = true;
+  btn.textContent = '⏳ Starting…';
+
+  fetch('{% url "students:analyze_blood" student.pk %}', {
+    method: 'POST',
+    headers: {'X-CSRFToken': '{{ csrf_token }}'},
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.error) {
+      alert(data.error);
+      btn.disabled = false;
+      btn.textContent = '🔬 Analyze Blood Test';
+      return;
+    }
+    // Analysis started in background — poll until done
+    btn.textContent = '⏳ Analysing…';
+    pollAnalysis();
+  })
+  .catch(function() {
+    alert('Network error — please try again.');
+    btn.disabled = false;
+    btn.textContent = '🔬 Analyze Blood Test';
+  });
+}
+
+function pollAnalysis() {
+  setTimeout(function() {
+    fetch('{% url "students:check_blood_analysis" student.pk %}')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.status === 'done') {
+        window.location.reload();
+      } else if (data.status === 'error') {
+        alert(data.error || 'Analysis failed. Please re-upload the blood test and try again.');
+        var btn = document.getElementById('analyze-btn');
+        if (btn) { btn.disabled = false; btn.textContent = '🔬 Analyze Blood Test'; }
+      } else {
+        pollAnalysis(); // still processing — check again in 3 s
+      }
+    })
+    .catch(function() { pollAnalysis(); }); // network blip — keep polling
+  }, 3000);
+}
+</script>
 
 <!-- Notes -->
 {% if student.notes %}

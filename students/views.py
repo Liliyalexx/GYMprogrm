@@ -1,8 +1,29 @@
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 from .models import Student
 from .forms import StudentForm
+
+
+def _safe_file_url(file_field):
+    """Return a working URL for a FileField/ImageField.
+    django-cloudinary-storage returns image/upload for all files, but PDFs
+    need raw/upload — we patch the URL for non-image extensions."""
+    if not file_field:
+        return None
+    try:
+        import os
+        url = file_field.url
+        if url and 'cloudinary.com' in url and 'image/upload' in url:
+            _, ext = os.path.splitext(file_field.name or '')
+            if ext.lower() not in ('.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tiff'):
+                url = url.replace('/image/upload/', '/raw/upload/')
+        return url
+    except Exception:
+        return None
+
+
 
 
 @login_required
@@ -15,7 +36,11 @@ def student_list(request):
 @login_required
 def student_detail(request, pk):
     student = get_object_or_404(Student, pk=pk)
-    return render(request, 'students/student_detail.html', {'student': student})
+    return render(request, 'students/student_detail.html', {
+        'student': student,
+        'blood_test_url': _safe_file_url(student.blood_test_file),
+        'photo_url': _safe_file_url(student.photo),
+    })
 
 
 @login_required
@@ -40,7 +65,13 @@ def student_edit(request, pk):
             return redirect('students:detail', pk=student.pk)
     else:
         form = StudentForm(instance=student)
-    return render(request, 'students/student_form.html', {'form': form, 'title': 'Edit Student', 'student': student})
+    return render(request, 'students/student_form.html', {
+        'form': form,
+        'title': 'Edit Student',
+        'student': student,
+        'blood_test_url': _safe_file_url(student.blood_test_file),
+        'photo_url': _safe_file_url(student.photo),
+    })
 
 
 @login_required
@@ -112,3 +143,110 @@ def accept_intake(request, pk):
     student.is_active = True
     student.save(update_fields=['intake_status', 'is_active'])
     return redirect('students:detail', pk=pk)
+
+
+def _health_issues_from_analysis(analysis):
+    """
+    Build a professional health issues text block from the blood analysis JSON.
+    Returns a string to be appended to student.health_issues.
+    """
+    lines = []
+
+    # Deficiencies — most clinically important
+    for d in analysis.get('deficiencies', []):
+        severity_map = {'severe': 'тяжёлый', 'moderate': 'умеренный', 'mild': 'лёгкий'}
+        sev = severity_map.get(d.get('severity', ''), d.get('severity', ''))
+        line = f"• Дефицит: {d['nutrient']}"
+        if sev:
+            line += f" ({sev})"
+        if d.get('impact_on_training'):
+            line += f" — {d['impact_on_training']}"
+        lines.append(line)
+
+    # Abnormal markers not already covered as a named deficiency
+    deficiency_names = {d['nutrient'].lower() for d in analysis.get('deficiencies', [])}
+    for m in analysis.get('markers', []):
+        if m.get('status') not in ('low', 'high', 'critical_low', 'critical_high'):
+            continue
+        if m['name'].lower() in deficiency_names:
+            continue
+        status_map = {
+            'low': 'снижен', 'high': 'повышен',
+            'critical_low': 'критически снижен', 'critical_high': 'критически повышен',
+        }
+        status = status_map.get(m.get('status', ''), '')
+        line = f"• {m['name']} {status}".strip()
+        if m.get('value'):
+            line += f" ({m['value']})"
+        if m.get('interpretation'):
+            line += f" — {m['interpretation']}"
+        lines.append(line)
+
+    # Urgent items
+    for item in analysis.get('urgent_attention', []):
+        lines.append(f"⚠️ {item}")
+
+    return '\n'.join(lines)
+
+
+@login_required
+@require_POST
+def analyze_blood(request, pk):
+    """
+    Start blood test analysis in a background thread and return immediately.
+    Frontend polls /check-blood-analysis/ every 3 s until done.
+    """
+    import threading
+    from django.db import connections
+
+    student = get_object_or_404(Student, pk=pk)
+    if not student.blood_test_file:
+        return JsonResponse({'error': 'No blood test file uploaded'}, status=400)
+
+    # Mark as processing so polling knows it started
+    Student.objects.filter(pk=pk).update(blood_analysis={'_processing': True})
+
+    def _run(student_pk):
+        try:
+            # Each thread needs its own DB connection
+            from programs.ai import analyze_blood_test
+            s = Student.objects.get(pk=student_pk)
+            analysis = analyze_blood_test(s)
+            if analysis is None:
+                Student.objects.filter(pk=student_pk).update(
+                    blood_analysis={'_error': 'Could not read the blood test file. Please re-upload it via Edit Student.'})
+                return
+
+            blood_block = _health_issues_from_analysis(analysis)
+            s.refresh_from_db()
+            s.blood_analysis = analysis
+            if blood_block:
+                marker = '🩸 Анализ крови (AI):'
+                existing = (s.health_issues or '').strip()
+                if marker in existing:
+                    existing = existing[:existing.index(marker)].strip()
+                s.health_issues = (existing + '\n\n' if existing else '') + marker + '\n' + blood_block
+            s.save(update_fields=['blood_analysis', 'health_issues'])
+        except Exception as e:
+            Student.objects.filter(pk=student_pk).update(blood_analysis={'_error': str(e)})
+        finally:
+            connections.close_all()
+
+    t = threading.Thread(target=_run, args=(pk,), daemon=True)
+    t.start()
+    return JsonResponse({'status': 'processing'})
+
+
+@login_required
+def check_blood_analysis(request, pk):
+    """Poll endpoint: returns processing / done / error."""
+    student = get_object_or_404(Student, pk=pk)
+    if not student.blood_analysis:
+        return JsonResponse({'status': 'none'})
+    if student.blood_analysis.get('_processing'):
+        return JsonResponse({'status': 'processing'})
+    if student.blood_analysis.get('_error'):
+        err = student.blood_analysis['_error']
+        Student.objects.filter(pk=pk).update(blood_analysis=None)
+        return JsonResponse({'status': 'error', 'error': err})
+    return JsonResponse({'status': 'done'})
