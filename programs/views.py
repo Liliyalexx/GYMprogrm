@@ -43,102 +43,107 @@ def program_generate(request, student_pk):
                 'error': str(e),
             })
 
-        # Create program
-        key_findings = ai_result.get('key_findings', [])
-        program = WorkoutProgram.objects.create(
-            student=student,
-            name=ai_result['program_name'],
-            description='\n'.join(key_findings) if key_findings else ai_result.get('description', ''),
-            training_days=training_days,
-            nutrition_plan=ai_result.get('nutrition'),
-        )
-
-        exercise_library = {ex.name.lower(): ex for ex in ExerciseLibrary.objects.all()}
-        suggestions = []
-
-        # Muscle group key map for auto-created home exercises
-        MUSCLE_KEYWORDS = {
-            'glute': 'glutes', 'ягодиц': 'glutes', 'butt': 'glutes',
-            'leg': 'legs', 'squat': 'legs', 'lunge': 'legs', 'нога': 'legs', 'ног': 'legs',
-            'back': 'back', 'row': 'back', 'pull': 'back', 'спин': 'back',
-            'chest': 'chest', 'push': 'chest', 'грудь': 'chest',
-            'shoulder': 'shoulders', 'плеч': 'shoulders', 'press': 'shoulders',
-            'bicep': 'arms', 'tricep': 'arms', 'curl': 'arms', 'рук': 'arms',
-            'core': 'core', 'plank': 'core', 'crunch': 'core', 'пресс': 'core', 'ab': 'core',
-            'cardio': 'cardio', 'run': 'cardio', 'jump': 'cardio', 'кардио': 'cardio',
-        }
-
-        def _infer_muscle_group(name, day_name=''):
-            text = (name + ' ' + day_name).lower()
-            for kw, mg in MUSCLE_KEYWORDS.items():
-                if kw in text:
-                    return mg
-            return 'full_body'
-
-        for day_data in ai_result['days']:
-            day = ProgramDay.objects.create(
-                program=program,
-                day_number=day_data['day_number'],
-                name=day_data['day_name'],
+        try:
+            # Create program
+            key_findings = ai_result.get('key_findings', [])
+            program = WorkoutProgram.objects.create(
+                student=student,
+                name=ai_result.get('program_name', 'Программа тренировок'),
+                description='\n'.join(key_findings) if key_findings else ai_result.get('description', ''),
+                training_days=training_days,
+                nutrition_plan=ai_result.get('nutrition'),
             )
-            for order, ex_data in enumerate(day_data['exercises']):
-                name_key = ex_data['name'].lower()
-                # fuzzy match: try exact, then partial
-                library_ex = exercise_library.get(name_key)
-                if not library_ex:
-                    # Equipment words are too generic — skip them for matching
-                    _GENERIC = {'dumbbell', 'barbell', 'cable', 'lever', 'machine',
-                                'with', 'without', 'using', 'band', 'weight'}
-                    name_words = [w for w in name_key.split() if len(w) > 3 and w not in _GENERIC]
-                    best_key, best_score = None, 0
-                    for key, val in exercise_library.items():
-                        score = sum(1 for w in name_words if w in key)
-                        if score > best_score:
-                            best_score, best_key = score, key
-                    if best_score >= 2:
-                        library_ex = exercise_library[best_key]
 
-                # For home programs: auto-create missing exercises in the library
-                if not library_ex and training_location == 'home':
-                    mg = ex_data.get('muscle_group') or _infer_muscle_group(ex_data['name'], day_data['day_name'])
-                    library_ex = ExerciseLibrary.objects.create(
-                        name=ex_data['name'],
-                        muscle_group=mg,
-                        description=ex_data.get('reason_ru') or ex_data.get('reason') or ex_data['name'],
-                        difficulty='beginner',
-                    )
-                    exercise_library[ex_data['name'].lower()] = library_ex
+            exercise_library = {ex.name.lower(): ex for ex in ExerciseLibrary.objects.all()}
+            suggestions = []
 
-                if library_ex:
-                    pe = ProgramExercise.objects.create(
-                        program_day=day,
-                        exercise=library_ex,
-                        sets=ex_data.get('sets', 3),
-                        reps=str(ex_data.get('reps', '10')),
-                        name_ru=ex_data.get('name_ru', ''),
-                        reason_ru=ex_data.get('reason_ru', ''),
-                        order=order,
-                        confirmed=False,
-                    )
-                    suggestions.append({
-                        'id': pe.pk,
-                        'name': library_ex.name,
-                        'name_ru': ex_data.get('name_ru', library_ex.name),
-                        'muscle_group': library_ex.get_muscle_group_display(),
-                        'photo_url': library_ex.photo_url,
-                        'description': library_ex.description,
-                        'sets': pe.sets,
-                        'reps': pe.reps,
-                        'reason': ex_data.get('reason', ''),
-                        'reason_ru': ex_data.get('reason_ru', ''),
-                        'day_name': day.name,
-                    })
+            MUSCLE_KEYWORDS = {
+                'glute': 'glutes', 'ягодиц': 'glutes', 'butt': 'glutes',
+                'leg': 'legs', 'squat': 'legs', 'lunge': 'legs', 'нога': 'legs', 'ног': 'legs',
+                'back': 'back', 'row': 'back', 'pull': 'back', 'спин': 'back',
+                'chest': 'chest', 'push': 'chest', 'грудь': 'chest',
+                'shoulder': 'shoulders', 'плеч': 'shoulders', 'press': 'shoulders',
+                'bicep': 'arms', 'tricep': 'arms', 'curl': 'arms', 'рук': 'arms',
+                'core': 'core', 'plank': 'core', 'crunch': 'core', 'пресс': 'core', 'ab': 'core',
+                'cardio': 'cardio', 'run': 'cardio', 'jump': 'cardio', 'кардио': 'cardio',
+            }
 
-        return render(request, 'programs/program_generate.html', {
-            'student': student,
-            'program': program,
-            'suggestions_json': json.dumps(suggestions),
-        })
+            def _infer_muscle_group(name, day_name=''):
+                text = (name + ' ' + day_name).lower()
+                for kw, mg in MUSCLE_KEYWORDS.items():
+                    if kw in text:
+                        return mg
+                return 'full_body'
+
+            for day_data in ai_result.get('days', []):
+                day = ProgramDay.objects.create(
+                    program=program,
+                    day_number=day_data.get('day_number', 1),
+                    name=day_data.get('day_name', 'День'),
+                )
+                for order, ex_data in enumerate(day_data.get('exercises', [])):
+                    name_key = ex_data.get('name', '').lower()
+                    if not name_key:
+                        continue
+                    library_ex = exercise_library.get(name_key)
+                    if not library_ex:
+                        _GENERIC = {'dumbbell', 'barbell', 'cable', 'lever', 'machine',
+                                    'with', 'without', 'using', 'band', 'weight'}
+                        name_words = [w for w in name_key.split() if len(w) > 3 and w not in _GENERIC]
+                        best_key, best_score = None, 0
+                        for key in exercise_library:
+                            score = sum(1 for w in name_words if w in key)
+                            if score > best_score:
+                                best_score, best_key = score, key
+                        if best_score >= 2:
+                            library_ex = exercise_library[best_key]
+
+                    if not library_ex and training_location == 'home':
+                        mg = ex_data.get('muscle_group') or _infer_muscle_group(ex_data.get('name', ''), day_data.get('day_name', ''))
+                        library_ex = ExerciseLibrary.objects.create(
+                            name=ex_data['name'],
+                            muscle_group=mg,
+                            description=ex_data.get('reason_ru') or ex_data.get('reason') or ex_data['name'],
+                            difficulty='beginner',
+                        )
+                        exercise_library[ex_data['name'].lower()] = library_ex
+
+                    if library_ex:
+                        pe = ProgramExercise.objects.create(
+                            program_day=day,
+                            exercise=library_ex,
+                            sets=ex_data.get('sets', 3),
+                            reps=str(ex_data.get('reps', '10')),
+                            name_ru=ex_data.get('name_ru', ''),
+                            reason_ru=ex_data.get('reason_ru', ''),
+                            order=order,
+                            confirmed=False,
+                        )
+                        suggestions.append({
+                            'id': pe.pk,
+                            'name': library_ex.name,
+                            'name_ru': ex_data.get('name_ru', library_ex.name),
+                            'muscle_group': library_ex.get_muscle_group_display(),
+                            'photo_url': library_ex.photo_url,
+                            'description': library_ex.description,
+                            'sets': pe.sets,
+                            'reps': pe.reps,
+                            'reason': ex_data.get('reason', ''),
+                            'reason_ru': ex_data.get('reason_ru', ''),
+                            'day_name': day.name,
+                        })
+
+            return render(request, 'programs/program_generate.html', {
+                'student': student,
+                'program': program,
+                'suggestions_json': json.dumps(suggestions),
+            })
+
+        except Exception as e:
+            return render(request, 'programs/program_generate.html', {
+                'student': student,
+                'error': f'Ошибка при создании программы: {e}',
+            })
 
     return render(request, 'programs/program_generate.html', {'student': student})
 
