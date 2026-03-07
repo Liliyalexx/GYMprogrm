@@ -40,6 +40,8 @@ class WorkoutProgram(models.Model):
     description = models.TextField(blank=True)
     training_days = models.PositiveSmallIntegerField(default=3)
     nutrition_plan = models.JSONField(null=True, blank=True)
+    start_date = models.DateField(null=True, blank=True)
+    duration_weeks = models.PositiveSmallIntegerField(default=2)
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
 

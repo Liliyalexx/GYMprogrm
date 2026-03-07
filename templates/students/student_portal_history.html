@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Workout History — GYMprogrm{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <a href="{% url 'students:portal_dashboard' %}" style="color:var(--text-muted);font-size:.9rem;text-decoration:none;">← Dashboard</a>
+    <h1 class="page-title" style="margin-top:.25rem;">Workout History</h1>
+  </div>
+</div>
+
+{% if logs %}
+  {% for log in logs %}
+  <div class="card" style="margin-bottom:1rem;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;">
+      <div>
+        <div style="font-weight:700;">{{ log.program_day.name|default:"Workout" }}</div>
+        <div style="font-size:.82rem;color:var(--text-muted);">{{ log.date|date:"d M Y" }}</div>
+      </div>
+      {% if log.completed %}<span style="color:var(--success);font-weight:600;font-size:.85rem;">✓ Completed</span>{% endif %}
+    </div>
+
+    {% if log.exercise_logs.all %}
+    <div style="display:flex;flex-direction:column;gap:.35rem;">
+      {% for el in log.exercise_logs.all %}
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:.45rem .65rem;background:#f8fafc;border-radius:6px;font-size:.87rem;">
+        <span style="font-weight:500;">{{ el.exercise_name }}</span>
+        <span style="color:var(--text-muted);">
+          {{ el.sets_done }}×{{ el.reps_done }}
+          {% if el.weight_kg %}@ {{ el.weight_kg }} kg{% endif %}
+        </span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if log.notes %}
+    <div style="font-size:.82rem;color:var(--text-muted);margin-top:.5rem;font-style:italic;">{{ log.notes }}</div>
+    {% endif %}
+  </div>
+  {% endfor %}
+{% else %}
+  <div class="empty-state">
+    <p style="font-size:2rem;">📈</p>
+    <p>No workouts logged yet. Go log your first workout!</p>
+    <a href="{% url 'students:portal_program' %}" class="btn btn-primary">View Program</a>
+  </div>
+{% endif %}
+
+{% endblock %}

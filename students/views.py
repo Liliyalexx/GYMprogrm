@@ -1,15 +1,24 @@
+import uuid
+from datetime import date, datetime
+from functools import wraps
+
+from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_POST
+
 from .models import Student
 from .forms import StudentForm
 
 
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
 def _safe_file_url(file_field):
-    """Return a working URL for a FileField/ImageField.
-    django-cloudinary-storage returns image/upload for all files, but PDFs
-    need raw/upload — we patch the URL for non-image extensions."""
+    """Return a working URL for a FileField/ImageField."""
     if not file_field:
         return None
     try:
@@ -24,27 +33,91 @@ def _safe_file_url(file_field):
         return None
 
 
+def student_required(view_func):
+    """Decorator: user must be logged-in and have a student profile."""
+    @wraps(view_func)
+    def _wrapped(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('/login/')
+        if not hasattr(request.user, 'student'):
+            return redirect('/')
+        return view_func(request, *args, **kwargs)
+    return _wrapped
 
+
+def get_reminders(student):
+    """Return a list of reminder dicts for a student (computed at request time)."""
+    reminders = []
+    today = date.today()
+
+    # Program change reminder
+    active_program = student.programs.filter(is_active=True).first()
+    if active_program and active_program.start_date:
+        days_since = (today - active_program.start_date).days
+        threshold = active_program.duration_weeks * 7
+        if days_since >= threshold:
+            reminders.append({
+                'type': 'change_program',
+                'student': student,
+                'program': active_program,
+                'days_since': days_since,
+            })
+
+    # Payment reminder
+    if student.payment_start_date:
+        days_since_payment = (today - student.payment_start_date).days
+        threshold = 84 if student.payment_plan == '3months' else 28
+        if days_since_payment >= threshold:
+            reminders.append({
+                'type': 'payment_due',
+                'student': student,
+                'plan': student.get_payment_plan_display(),
+            })
+
+    return reminders
+
+
+# ---------------------------------------------------------------------------
+# Trainer views
+# ---------------------------------------------------------------------------
 
 @login_required
 def student_list(request):
+    if hasattr(request.user, 'student'):
+        return redirect('students:portal_dashboard')
     students = Student.objects.filter(is_active=True, intake_status='active')
     pending = Student.objects.filter(intake_status='pending')
-    return render(request, 'students/student_list.html', {'students': students, 'pending': pending})
+
+    # Gather all reminders for trainer dashboard
+    all_reminders = []
+    for s in students:
+        all_reminders.extend(get_reminders(s))
+
+    return render(request, 'students/student_list.html', {
+        'students': students,
+        'pending': pending,
+        'all_reminders': all_reminders,
+    })
 
 
 @login_required
 def student_detail(request, pk):
+    if hasattr(request.user, 'student'):
+        return redirect('students:portal_dashboard')
     student = get_object_or_404(Student, pk=pk)
+    reminders = get_reminders(student)
     return render(request, 'students/student_detail.html', {
         'student': student,
         'blood_test_url': _safe_file_url(student.blood_test_file),
         'photo_url': _safe_file_url(student.photo),
+        'reminders': reminders,
     })
 
 
 @login_required
 def student_create(request):
+    if hasattr(request.user, 'student'):
+        return redirect('students:portal_dashboard')
     if request.method == 'POST':
         form = StudentForm(request.POST, request.FILES)
         if form.is_valid():
@@ -57,6 +130,8 @@ def student_create(request):
 
 @login_required
 def student_edit(request, pk):
+    if hasattr(request.user, 'student'):
+        return redirect('students:portal_dashboard')
     student = get_object_or_404(Student, pk=pk)
     if request.method == 'POST':
         form = StudentForm(request.POST, request.FILES, instance=student)
@@ -76,6 +151,8 @@ def student_edit(request, pk):
 
 @login_required
 def student_delete(request, pk):
+    if hasattr(request.user, 'student'):
+        return redirect('students:portal_dashboard')
     student = get_object_or_404(Student, pk=pk)
     if request.method == 'POST':
         student.delete()
@@ -83,15 +160,81 @@ def student_delete(request, pk):
     return render(request, 'students/student_confirm_delete.html', {'student': student})
 
 
+@login_required
+@require_POST
+def accept_intake(request, pk):
+    if hasattr(request.user, 'student'):
+        return redirect('students:portal_dashboard')
+    student = get_object_or_404(Student, pk=pk)
+    student.intake_status = 'active'
+    student.is_active = True
+    student.save(update_fields=['intake_status', 'is_active'])
+    return redirect('students:detail', pk=pk)
+
+
+@login_required
+@require_POST
+def send_invite(request, pk):
+    """Generate invite token and return the invite URL."""
+    if hasattr(request.user, 'student'):
+        return JsonResponse({'error': 'Not authorized'}, status=403)
+    student = get_object_or_404(Student, pk=pk)
+    token = uuid.uuid4()
+    student.invite_token = token
+    student.save(update_fields=['invite_token'])
+    invite_url = request.build_absolute_uri(f'/invite/{token}/')
+    return JsonResponse({'url': invite_url})
+
+
+# ---------------------------------------------------------------------------
+# Invite registration
+# ---------------------------------------------------------------------------
+
+def invite_register(request, token):
+    """Public view: student registers via invite link."""
+    student = get_object_or_404(Student, invite_token=token)
+
+    error = None
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip()
+        password = request.POST.get('password', '')
+        confirm = request.POST.get('confirm_password', '')
+
+        if not email:
+            error = 'Email is required.'
+        elif not password:
+            error = 'Password is required.'
+        elif password != confirm:
+            error = 'Passwords do not match.'
+        elif len(password) < 8:
+            error = 'Password must be at least 8 characters.'
+        elif User.objects.filter(username=email).exists():
+            error = 'An account with this email already exists.'
+        else:
+            user = User.objects.create_user(username=email, email=email, password=password)
+            student.user = user
+            student.invite_token = None  # consume token
+            if not student.email:
+                student.email = email
+            student.save(update_fields=['user', 'invite_token', 'email'])
+            login(request, user)
+            return redirect('students:portal_dashboard')
+
+    return render(request, 'students/invite_register.html', {'student': student, 'error': error})
+
+
+# ---------------------------------------------------------------------------
+# Public intake form
+# ---------------------------------------------------------------------------
+
 def client_intake(request):
-    """Public intake form — no login required. Clients fill this in themselves."""
+    """Public intake form — no login required."""
     error = None
     if request.method == 'POST':
         name = request.POST.get('name', '').strip()
         if not name:
-            error = 'Пожалуйста, введите ваше имя.'
+            error = 'Please enter your name.'
         else:
-            from datetime import datetime
             dob_raw = request.POST.get('date_of_birth', '').strip()
             dob = None
             if dob_raw:
@@ -134,25 +277,161 @@ def intake_success(request):
     return render(request, 'students/intake_success.html')
 
 
-@login_required
-@require_POST
-def accept_intake(request, pk):
-    """Trainer accepts a pending intake — activates the student."""
-    student = get_object_or_404(Student, pk=pk)
-    student.intake_status = 'active'
-    student.is_active = True
-    student.save(update_fields=['intake_status', 'is_active'])
-    return redirect('students:detail', pk=pk)
+# ---------------------------------------------------------------------------
+# Login redirect
+# ---------------------------------------------------------------------------
 
+@login_required
+def auth_redirect(request):
+    """Role-based redirect after login."""
+    if hasattr(request.user, 'student'):
+        return redirect('students:portal_dashboard')
+    return redirect('students:list')
+
+
+# ---------------------------------------------------------------------------
+# Student portal views
+# ---------------------------------------------------------------------------
+
+@student_required
+def portal_dashboard(request):
+    student = request.user.student
+    reminders = get_reminders(student)
+    active_program = student.programs.filter(is_active=True).first()
+
+    days_remaining = None
+    if active_program and active_program.start_date:
+        elapsed = (date.today() - active_program.start_date).days
+        total = active_program.duration_weeks * 7
+        days_remaining = max(0, total - elapsed)
+
+    recent_logs = student.workout_logs.select_related('program_day').order_by('-date')[:5]
+    last_measurement = student.measurements.order_by('-date').first()
+
+    return render(request, 'students/student_portal_dashboard.html', {
+        'student': student,
+        'active_program': active_program,
+        'days_remaining': days_remaining,
+        'reminders': reminders,
+        'recent_logs': recent_logs,
+        'last_measurement': last_measurement,
+    })
+
+
+@student_required
+def portal_program(request):
+    student = request.user.student
+    active_program = student.programs.filter(is_active=True).prefetch_related(
+        'days__exercises__exercise'
+    ).first()
+    return render(request, 'students/student_portal_program.html', {
+        'student': student,
+        'program': active_program,
+    })
+
+
+@student_required
+def portal_log_workout(request, program_day_id):
+    from programs.models import ProgramDay
+    from progress.models import WorkoutLog, ExerciseLog
+
+    student = request.user.student
+    program_day = get_object_or_404(ProgramDay, pk=program_day_id, program__student=student)
+    exercises = program_day.exercises.select_related('exercise').order_by('order')
+
+    error = None
+    if request.method == 'POST':
+        log = WorkoutLog.objects.create(
+            student=student,
+            program_day=program_day,
+            notes=request.POST.get('notes', '').strip(),
+            completed=True,
+        )
+        for ex in exercises:
+            key = f'exercise_{ex.pk}'
+            weight_raw = request.POST.get(f'{key}_weight', '').strip()
+            reps_raw = request.POST.get(f'{key}_reps', '').strip()
+            sets_raw = request.POST.get(f'{key}_sets', '').strip()
+            ExerciseLog.objects.create(
+                workout_log=log,
+                program_exercise=ex,
+                exercise_name=ex.exercise.name,
+                sets_done=int(sets_raw) if sets_raw.isdigit() else ex.sets,
+                reps_done=reps_raw or ex.reps,
+                weight_kg=weight_raw if weight_raw else None,
+                notes=request.POST.get(f'{key}_notes', '').strip(),
+            )
+        return redirect('students:portal_history')
+
+    return render(request, 'students/student_portal_log_workout.html', {
+        'student': student,
+        'program_day': program_day,
+        'exercises': exercises,
+        'error': error,
+    })
+
+
+@student_required
+def portal_measurements(request):
+    from measurements.models import BodyMeasurement
+
+    student = request.user.student
+    error = None
+
+    if request.method == 'POST':
+        date_raw = request.POST.get('date', '').strip() or str(date.today())
+        try:
+            mdate = datetime.strptime(date_raw, '%Y-%m-%d').date()
+        except ValueError:
+            mdate = date.today()
+
+        def _dec(key):
+            v = request.POST.get(key, '').strip()
+            return v if v else None
+
+        BodyMeasurement.objects.create(
+            student=student,
+            date=mdate,
+            weight_kg=_dec('weight_kg'),
+            body_fat_pct=_dec('body_fat_pct'),
+            waist_cm=_dec('waist_cm'),
+            hips_cm=_dec('hips_cm'),
+            chest_cm=_dec('chest_cm'),
+            arms_cm=_dec('arms_cm'),
+            legs_cm=_dec('legs_cm'),
+        )
+        return redirect('students:portal_measurements')
+
+    measurements = student.measurements.order_by('-date')
+    return render(request, 'students/student_portal_measurements.html', {
+        'student': student,
+        'measurements': measurements,
+        'today': str(date.today()),
+        'error': error,
+    })
+
+
+@student_required
+def portal_history(request):
+    from progress.models import WorkoutLog
+
+    student = request.user.student
+    logs = student.workout_logs.prefetch_related(
+        'exercise_logs'
+    ).select_related('program_day').order_by('-date')
+
+    return render(request, 'students/student_portal_history.html', {
+        'student': student,
+        'logs': logs,
+    })
+
+
+# ---------------------------------------------------------------------------
+# Blood analysis (trainer only)
+# ---------------------------------------------------------------------------
 
 def _health_issues_from_analysis(analysis):
-    """
-    Build a professional health issues text block from the blood analysis JSON.
-    Returns a string to be appended to student.health_issues.
-    """
     lines = []
-
-    # Deficiencies — most clinically important
     for d in analysis.get('deficiencies', []):
         severity_map = {'severe': 'тяжёлый', 'moderate': 'умеренный', 'mild': 'лёгкий'}
         sev = severity_map.get(d.get('severity', ''), d.get('severity', ''))
@@ -163,7 +442,6 @@ def _health_issues_from_analysis(analysis):
             line += f" — {d['impact_on_training']}"
         lines.append(line)
 
-    # Abnormal markers not already covered as a named deficiency
     deficiency_names = {d['nutrient'].lower() for d in analysis.get('deficiencies', [])}
     for m in analysis.get('markers', []):
         if m.get('status') not in ('low', 'high', 'critical_low', 'critical_high'):
@@ -182,7 +460,6 @@ def _health_issues_from_analysis(analysis):
             line += f" — {m['interpretation']}"
         lines.append(line)
 
-    # Urgent items
     for item in analysis.get('urgent_attention', []):
         lines.append(f"⚠️ {item}")
 
@@ -192,29 +469,26 @@ def _health_issues_from_analysis(analysis):
 @login_required
 @require_POST
 def analyze_blood(request, pk):
-    """
-    Start blood test analysis in a background thread and return immediately.
-    Frontend polls /check-blood-analysis/ every 3 s until done.
-    """
     import threading
     from django.db import connections
+
+    if hasattr(request.user, 'student'):
+        return JsonResponse({'error': 'Not authorized'}, status=403)
 
     student = get_object_or_404(Student, pk=pk)
     if not student.blood_test_file:
         return JsonResponse({'error': 'No blood test file uploaded'}, status=400)
 
-    # Mark as processing so polling knows it started
     Student.objects.filter(pk=pk).update(blood_analysis={'_processing': True})
 
     def _run(student_pk):
         try:
-            # Each thread needs its own DB connection
             from programs.ai import analyze_blood_test
             s = Student.objects.get(pk=student_pk)
             analysis = analyze_blood_test(s)
             if analysis is None:
                 Student.objects.filter(pk=student_pk).update(
-                    blood_analysis={'_error': 'Could not read the blood test file. Please re-upload it via Edit Student.'})
+                    blood_analysis={'_error': 'Could not read the blood test file.'})
                 return
 
             blood_block = _health_issues_from_analysis(analysis)
@@ -239,7 +513,8 @@ def analyze_blood(request, pk):
 
 @login_required
 def check_blood_analysis(request, pk):
-    """Poll endpoint: returns processing / done / error."""
+    if hasattr(request.user, 'student'):
+        return JsonResponse({'error': 'Not authorized'}, status=403)
     student = get_object_or_404(Student, pk=pk)
     if not student.blood_analysis:
         return JsonResponse({'status': 'none'})

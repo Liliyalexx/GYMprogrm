@@ -1,5 +1,7 @@
 from django.db import models
+from django.contrib.auth.models import User
 from datetime import date
+import uuid
 
 
 class Student(models.Model):
@@ -8,6 +10,15 @@ class Student(models.Model):
         ('active', 'Active'),
         ('pending', 'Pending review'),
     ]
+    PAYMENT_PLAN_CHOICES = [
+        ('monthly', 'Monthly (2 programs)'),
+        ('3months', '3 Months (6 programs)'),
+    ]
+
+    user = models.OneToOneField(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='student')
+    invite_token = models.UUIDField(null=True, blank=True)
+    payment_plan = models.CharField(max_length=20, choices=PAYMENT_PLAN_CHOICES, default='monthly')
+    payment_start_date = models.DateField(null=True, blank=True)
 
     name = models.CharField(max_length=200)
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True)

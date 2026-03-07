@@ -15,9 +15,23 @@
   </div>
 </div>
 
+<!-- Reminder banners -->
+{% for r in reminders %}
+  {% if r.type == 'change_program' %}
+  <div class="banner banner-warning">
+    ⏰ Time to update this student's program — {{ r.days_since }} days since start ({{ r.program.duration_weeks }}-week block complete).
+    <a href="{% url 'programs:generate' student.pk %}" style="color:inherit;font-weight:700;margin-left:.5rem;">Generate new →</a>
+  </div>
+  {% elif r.type == 'payment_due' %}
+  <div class="banner banner-danger">
+    💳 {{ r.plan }} payment is due for this student.
+  </div>
+  {% endif %}
+{% endfor %}
+
 <!-- Profile Info -->
 <div class="card" style="margin-bottom:1.5rem;">
-  <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.25rem;">
+  <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.25rem;flex-wrap:wrap;">
     {% if student.photo and photo_url %}
       <img src="{{ photo_url }}" alt="{{ student.name }}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--border);flex-shrink:0;">
     {% else %}
@@ -42,6 +56,32 @@
       <div class="detail-label">Phone</div>
       <div class="detail-value">{% if student.phone %}{{ student.phone }}{% else %}—{% endif %}</div>
     </div>
+  </div>
+</div>
+
+<!-- Invite & Payment -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.5rem;">
+  <!-- Invite -->
+  <div class="card">
+    <h2 style="font-size:1rem;font-weight:700;margin-bottom:.75rem;">🔗 Student Account</h2>
+    {% if student.user %}
+      <div style="color:var(--success);font-weight:600;font-size:.9rem;margin-bottom:.5rem;">✓ Account active</div>
+      <div style="font-size:.85rem;color:var(--text-muted);">{{ student.user.email }}</div>
+    {% else %}
+      <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:.75rem;">No account yet. Send an invite link for the student to register.</p>
+      <button class="btn btn-primary btn-sm" onclick="sendInvite({{ student.pk }})">Send Invite Link</button>
+      <div id="invite-result" style="margin-top:.75rem;font-size:.85rem;"></div>
+    {% endif %}
+  </div>
+
+  <!-- Payment -->
+  <div class="card">
+    <h2 style="font-size:1rem;font-weight:700;margin-bottom:.75rem;">💳 Billing</h2>
+    <div style="font-size:.85rem;color:var(--text-muted);margin-bottom:.25rem;">Plan: <strong>{{ student.get_payment_plan_display }}</strong></div>
+    <div style="font-size:.85rem;color:var(--text-muted);">
+      Started: {% if student.payment_start_date %}{{ student.payment_start_date|date:"d M Y" }}{% else %}—{% endif %}
+    </div>
+    <a href="{% url 'students:edit' student.pk %}" style="font-size:.82rem;color:var(--primary);text-decoration:none;display:inline-block;margin-top:.65rem;">Edit payment info →</a>
   </div>
 </div>
 
@@ -76,7 +116,6 @@
   <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:.5rem;">
     No blood test uploaded yet.
     <a href="{% url 'students:edit' student.pk %}">Upload now →</a>
-    After uploading, click <strong>Analyze Blood Test</strong> to get a full AI breakdown of markers, deficiencies, and recommendations.
   </p>
   {% else %}
     <div id="analysis-area">
@@ -84,7 +123,7 @@
         {% include 'students/_blood_analysis.html' with analysis=student.blood_analysis %}
       {% else %}
         <p style="color:var(--text-muted);font-size:.9rem;">
-          Blood test file uploaded. Click <strong>"🔬 Analyze Blood Test"</strong> above to get a full AI analysis — markers, deficiencies, exercise and nutrition recommendations.
+          Blood test file uploaded. Click <strong>"🔬 Analyze Blood Test"</strong> above.
         </p>
       {% endif %}
     </div>
@@ -110,7 +149,6 @@ function analyzeBlood() {
       btn.textContent = '🔬 Analyze Blood Test';
       return;
     }
-    // Analysis started in background — poll until done
     btn.textContent = '⏳ Analysing…';
     pollAnalysis();
   })
@@ -129,15 +167,38 @@ function pollAnalysis() {
       if (data.status === 'done') {
         window.location.reload();
       } else if (data.status === 'error') {
-        alert(data.error || 'Analysis failed. Please re-upload the blood test and try again.');
+        alert(data.error || 'Analysis failed.');
         var btn = document.getElementById('analyze-btn');
         if (btn) { btn.disabled = false; btn.textContent = '🔬 Analyze Blood Test'; }
       } else {
-        pollAnalysis(); // still processing — check again in 3 s
+        pollAnalysis();
       }
     })
-    .catch(function() { pollAnalysis(); }); // network blip — keep polling
+    .catch(function() { pollAnalysis(); });
   }, 3000);
+}
+
+function sendInvite(studentId) {
+  var resultEl = document.getElementById('invite-result');
+  resultEl.textContent = 'Generating…';
+
+  fetch('/students/' + studentId + '/send-invite/', {
+    method: 'POST',
+    headers: {'X-CSRFToken': '{{ csrf_token }}'},
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.url) {
+      navigator.clipboard.writeText(data.url).then(function() {
+        resultEl.innerHTML = '<span style="color:var(--success);font-weight:600;">✓ Link copied!</span><br><span style="word-break:break-all;color:var(--text-muted);">' + data.url + '</span>';
+      }).catch(function() {
+        resultEl.innerHTML = '<span>Copy this link:</span><br><input style="width:100%;margin-top:.35rem;padding:.3rem .5rem;border:1px solid var(--border);border-radius:6px;font-size:.82rem;" value="' + data.url + '" readonly onclick="this.select();">';
+      });
+    } else {
+      resultEl.textContent = 'Error: ' + (data.error || 'Unknown error');
+    }
+  })
+  .catch(function() { resultEl.textContent = 'Network error — please try again.'; });
 }
 </script>
 
@@ -160,7 +221,10 @@ function pollAnalysis() {
     {% for program in programs %}
     <a href="{% url 'programs:detail' program.pk %}" style="display:block;padding:.75rem;border:1px solid var(--border);border-radius:8px;text-decoration:none;color:inherit;margin-bottom:.5rem;transition:background .15s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background=''">
       <div style="font-weight:600;">{{ program.name }}</div>
-      <div style="font-size:.82rem;color:var(--text-muted);">{{ program.days.count }} day{{ program.days.count|pluralize }} · Created {{ program.created_at|date:"d M Y" }}</div>
+      <div style="font-size:.82rem;color:var(--text-muted);">
+        {{ program.days.count }} day{{ program.days.count|pluralize }} · Created {{ program.created_at|date:"d M Y" }}
+        {% if program.start_date %} · Started {{ program.start_date|date:"d M Y" }}{% endif %}
+      </div>
     </a>
     {% endfor %}
   {% else %}

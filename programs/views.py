@@ -1,4 +1,5 @@
 import json
+from datetime import date
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
@@ -52,6 +53,7 @@ def program_generate(request, student_pk):
                 description='\n'.join(key_findings) if key_findings else ai_result.get('description', ''),
                 training_days=training_days,
                 nutrition_plan=ai_result.get('nutrition'),
+                start_date=date.today(),
             )
 
             exercise_library = {ex.name.lower(): ex for ex in ExerciseLibrary.objects.all()}

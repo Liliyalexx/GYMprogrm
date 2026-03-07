@@ -24,6 +24,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'students',
     'programs',
+    'progress',
+    'measurements',
 ]
 
 MIDDLEWARE = [
@@ -102,7 +104,7 @@ if CLOUDINARY_URL:
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/auth/redirect/'
 LOGOUT_REDIRECT_URL = '/login/'
 
 ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
