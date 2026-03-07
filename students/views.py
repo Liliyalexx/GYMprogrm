@@ -224,6 +224,38 @@ def invite_register(request, token):
 
 
 # ---------------------------------------------------------------------------
+# Send intake form by email
+# ---------------------------------------------------------------------------
+
+@login_required
+@require_POST
+def send_intake_email(request):
+    """Trainer enters an email → system emails the intake form link."""
+    from django.core.mail import send_mail
+    from django.conf import settings as django_settings
+
+    email = request.POST.get('email', '').strip()
+    if not email:
+        return JsonResponse({'error': 'Email is required.'}, status=400)
+
+    intake_url = request.build_absolute_uri('/intake/')
+    subject = 'Your fitness intake form'
+    body = (
+        f'Hi!\n\n'
+        f'Your trainer has invited you to fill in a quick intake form.\n'
+        f'It takes about 3 minutes and helps build a program tailored just for you.\n\n'
+        f'Fill in your form here:\n{intake_url}\n\n'
+        f'— GYMprogrm'
+    )
+
+    try:
+        send_mail(subject, body, django_settings.DEFAULT_FROM_EMAIL, [email], fail_silently=False)
+        return JsonResponse({'ok': True})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+# ---------------------------------------------------------------------------
 # Public intake form
 # ---------------------------------------------------------------------------
 
@@ -246,6 +278,10 @@ def client_intake(request):
             height_raw = request.POST.get('height_cm', '').strip()
             weight_raw = request.POST.get('weight_kg', '').strip()
             days_raw = request.POST.get('training_days_per_week', '').strip()
+            goals = request.POST.get('goals', '').strip()
+            expectations = request.POST.get('expectations', '').strip()
+            if expectations:
+                goals = goals + ('\n\n' if goals else '') + 'Expectations from trainer:\n' + expectations
 
             student = Student(
                 name=name,
@@ -254,7 +290,7 @@ def client_intake(request):
                 phone=request.POST.get('phone', '').strip(),
                 date_of_birth=dob,
                 health_issues=request.POST.get('health_issues', '').strip(),
-                goals=request.POST.get('goals', '').strip(),
+                goals=goals,
                 training_days_per_week=int(days_raw) if days_raw.isdigit() else None,
                 follow_nutrition=request.POST.get('follow_nutrition') == '1',
                 height_cm=height_raw if height_raw else None,
@@ -267,6 +303,22 @@ def client_intake(request):
             if request.FILES.get('blood_test_file'):
                 student.blood_test_file = request.FILES['blood_test_file']
                 student.save(update_fields=['blood_test_file'])
+
+            if request.FILES.get('photo'):
+                student.photo = request.FILES['photo']
+                student.save(update_fields=['photo'])
+
+            # Save initial body measurements if any provided
+            from measurements.models import BodyMeasurement
+            meas_fields = ['waist_cm', 'hips_cm', 'chest_cm', 'arms_cm', 'legs_cm']
+            meas_data = {f: request.POST.get(f, '').strip() or None for f in meas_fields}
+            if any(meas_data.values()):
+                BodyMeasurement.objects.create(
+                    student=student,
+                    date=dob or date.today(),
+                    weight_kg=weight_raw if weight_raw else None,
+                    **meas_data,
+                )
 
             return redirect('intake_success')
 

@@ -14,6 +14,7 @@ urlpatterns = [
     path('intake/', student_views.client_intake, name='intake'),
     path('intake/success/', student_views.intake_success, name='intake_success'),
     path('invite/<uuid:token>/', student_views.invite_register, name='invite_register'),
+    path('send-intake-email/', student_views.send_intake_email, name='send_intake_email'),
     path('students/', include('students.urls', namespace='students')),
     path('programs/', include('programs.urls', namespace='programs')),
     path('', lambda request: redirect('students:list'), name='home'),

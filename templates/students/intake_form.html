@@ -223,6 +223,26 @@
           <label for="id_weight">Weight, kg <span class="opt">(optional)</span></label>
           <input type="number" name="weight_kg" id="id_weight" placeholder="62" min="30" max="300" step="0.1" value="{{ request.POST.weight_kg|default:'' }}">
         </div>
+        <div class="ifield">
+          <label for="id_waist">Waist, cm <span class="opt">(optional)</span></label>
+          <input type="number" name="waist_cm" id="id_waist" placeholder="72" min="40" max="200" step="0.1" value="{{ request.POST.waist_cm|default:'' }}">
+        </div>
+        <div class="ifield">
+          <label for="id_hips">Hips, cm <span class="opt">(optional)</span></label>
+          <input type="number" name="hips_cm" id="id_hips" placeholder="96" min="40" max="200" step="0.1" value="{{ request.POST.hips_cm|default:'' }}">
+        </div>
+        <div class="ifield">
+          <label for="id_chest">Chest, cm <span class="opt">(optional)</span></label>
+          <input type="number" name="chest_cm" id="id_chest" placeholder="88" min="40" max="200" step="0.1" value="{{ request.POST.chest_cm|default:'' }}">
+        </div>
+        <div class="ifield">
+          <label for="id_arms">Arms, cm <span class="opt">(optional)</span></label>
+          <input type="number" name="arms_cm" id="id_arms" placeholder="28" min="10" max="100" step="0.1" value="{{ request.POST.arms_cm|default:'' }}">
+        </div>
+        <div class="ifield">
+          <label for="id_legs">Legs (thigh), cm <span class="opt">(optional)</span></label>
+          <input type="number" name="legs_cm" id="id_legs" placeholder="54" min="20" max="120" step="0.1" value="{{ request.POST.legs_cm|default:'' }}">
+        </div>
       </div>
     </div>
 
@@ -246,14 +266,32 @@
       </div>
     </div>
 
-    <!-- Goals -->
+    <!-- Goals & Expectations -->
     <div class="intake-section">
-      <div class="intake-section-title">🎯 Your goals</div>
+      <div class="intake-section-title">🎯 Goals & expectations</div>
       <div class="ifield">
         <label for="id_goals">What do you want to achieve? <span class="req">*</span></label>
         <textarea name="goals" id="id_goals" required
           placeholder="e.g. lose 15 lbs, tone glutes and legs, improve posture, build muscle, increase stamina…">{{ request.POST.goals|default:'' }}</textarea>
       </div>
+      <div class="ifield">
+        <label for="id_expectations">What do you expect from your trainer? <span class="opt">(optional)</span></label>
+        <textarea name="expectations" id="id_expectations"
+          placeholder="e.g. detailed explanations of exercises, regular check-ins, strict nutrition guidance, flexible schedule…">{{ request.POST.expectations|default:'' }}</textarea>
+      </div>
+    </div>
+
+    <!-- Photo in sport clothes -->
+    <div class="intake-section">
+      <div class="intake-section-title">📸 Photo in sport clothes</div>
+      <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:.75rem;">
+        A front and/or back photo in workout clothes helps your trainer see your starting point and track progress. Completely optional.
+      </p>
+      <label class="file-label" for="id_photo">
+        <span style="font-size:1.2rem;">📷</span>
+        <span id="photo-label-text">Attach photo (JPG, PNG)</span>
+        <input type="file" name="photo" id="id_photo" accept=".jpg,.jpeg,.png,.webp">
+      </label>
     </div>
 
     <!-- Training -->
@@ -299,6 +337,10 @@
   document.getElementById('id_blood').addEventListener('change', function() {
     document.getElementById('blood-label-text').textContent =
       this.files[0] ? this.files[0].name : 'Attach file';
+  });
+  document.getElementById('id_photo').addEventListener('change', function() {
+    document.getElementById('photo-label-text').textContent =
+      this.files[0] ? this.files[0].name : 'Attach photo (JPG, PNG)';
   });
 </script>
 {% endblock %}

@@ -4,13 +4,46 @@
 {% block content %}
 <div class="page-header">
   <h1 class="page-title">My Students</h1>
-  <div style="display:flex;gap:.6rem;align-items:center;">
-    <a href="/intake/" target="_blank" style="font-size:.82rem;padding:.35rem .8rem;border-radius:7px;border:1px solid var(--border);background:#f8fafc;color:var(--text-muted);text-decoration:none;" title="Copy this link and send to clients">
-      🔗 Client intake link
-    </a>
+  <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;">
     <a href="{% url 'students:create' %}" class="btn btn-primary">+ Add Student</a>
   </div>
 </div>
+
+<!-- Send intake form by email -->
+<div class="card" style="margin-bottom:1.5rem;padding:1rem 1.25rem;">
+  <div style="font-size:.88rem;font-weight:700;margin-bottom:.6rem;">📧 Send intake form by email</div>
+  <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+    <input type="email" id="intake-email-input" placeholder="client@example.com"
+      style="flex:1;min-width:200px;padding:.5rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;">
+    <button class="btn btn-primary btn-sm" onclick="sendIntakeEmail()">Send</button>
+    <a href="/intake/" target="_blank" style="font-size:.82rem;color:var(--text-muted);text-decoration:none;">or copy link →</a>
+  </div>
+  <div id="intake-email-result" style="font-size:.85rem;margin-top:.5rem;"></div>
+</div>
+
+<script>
+function sendIntakeEmail() {
+  var email = document.getElementById('intake-email-input').value.trim();
+  var result = document.getElementById('intake-email-result');
+  if (!email) { result.innerHTML = '<span style="color:#dc2626;">Please enter an email address.</span>'; return; }
+  result.textContent = 'Sending…';
+  fetch('{% url "send_intake_email" %}', {
+    method: 'POST',
+    headers: {'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/x-www-form-urlencoded'},
+    body: 'email=' + encodeURIComponent(email),
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.ok) {
+      result.innerHTML = '<span style="color:#16a34a;font-weight:600;">✓ Email sent to ' + email + '</span>';
+      document.getElementById('intake-email-input').value = '';
+    } else {
+      result.innerHTML = '<span style="color:#dc2626;">Error: ' + (data.error || 'Unknown error') + '</span>';
+    }
+  })
+  .catch(function() { result.innerHTML = '<span style="color:#dc2626;">Network error — try again.</span>'; });
+}
+</script>
 
 <!-- Trainer reminder banners -->
 {% for r in all_reminders %}
