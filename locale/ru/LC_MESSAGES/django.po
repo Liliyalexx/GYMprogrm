@@ -1,0 +1,821 @@
+# Russian translations for GYMprogrm
+msgid ""
+msgstr ""
+"Project-Id-Version: GYMprogrm\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-03-07 19:18+0000\n"
+"PO-Revision-Date: 2026-03-07 00:00+0000\n"
+"Last-Translator: GYMprogrm\n"
+"Language-Team: Russian\n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n%100>=11 && n%100<=14)? 2 : 3);\n"
+
+msgid "English"
+msgstr "English"
+
+msgid "Русский"
+msgstr "Русский"
+
+msgid "Español"
+msgstr "Español"
+
+msgid "Français"
+msgstr "Français"
+
+msgid "Deutsch"
+msgstr "Deutsch"
+
+msgid "Italiano"
+msgstr "Italiano"
+
+msgid "Português"
+msgstr "Português"
+
+msgid "中文"
+msgstr "中文"
+
+msgid "العربية"
+msgstr "العربية"
+
+msgid "日本語"
+msgstr "日本語"
+
+msgid "Students"
+msgstr "Ученики"
+
+msgid "Exercises"
+msgstr "Упражнения"
+
+msgid "Dashboard"
+msgstr "Главная"
+
+msgid "My Program"
+msgstr "Моя программа"
+
+msgid "Measurements"
+msgstr "Замеры"
+
+msgid "History"
+msgstr "История"
+
+msgid "Logout"
+msgstr "Выйти"
+
+msgid "Generate Program"
+msgstr "Создать программу"
+
+msgid "Error:"
+msgstr "Ошибка:"
+
+msgid "Make sure your ANTHROPIC_API_KEY is set in .env"
+msgstr "Убедитесь, что ANTHROPIC_API_KEY задан в .env"
+
+msgid "Generate AI-powered program for %(name)s"
+msgstr "Создать AI-программу для %(name)s"
+
+msgid "Goals:"
+msgstr "Цели:"
+
+msgid "Not specified"
+msgstr "Не указано"
+
+msgid "Health issues:"
+msgstr "Проблемы со здоровьем:"
+
+msgid "None reported"
+msgstr "Не указаны"
+
+msgid "Blood test:"
+msgstr "Анализ крови:"
+
+msgid "File uploaded"
+msgstr "Файл загружен"
+
+msgid "Where will the student train?"
+msgstr "Где будет тренироваться ученик?"
+
+msgid "Gym"
+msgstr "Зал"
+
+msgid "Machines, barbells, cables"
+msgstr "Тренажёры, штанги, блоки"
+
+msgid "Home"
+msgstr "Дома"
+
+msgid "Bodyweight & dumbbells"
+msgstr "Своё тело и гантели"
+
+msgid "How many days per week will the student train?"
+msgstr "Сколько дней в неделю будет тренироваться?"
+
+msgid "days / week"
+msgstr "дней в неделю"
+
+msgid "Program created:"
+msgstr "Программа создана:"
+
+msgid "Training Programs"
+msgstr "Программы тренировок"
+
+msgid "Create Program"
+msgstr "Создать программу"
+
+msgid "%(days)s day · %(weeks)s workouts per week · "
+msgstr "%(days)s дней · %(weeks)s тренировок в неделю · "
+
+msgid "Created"
+msgstr "Создана"
+
+msgid "Open program →"
+msgstr "Открыть программу →"
+
+msgid "Analysis findings"
+msgstr "Результаты анализа"
+
+msgid "No programs yet for %(name)s."
+msgstr "Программ пока нет для %(name)s."
+
+msgid "Create first program"
+msgstr "Создать первую программу"
+
+msgid "Login"
+msgstr "Вход"
+
+msgid "Invalid username or password."
+msgstr "Неверный логин или пароль."
+
+msgid "Username"
+msgstr "Имя пользователя"
+
+msgid "Password"
+msgstr "Пароль"
+
+msgid "Sign In"
+msgstr "Войти"
+
+msgid "Summary:"
+msgstr "Резюме:"
+
+msgid "Requires doctor attention"
+msgstr "Требует внимания врача"
+
+msgid "Blood markers"
+msgstr "Показатели крови"
+
+msgid "Marker"
+msgstr "Показатель"
+
+msgid "Result"
+msgstr "Результат"
+
+msgid "Reference"
+msgstr "Норма"
+
+msgid "Interpretation"
+msgstr "Интерпретация"
+
+msgid "Deficiencies & recommendations"
+msgstr "Дефициты и рекомендации"
+
+msgid "Severe"
+msgstr "Тяжёлый"
+
+msgid "Moderate"
+msgstr "Умеренный"
+
+msgid "Mild"
+msgstr "Лёгкий"
+
+msgid "Foods:"
+msgstr "Продукты:"
+
+msgid "Impact on training"
+msgstr "Влияние на тренировки"
+
+msgid "Nutrition by test results"
+msgstr "Питание по результатам анализов"
+
+msgid "Normal findings"
+msgstr "Нормальные показатели"
+
+msgid "Client Intake Form"
+msgstr "Анкета клиента"
+
+msgid "Your Personal Fitness Intake Form"
+msgstr "Ваша персональная фитнес-анкета"
+
+msgid "Takes about 3 minutes to complete."
+msgstr "Займёт около 3 минут."
+
+msgid "Your trainer will review this and build a program tailored just for you."
+msgstr "Тренер изучит анкету и составит программу специально для вас."
+
+msgid "Personal information"
+msgstr "Личная информация"
+
+msgid "Full name"
+msgstr "Полное имя"
+
+msgid "Date of birth"
+msgstr "Дата рождения"
+
+msgid "Gender"
+msgstr "Пол"
+
+msgid "optional"
+msgstr "необязательно"
+
+msgid "not specified"
+msgstr "не указан"
+
+msgid "Female"
+msgstr "Женский"
+
+msgid "Male"
+msgstr "Мужской"
+
+msgid "Other"
+msgstr "Другой"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "Phone"
+msgstr "Телефон"
+
+msgid "Body measurements"
+msgstr "Замеры тела"
+
+msgid "Height, cm"
+msgstr "Рост, см"
+
+msgid "Weight, kg"
+msgstr "Вес, кг"
+
+msgid "Waist, cm"
+msgstr "Талия, см"
+
+msgid "Hips, cm"
+msgstr "Бёдра, см"
+
+msgid "Chest, cm"
+msgstr "Грудь, см"
+
+msgid "Arms, cm"
+msgstr "Руки, см"
+
+msgid "Legs (thigh), cm"
+msgstr "Ноги (бедро), см"
+
+msgid "Health & injuries"
+msgstr "Здоровье и травмы"
+
+msgid "Health issues, injuries or contraindications"
+msgstr "Проблемы со здоровьем, травмы или противопоказания"
+
+msgid "e.g. lower back pain, varicose veins, high blood pressure, knee surgery in 2020…"
+msgstr "напр. боль в пояснице, варикоз, гипертония, операция на колене в 2020…"
+
+msgid "Blood test results"
+msgstr "Результаты анализа крови"
+
+msgid "optional — PDF or photo"
+msgstr "необязательно — PDF или фото"
+
+msgid "Attach file"
+msgstr "Прикрепить файл"
+
+msgid "Goals & expectations"
+msgstr "Цели и ожидания"
+
+msgid "What do you want to achieve?"
+msgstr "Чего вы хотите достичь?"
+
+msgid "e.g. lose 15 lbs, tone glutes and legs, improve posture, build muscle, increase stamina…"
+msgstr "напр. похудеть на 7 кг, подтянуть ягодицы и ноги, улучшить осанку, набрать мышцы…"
+
+msgid "What do you expect from your trainer?"
+msgstr "Чего вы ожидаете от тренера?"
+
+msgid "e.g. detailed explanations of exercises, regular check-ins, strict nutrition guidance, flexible schedule…"
+msgstr "напр. подробные объяснения упражнений, регулярные проверки, строгое питание…"
+
+msgid "Photo in sport clothes"
+msgstr "Фото в спортивной одежде"
+
+msgid "A front and/or back photo in workout clothes helps your trainer see your starting point and track progress. Completely optional."
+msgstr "Фото спереди и/или сзади в спортивной одежде помогает тренеру видеть стартовую точку и отслеживать прогресс. Полностью по желанию."
+
+msgid "Attach photo (JPG, PNG)"
+msgstr "Прикрепить фото (JPG, PNG)"
+
+msgid "Training availability"
+msgstr "Расписание тренировок"
+
+msgid "How many days per week can you train?"
+msgstr "Сколько дней в неделю вы можете тренироваться?"
+
+msgid "%(d)s days"
+msgstr "%(d)s дней"
+
+msgid "Are you willing to follow nutrition recommendations?"
+msgstr "Готовы следовать рекомендациям по питанию?"
+
+msgid "Your trainer may suggest a meal plan alongside your workouts."
+msgstr "Тренер может предложить план питания вместе с тренировками."
+
+msgid "Yes, I'm in"
+msgstr "Да, я готова / готов"
+
+msgid "Not right now"
+msgstr "Пока нет"
+
+msgid "Submit my form →"
+msgstr "Отправить анкету →"
+
+msgid "Your information is private and will only be used by your trainer to build your program."
+msgstr "Ваши данные конфиденциальны и используются только тренером для составления программы."
+
+msgid "Form Submitted"
+msgstr "Анкета отправлена"
+
+msgid "You're all set!"
+msgstr "Всё готово!"
+
+msgid "Your trainer has received your intake form and will be in touch soon."
+msgstr "Тренер получил вашу анкету и скоро свяжется с вами."
+
+msgid "What happens next:"
+msgstr "Что будет дальше:"
+
+msgid "Your trainer reviews your intake form"
+msgstr "Тренер изучает вашу анкету"
+
+msgid "A program tailored to your goals is created"
+msgstr "Создаётся программа под ваши цели"
+
+msgid "Your trainer will contact you to go over the details"
+msgstr "Тренер свяжется с вами для обсуждения деталей"
+
+msgid "Create Account"
+msgstr "Создать аккаунт"
+
+msgid "Welcome, %(name)s!"
+msgstr "Добро пожаловать, %(name)s!"
+
+msgid "Create your account to access your workout portal."
+msgstr "Создайте аккаунт для доступа к порталу тренировок."
+
+msgid "Email address"
+msgstr "Email адрес"
+
+msgid "At least 8 characters."
+msgstr "Минимум 8 символов."
+
+msgid "Confirm password"
+msgstr "Подтвердите пароль"
+
+msgid "Create Account & Go to My Portal"
+msgstr "Создать аккаунт и перейти в портал"
+
+msgid "Delete %(name)s"
+msgstr "Удалить %(name)s"
+
+msgid "Delete %(name)s?"
+msgstr "Удалить %(name)s?"
+
+msgid "This action cannot be undone. All programs and data for this student will be permanently removed."
+msgstr "Это действие необратимо. Все программы и данные ученика будут удалены навсегда."
+
+msgid "Yes, Delete"
+msgstr "Да, удалить"
+
+msgid "Cancel"
+msgstr "Отмена"
+
+msgid "Programs"
+msgstr "Программы"
+
+msgid "Edit"
+msgstr "Редактировать"
+
+msgid "Delete"
+msgstr "Удалить"
+
+msgid "Generate new →"
+msgstr "Создать новую →"
+
+msgid "%(plan)s payment is due for this student."
+msgstr "Оплата «%(plan)s» для этого ученика просрочена."
+
+msgid "Profile"
+msgstr "Профиль"
+
+msgid "Age"
+msgstr "Возраст"
+
+msgid "%(age)s years old"
+msgstr "%(age)s лет"
+
+msgid "Date of Birth"
+msgstr "Дата рождения"
+
+msgid "Student Account"
+msgstr "Аккаунт ученика"
+
+msgid "Account active"
+msgstr "Аккаунт активен"
+
+msgid "No account yet. Send an invite link for the student to register."
+msgstr "Аккаунта нет. Отправьте ссылку-приглашение для регистрации."
+
+msgid "Send Invite Link"
+msgstr "Отправить ссылку"
+
+msgid "Billing"
+msgstr "Оплата"
+
+msgid "Plan:"
+msgstr "Тариф:"
+
+msgid "Started:"
+msgstr "Начало:"
+
+msgid "Edit payment info →"
+msgstr "Редактировать оплату →"
+
+msgid "Goals & Wishes"
+msgstr "Цели и пожелания"
+
+msgid "Health Issues"
+msgstr "Здоровье"
+
+msgid "Blood Test"
+msgstr "Анализ крови"
+
+msgid "View File"
+msgstr "Просмотреть файл"
+
+msgid "Analyze Blood Test"
+msgstr "Анализировать"
+
+msgid "Upload / Replace"
+msgstr "Загрузить / Заменить"
+
+msgid "No blood test uploaded yet."
+msgstr "Анализ крови не загружен."
+
+msgid "Upload now →"
+msgstr "Загрузить →"
+
+msgid "Blood test file uploaded. Click"
+msgstr "Файл анализа загружен. Нажмите"
+
+msgid "above."
+msgstr "выше."
+
+msgid "Starting…"
+msgstr "Запуск…"
+
+msgid "Analysing…"
+msgstr "Анализируем…"
+
+msgid "Network error — please try again."
+msgstr "Ошибка сети — попробуйте снова."
+
+msgid "Analysis failed."
+msgstr "Анализ не удался."
+
+msgid "Generating…"
+msgstr "Генерация…"
+
+msgid "Link copied!"
+msgstr "Ссылка скопирована!"
+
+msgid "Copy this link:"
+msgstr "Скопируйте ссылку:"
+
+msgid "Unknown error"
+msgstr "Неизвестная ошибка"
+
+msgid "Notes"
+msgstr "Заметки"
+
+msgid "Generate New"
+msgstr "Создать новую"
+
+msgid "day"
+msgid_plural "days"
+msgstr[0] "день"
+msgstr[1] "дня"
+msgstr[2] "дней"
+msgstr[3] "дней"
+
+msgid "Started"
+msgstr "Начата"
+
+msgid "No programs yet."
+msgstr "Программ пока нет."
+
+msgid "Generate one →"
+msgstr "Создать →"
+
+msgid "Full Name"
+msgstr "Полное имя"
+
+msgid "Height (cm)"
+msgstr "Рост (см)"
+
+msgid "Weight (kg)"
+msgstr "Вес (кг)"
+
+msgid "Desirable weight:"
+msgstr "Желаемый вес:"
+
+msgid "Broca formula (F, 18+)"
+msgstr "Формула Брока (Ж, 18+)"
+
+msgid "Broca formula (M, 18+)"
+msgstr "Формула Брока (М, 18+)"
+
+msgid "Broca formula (18+)"
+msgstr "Формула Брока (18+)"
+
+msgid "BMI 50th percentile (WHO, age %(age)s)"
+msgstr "ИМТ 50-й процентиль (ВОЗ, возраст %(age)s)"
+
+msgid "Photo"
+msgstr "Фото"
+
+msgid "JPG, PNG or WebP. Shown on the student profile."
+msgstr "JPG, PNG или WebP. Отображается в профиле ученика."
+
+msgid "Blood Test Result (PDF or image)"
+msgstr "Результат анализа крови (PDF или фото)"
+
+msgid "Current file:"
+msgstr "Текущий файл:"
+
+msgid "re-upload to refresh link"
+msgstr "загрузите снова для обновления ссылки"
+
+msgid "Upload the lab results PDF or a photo."
+msgstr "Загрузите PDF или фото с результатами лаборатории."
+
+msgid "Health Issues / Contraindications"
+msgstr "Проблемы со здоровьем / Противопоказания"
+
+msgid "AI Correct"
+msgstr "Исправить (AI)"
+
+msgid "E.g. lower back pain, knee injury, hypertension..."
+msgstr "Напр. боль в пояснице, травма колена, гипертония..."
+
+msgid "E.g. make glutes bigger, reduce body fat, improve stamina..."
+msgstr "Напр. увеличить ягодицы, снизить жир, улучшить выносливость..."
+
+msgid "Correcting…"
+msgstr "Исправление…"
+
+msgid "✓ Rewritten in professional language"
+msgstr "✓ Переформулировано профессионально"
+
+msgid "✗ Error — try again"
+msgstr "✗ Ошибка — попробуйте снова"
+
+msgid "Additional Notes"
+msgstr "Дополнительные заметки"
+
+msgid "Any other relevant information..."
+msgstr "Любая другая важная информация..."
+
+msgid "Save Student"
+msgstr "Сохранить ученика"
+
+msgid "My Students"
+msgstr "Мои ученики"
+
+msgid "Add Student"
+msgstr "Добавить ученика"
+
+msgid "Send intake form by email"
+msgstr "Отправить анкету по email"
+
+msgid "Send"
+msgstr "Отправить"
+
+msgid "or copy link →"
+msgstr "или скопировать ссылку →"
+
+msgid "Please enter an email address."
+msgstr "Введите email адрес."
+
+msgid "Sending…"
+msgstr "Отправка…"
+
+msgid "Network error — try again."
+msgstr "Ошибка сети — попробуйте снова."
+
+msgid "Email sent to"
+msgstr "Email отправлен на"
+
+msgid "%(plan)s payment is due."
+msgstr "Оплата «%(plan)s» просрочена."
+
+msgid "New Applications"
+msgstr "Новые заявки"
+
+msgid "View"
+msgstr "Просмотр"
+
+msgid "Accept"
+msgstr "Принять"
+
+msgid "program"
+msgid_plural "programs"
+msgstr[0] "программа"
+msgstr[1] "программы"
+msgstr[2] "программ"
+msgstr[3] "программ"
+
+msgid "Active"
+msgstr "Активен"
+
+msgid "No account"
+msgstr "Нет аккаунта"
+
+msgid "No students yet. Add your first student!"
+msgstr "Учеников пока нет. Добавьте первого!"
+
+msgid "My Portal"
+msgstr "Мой портал"
+
+msgid "Your trainer will be updating your program soon — keep up the great work!"
+msgstr "Тренер скоро обновит вашу программу — продолжайте в том же духе!"
+
+msgid "Your subscription (%(plan)s) is coming up for renewal — contact your trainer."
+msgstr "Ваша подписка «%(plan)s» скоро заканчивается — свяжитесь с тренером."
+
+msgid "Hi, %(name)s!"
+msgstr "Привет, %(name)s!"
+
+msgid "Current Program"
+msgstr "Текущая программа"
+
+msgid "%(n)s day remaining in this 2-week block"
+msgid_plural "%(n)s days remaining in this 2-week block"
+msgstr[0] "%(n)s день осталось в этом блоке"
+msgstr[1] "%(n)s дня осталось в этом блоке"
+msgstr[2] "%(n)s дней осталось в этом блоке"
+msgstr[3] "%(n)s дней осталось в этом блоке"
+
+msgid "Program period complete — new program coming soon!"
+msgstr "Период программы завершён — скоро новая программа!"
+
+msgid "View Full Program"
+msgstr "Смотреть программу"
+
+msgid "No active program yet. Your trainer will set one up for you."
+msgstr "Активной программы нет. Тренер скоро её составит."
+
+msgid "Log Measurements"
+msgstr "Записать замеры"
+
+msgid "Last: %(d)s"
+msgstr "Последний: %(d)s"
+
+msgid "No logs yet"
+msgstr "Записей нет"
+
+msgid "My History"
+msgstr "Моя история"
+
+msgid "Past workouts & progress"
+msgstr "Прошлые тренировки и прогресс"
+
+msgid "Recent Workouts"
+msgstr "Недавние тренировки"
+
+msgid "Workout"
+msgstr "Тренировка"
+
+msgid "Done"
+msgstr "Готово"
+
+msgid "View all history →"
+msgstr "Вся история →"
+
+msgid "Workout History"
+msgstr "История тренировок"
+
+msgid "Completed"
+msgstr "Завершено"
+
+msgid "No workouts logged yet. Go log your first workout!"
+msgstr "Тренировок пока нет. Запишите первую!"
+
+msgid "View Program"
+msgstr "Смотреть программу"
+
+msgid "Log Workout"
+msgstr "Записать тренировку"
+
+msgid "Program"
+msgstr "Программа"
+
+msgid "Log:"
+msgstr "Запись:"
+
+msgid "Target:"
+msgstr "Цель:"
+
+msgid "Sets done"
+msgstr "Выполнено подходов"
+
+msgid "Reps"
+msgstr "Повторения"
+
+msgid "Notes (optional)"
+msgstr "Заметки (необязательно)"
+
+msgid "How did it feel?"
+msgstr "Как ощущения?"
+
+msgid "Workout notes (optional)"
+msgstr "Заметки о тренировке (необязательно)"
+
+msgid "Overall notes for this session..."
+msgstr "Общие заметки о занятии..."
+
+msgid "Save Workout"
+msgstr "Сохранить тренировку"
+
+msgid "Body Measurements"
+msgstr "Замеры тела"
+
+msgid "Log Today's Measurements"
+msgstr "Записать сегодняшние замеры"
+
+msgid "Date"
+msgstr "Дата"
+
+msgid "Body Fat %%"
+msgstr "%% жира"
+
+msgid "Waist (cm)"
+msgstr "Талия (см)"
+
+msgid "Hips (cm)"
+msgstr "Бёдра (см)"
+
+msgid "Chest (cm)"
+msgstr "Грудь (см)"
+
+msgid "Arms (cm)"
+msgstr "Руки (см)"
+
+msgid "Legs (cm)"
+msgstr "Ноги (см)"
+
+msgid "Save Measurements"
+msgstr "Сохранить замеры"
+
+msgid "Weight"
+msgstr "Вес"
+
+msgid "BF%%"
+msgstr "%% жира"
+
+msgid "Waist"
+msgstr "Талия"
+
+msgid "Hips"
+msgstr "Бёдра"
+
+msgid "Chest"
+msgstr "Грудь"
+
+msgid "Arms"
+msgstr "Руки"
+
+msgid "Legs"
+msgstr "Ноги"
+
+msgid "No measurements logged yet. Fill in the form above to start tracking!"
+msgstr "Замеров пока нет. Заполните форму выше, чтобы начать отслеживать!"
+
+msgid "Log this workout"
+msgstr "Записать тренировку"
+
+msgid "Technique tips"
+msgstr "Советы по технике"
+
+msgid "Your trainer hasn't set up your program yet. Check back soon!"
+msgstr "Тренер ещё не составил программу. Проверьте позже!"
+
+msgid "No file selected!"
+msgstr "Файл не выбран!"
