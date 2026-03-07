@@ -1,16 +1,17 @@
 {% extends 'base.html' %}
-{% block title %}Delete {{ student.name }}{% endblock %}
+{% load i18n %}
+{% block title %}{% blocktrans with name=student.name %}Delete {{ name }}{% endblocktrans %}{% endblock %}
 
 {% block content %}
 <div style="max-width:480px;margin:0 auto;text-align:center;padding-top:3rem;">
   <div class="card">
     <p style="font-size:2.5rem;margin-bottom:1rem;">⚠️</p>
-    <h1 style="font-size:1.3rem;margin-bottom:.75rem;">Delete {{ student.name }}?</h1>
-    <p style="color:var(--text-muted);margin-bottom:1.5rem;">This will permanently delete the student and all their programs. This cannot be undone.</p>
+    <h1 style="font-size:1.3rem;margin-bottom:.75rem;">{% blocktrans with name=student.name %}Delete {{ name }}?{% endblocktrans %}</h1>
+    <p style="color:var(--text-muted);margin-bottom:1.5rem;">{% trans "This will permanently delete the student and all their programs. This cannot be undone." %}</p>
     <form method="post" style="display:flex;gap:.75rem;justify-content:center;">
       {% csrf_token %}
-      <button type="submit" class="btn btn-danger">Yes, Delete</button>
-      <a href="{% url 'students:list' %}" class="btn btn-outline">Cancel</a>
+      <button type="submit" class="btn btn-danger">{% trans "Yes, Delete" %}</button>
+      <a href="{% url 'students:list' %}" class="btn btn-outline">{% trans "Cancel" %}</a>
     </form>
   </div>
 </div>

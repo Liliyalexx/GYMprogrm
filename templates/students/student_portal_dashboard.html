@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
-{% block title %}My Portal — GYMprogrm{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "My Portal" %} — GYMprogrm{% endblock %}
 
 {% block content %}
 
@@ -7,36 +8,36 @@
 {% for r in reminders %}
   {% if r.type == 'change_program' %}
   <div class="banner banner-warning">
-    💪 Your trainer will be updating your program soon — keep up the great work!
+    💪 {% trans "Your trainer will be updating your program soon — keep up the great work!" %}
   </div>
   {% elif r.type == 'payment_due' %}
   <div class="banner banner-danger">
-    💳 Your subscription ({{ r.plan }}) is coming up for renewal — contact your trainer.
+    💳 {% blocktrans with plan=r.plan %}Your subscription ({{ plan }}) is coming up for renewal — contact your trainer.{% endblocktrans %}
   </div>
   {% endif %}
 {% endfor %}
 
 <div class="page-header">
-  <h1 class="page-title">Hi, {{ student.name }}!</h1>
+  <h1 class="page-title">{% blocktrans with name=student.name %}Hi, {{ name }}!{% endblocktrans %}</h1>
 </div>
 
 <!-- Current program card -->
 <div class="card" style="margin-bottom:1.25rem;">
-  <h2 style="font-size:1rem;font-weight:700;margin-bottom:.75rem;">📋 Current Program</h2>
+  <h2 style="font-size:1rem;font-weight:700;margin-bottom:.75rem;">📋 {% trans "Current Program" %}</h2>
   {% if active_program %}
     <div style="font-weight:600;font-size:1.05rem;margin-bottom:.35rem;">{{ active_program.name }}</div>
     {% if days_remaining is not None %}
       <div style="font-size:.88rem;color:var(--text-muted);margin-bottom:1rem;">
         {% if days_remaining > 0 %}
-          {{ days_remaining }} day{{ days_remaining|pluralize }} remaining in this 2-week block
+          {% blocktrans count n=days_remaining %}{{ n }} day remaining in this 2-week block{% plural %}{{ n }} days remaining in this 2-week block{% endblocktrans %}
         {% else %}
-          Program period complete — new program coming soon!
+          {% trans "Program period complete — new program coming soon!" %}
         {% endif %}
       </div>
     {% endif %}
-    <a href="{% url 'students:portal_program' %}" class="btn btn-primary">View Full Program</a>
+    <a href="{% url 'students:portal_program' %}" class="btn btn-primary">{% trans "View Full Program" %}</a>
   {% else %}
-    <p style="color:var(--text-muted);font-size:.9rem;">No active program yet. Your trainer will set one up for you.</p>
+    <p style="color:var(--text-muted);font-size:.9rem;">{% trans "No active program yet. Your trainer will set one up for you." %}</p>
   {% endif %}
 </div>
 
@@ -44,32 +45,32 @@
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.25rem;">
   <a href="{% url 'students:portal_measurements' %}" class="card" style="text-decoration:none;color:inherit;display:block;">
     <div style="font-size:1.5rem;margin-bottom:.4rem;">📏</div>
-    <div style="font-weight:600;">Log Measurements</div>
+    <div style="font-weight:600;">{% trans "Log Measurements" %}</div>
     <div style="font-size:.82rem;color:var(--text-muted);">
-      {% if last_measurement %}Last: {{ last_measurement.date|date:"d M" }}{% else %}No logs yet{% endif %}
+      {% if last_measurement %}{% blocktrans with d=last_measurement.date|date:"d M" %}Last: {{ d }}{% endblocktrans %}{% else %}{% trans "No logs yet" %}{% endif %}
     </div>
   </a>
   <a href="{% url 'students:portal_history' %}" class="card" style="text-decoration:none;color:inherit;display:block;">
     <div style="font-size:1.5rem;margin-bottom:.4rem;">📈</div>
-    <div style="font-weight:600;">My History</div>
-    <div style="font-size:.82rem;color:var(--text-muted);">Past workouts &amp; progress</div>
+    <div style="font-weight:600;">{% trans "My History" %}</div>
+    <div style="font-size:.82rem;color:var(--text-muted);">{% trans "Past workouts & progress" %}</div>
   </a>
 </div>
 
 <!-- Recent workouts -->
 {% if recent_logs %}
 <div class="card">
-  <h2 style="font-size:1rem;font-weight:700;margin-bottom:.75rem;">Recent Workouts</h2>
+  <h2 style="font-size:1rem;font-weight:700;margin-bottom:.75rem;">{% trans "Recent Workouts" %}</h2>
   {% for log in recent_logs %}
   <div style="padding:.6rem .75rem;border:1px solid var(--border);border-radius:8px;margin-bottom:.4rem;display:flex;align-items:center;justify-content:space-between;">
     <div>
-      <div style="font-weight:600;font-size:.9rem;">{{ log.program_day.name|default:"Workout" }}</div>
+      <div style="font-weight:600;font-size:.9rem;">{{ log.program_day.name|default:_("Workout") }}</div>
       <div style="font-size:.8rem;color:var(--text-muted);">{{ log.date|date:"d M Y" }}</div>
     </div>
-    {% if log.completed %}<span style="color:var(--success);font-size:.85rem;font-weight:600;">✓ Done</span>{% endif %}
+    {% if log.completed %}<span style="color:var(--success);font-size:.85rem;font-weight:600;">✓ {% trans "Done" %}</span>{% endif %}
   </div>
   {% endfor %}
-  <a href="{% url 'students:portal_history' %}" style="font-size:.85rem;color:var(--primary);text-decoration:none;">View all history →</a>
+  <a href="{% url 'students:portal_history' %}" style="font-size:.85rem;color:var(--primary);text-decoration:none;">{% trans "View all history →" %}</a>
 </div>
 {% endif %}
 

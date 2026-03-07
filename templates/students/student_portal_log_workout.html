@@ -1,11 +1,12 @@
 {% extends 'base.html' %}
-{% block title %}Log Workout — GYMprogrm{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Log Workout" %} — GYMprogrm{% endblock %}
 
 {% block content %}
 <div class="page-header">
   <div>
-    <a href="{% url 'students:portal_program' %}" style="color:var(--text-muted);font-size:.9rem;text-decoration:none;">← Program</a>
-    <h1 class="page-title" style="margin-top:.25rem;">Log: {{ program_day.name }}</h1>
+    <a href="{% url 'students:portal_program' %}" style="color:var(--text-muted);font-size:.9rem;text-decoration:none;">← {% trans "Program" %}</a>
+    <h1 class="page-title" style="margin-top:.25rem;">{% trans "Log:" %} {{ program_day.name }}</h1>
   </div>
 </div>
 
@@ -28,44 +29,44 @@
         <div style="font-weight:600;font-size:.95rem;">
           {% if ex.name_ru %}{{ ex.name_ru }}{% else %}{{ ex.exercise.name }}{% endif %}
         </div>
-        <div style="font-size:.82rem;color:var(--text-muted);">Target: {{ ex.sets }}×{{ ex.reps }}{% if ex.weight_kg %} @ {{ ex.weight_kg }}kg{% endif %}</div>
+        <div style="font-size:.82rem;color:var(--text-muted);">{% trans "Target:" %} {{ ex.sets }}×{{ ex.reps }}{% if ex.weight_kg %} @ {{ ex.weight_kg }}kg{% endif %}</div>
       </div>
     </div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;">
       <div class="form-group" style="margin-bottom:0;">
-        <label class="form-label" style="font-size:.8rem;">Sets done</label>
+        <label class="form-label" style="font-size:.8rem;">{% trans "Sets done" %}</label>
         <input class="form-control" type="number" name="exercise_{{ ex.pk }}_sets"
                value="{{ ex.sets }}" min="0" max="20" style="text-align:center;">
       </div>
       <div class="form-group" style="margin-bottom:0;">
-        <label class="form-label" style="font-size:.8rem;">Reps</label>
+        <label class="form-label" style="font-size:.8rem;">{% trans "Reps" %}</label>
         <input class="form-control" type="text" name="exercise_{{ ex.pk }}_reps"
                value="{{ ex.reps }}" placeholder="e.g. 10,10,8">
       </div>
       <div class="form-group" style="margin-bottom:0;">
-        <label class="form-label" style="font-size:.8rem;">Weight (kg)</label>
+        <label class="form-label" style="font-size:.8rem;">{% trans "Weight (kg)" %}</label>
         <input class="form-control" type="number" name="exercise_{{ ex.pk }}_weight"
                value="{% if ex.weight_kg %}{{ ex.weight_kg }}{% endif %}"
                step="0.5" min="0" placeholder="kg">
       </div>
     </div>
     <div class="form-group" style="margin-bottom:0;margin-top:.6rem;">
-      <label class="form-label" style="font-size:.8rem;">Notes (optional)</label>
-      <input class="form-control" type="text" name="exercise_{{ ex.pk }}_notes" placeholder="How did it feel?">
+      <label class="form-label" style="font-size:.8rem;">{% trans "Notes (optional)" %}</label>
+      <input class="form-control" type="text" name="exercise_{{ ex.pk }}_notes" placeholder="{% trans "How did it feel?" %}">
     </div>
   </div>
   {% endif %}
   {% endfor %}
 
   <div class="form-group">
-    <label class="form-label">Workout notes (optional)</label>
-    <textarea class="form-control" name="notes" rows="2" placeholder="Overall notes for this session..."></textarea>
+    <label class="form-label">{% trans "Workout notes (optional)" %}</label>
+    <textarea class="form-control" name="notes" rows="2" placeholder="{% trans "Overall notes for this session..." %}"></textarea>
   </div>
 
   <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
-    <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center;">Save Workout</button>
-    <a href="{% url 'students:portal_program' %}" class="btn btn-outline">Cancel</a>
+    <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center;">{% trans "Save Workout" %}</button>
+    <a href="{% url 'students:portal_program' %}" class="btn btn-outline">{% trans "Cancel" %}</a>
   </div>
 </form>
 {% endblock %}

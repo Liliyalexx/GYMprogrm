@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
-{% block title %}Client Intake Form — GYMprogrm{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Client Intake Form" %} — GYMprogrm{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -158,13 +159,12 @@
 {% block content %}
 <div class="intake-wrap">
   <div class="intake-hero">
-    <!-- Hero image: top half is the brand image, logo overlaid -->
     <div style="border-radius:16px;overflow:hidden;margin-bottom:1.5rem;position:relative;max-height:340px;">
       <img src="{% static 'images/logo.png' %}" alt="GymProgram"
         style="width:100%;height:100%;object-fit:cover;object-position:top;display:block;">
     </div>
-    <h1 style="font-size:1.4rem;">Your Personal Fitness Intake Form</h1>
-    <p>Takes about 3 minutes to complete.<br>Your trainer will review this and build a program tailored just for you.</p>
+    <h1 style="font-size:1.4rem;">{% trans "Your Personal Fitness Intake Form" %}</h1>
+    <p>{% trans "Takes about 3 minutes to complete." %}<br>{% trans "Your trainer will review this and build a program tailored just for you." %}</p>
   </div>
 
   {% if error %}
@@ -176,36 +176,36 @@
 
     <!-- Personal -->
     <div class="intake-section">
-      <div class="intake-section-title">👤 Personal information</div>
+      <div class="intake-section-title">👤 {% trans "Personal information" %}</div>
 
       <div class="ifield">
-        <label for="id_name">Full name <span class="req">*</span></label>
+        <label for="id_name">{% trans "Full name" %} <span class="req">*</span></label>
         <input type="text" name="name" id="id_name" required placeholder="Maria Johnson" value="{{ request.POST.name|default:'' }}">
       </div>
 
       <div class="two-col">
         <div class="ifield">
-          <label for="id_dob">Date of birth <span class="req">*</span></label>
+          <label for="id_dob">{% trans "Date of birth" %} <span class="req">*</span></label>
           <input type="date" name="date_of_birth" id="id_dob" required value="{{ request.POST.date_of_birth|default:'' }}">
         </div>
         <div class="ifield">
-          <label for="id_gender">Gender <span class="opt">(optional)</span></label>
+          <label for="id_gender">{% trans "Gender" %} <span class="opt">({% trans "optional" %})</span></label>
           <select name="gender" id="id_gender">
-            <option value="">— not specified —</option>
-            <option value="F" {% if request.POST.gender == 'F' %}selected{% endif %}>Female</option>
-            <option value="M" {% if request.POST.gender == 'M' %}selected{% endif %}>Male</option>
-            <option value="O" {% if request.POST.gender == 'O' %}selected{% endif %}>Other</option>
+            <option value="">— {% trans "not specified" %} —</option>
+            <option value="F" {% if request.POST.gender == 'F' %}selected{% endif %}>{% trans "Female" %}</option>
+            <option value="M" {% if request.POST.gender == 'M' %}selected{% endif %}>{% trans "Male" %}</option>
+            <option value="O" {% if request.POST.gender == 'O' %}selected{% endif %}>{% trans "Other" %}</option>
           </select>
         </div>
       </div>
 
       <div class="two-col">
         <div class="ifield">
-          <label for="id_email">Email <span class="opt">(optional)</span></label>
+          <label for="id_email">{% trans "Email" %} <span class="opt">({% trans "optional" %})</span></label>
           <input type="email" name="email" id="id_email" placeholder="you@example.com" value="{{ request.POST.email|default:'' }}">
         </div>
         <div class="ifield">
-          <label for="id_phone">Phone <span class="opt">(optional)</span></label>
+          <label for="id_phone">{% trans "Phone" %} <span class="opt">({% trans "optional" %})</span></label>
           <input type="tel" name="phone" id="id_phone" placeholder="+1 555 123-4567" value="{{ request.POST.phone|default:'' }}">
         </div>
       </div>
@@ -213,34 +213,34 @@
 
     <!-- Physical -->
     <div class="intake-section">
-      <div class="intake-section-title">📏 Body measurements</div>
+      <div class="intake-section-title">📏 {% trans "Body measurements" %}</div>
       <div class="two-col">
         <div class="ifield">
-          <label for="id_height">Height, cm <span class="opt">(optional)</span></label>
+          <label for="id_height">{% trans "Height, cm" %} <span class="opt">({% trans "optional" %})</span></label>
           <input type="number" name="height_cm" id="id_height" placeholder="168" min="100" max="250" step="0.1" value="{{ request.POST.height_cm|default:'' }}">
         </div>
         <div class="ifield">
-          <label for="id_weight">Weight, kg <span class="opt">(optional)</span></label>
+          <label for="id_weight">{% trans "Weight, kg" %} <span class="opt">({% trans "optional" %})</span></label>
           <input type="number" name="weight_kg" id="id_weight" placeholder="62" min="30" max="300" step="0.1" value="{{ request.POST.weight_kg|default:'' }}">
         </div>
         <div class="ifield">
-          <label for="id_waist">Waist, cm <span class="opt">(optional)</span></label>
+          <label for="id_waist">{% trans "Waist, cm" %} <span class="opt">({% trans "optional" %})</span></label>
           <input type="number" name="waist_cm" id="id_waist" placeholder="72" min="40" max="200" step="0.1" value="{{ request.POST.waist_cm|default:'' }}">
         </div>
         <div class="ifield">
-          <label for="id_hips">Hips, cm <span class="opt">(optional)</span></label>
+          <label for="id_hips">{% trans "Hips, cm" %} <span class="opt">({% trans "optional" %})</span></label>
           <input type="number" name="hips_cm" id="id_hips" placeholder="96" min="40" max="200" step="0.1" value="{{ request.POST.hips_cm|default:'' }}">
         </div>
         <div class="ifield">
-          <label for="id_chest">Chest, cm <span class="opt">(optional)</span></label>
+          <label for="id_chest">{% trans "Chest, cm" %} <span class="opt">({% trans "optional" %})</span></label>
           <input type="number" name="chest_cm" id="id_chest" placeholder="88" min="40" max="200" step="0.1" value="{{ request.POST.chest_cm|default:'' }}">
         </div>
         <div class="ifield">
-          <label for="id_arms">Arms, cm <span class="opt">(optional)</span></label>
+          <label for="id_arms">{% trans "Arms, cm" %} <span class="opt">({% trans "optional" %})</span></label>
           <input type="number" name="arms_cm" id="id_arms" placeholder="28" min="10" max="100" step="0.1" value="{{ request.POST.arms_cm|default:'' }}">
         </div>
         <div class="ifield">
-          <label for="id_legs">Legs (thigh), cm <span class="opt">(optional)</span></label>
+          <label for="id_legs">{% trans "Legs (thigh), cm" %} <span class="opt">({% trans "optional" %})</span></label>
           <input type="number" name="legs_cm" id="id_legs" placeholder="54" min="20" max="120" step="0.1" value="{{ request.POST.legs_cm|default:'' }}">
         </div>
       </div>
@@ -248,19 +248,19 @@
 
     <!-- Health -->
     <div class="intake-section">
-      <div class="intake-section-title">🩺 Health & injuries</div>
+      <div class="intake-section-title">🩺 {% trans "Health & injuries" %}</div>
 
       <div class="ifield">
-        <label for="id_health">Health issues, injuries or contraindications <span class="opt">(optional)</span></label>
+        <label for="id_health">{% trans "Health issues, injuries or contraindications" %} <span class="opt">({% trans "optional" %})</span></label>
         <textarea name="health_issues" id="id_health"
-          placeholder="e.g. lower back pain, varicose veins, high blood pressure, knee surgery in 2020…">{{ request.POST.health_issues|default:'' }}</textarea>
+          placeholder="{% trans "e.g. lower back pain, varicose veins, high blood pressure, knee surgery in 2020…" %}">{{ request.POST.health_issues|default:'' }}</textarea>
       </div>
 
       <div class="ifield">
-        <label>Blood test results <span class="opt">(optional — PDF or photo)</span></label>
+        <label>{% trans "Blood test results" %} <span class="opt">({% trans "optional — PDF or photo" %})</span></label>
         <label class="file-label" for="id_blood">
           <span style="font-size:1.2rem;">🩸</span>
-          <span id="blood-label-text">Attach file</span>
+          <span id="blood-label-text">{% trans "Attach file" %}</span>
           <input type="file" name="blood_test_file" id="id_blood" accept=".pdf,.jpg,.jpeg,.png">
         </label>
       </div>
@@ -268,79 +268,81 @@
 
     <!-- Goals & Expectations -->
     <div class="intake-section">
-      <div class="intake-section-title">🎯 Goals & expectations</div>
+      <div class="intake-section-title">🎯 {% trans "Goals & expectations" %}</div>
       <div class="ifield">
-        <label for="id_goals">What do you want to achieve? <span class="req">*</span></label>
+        <label for="id_goals">{% trans "What do you want to achieve?" %} <span class="req">*</span></label>
         <textarea name="goals" id="id_goals" required
-          placeholder="e.g. lose 15 lbs, tone glutes and legs, improve posture, build muscle, increase stamina…">{{ request.POST.goals|default:'' }}</textarea>
+          placeholder="{% trans "e.g. lose 15 lbs, tone glutes and legs, improve posture, build muscle, increase stamina…" %}">{{ request.POST.goals|default:'' }}</textarea>
       </div>
       <div class="ifield">
-        <label for="id_expectations">What do you expect from your trainer? <span class="opt">(optional)</span></label>
+        <label for="id_expectations">{% trans "What do you expect from your trainer?" %} <span class="opt">({% trans "optional" %})</span></label>
         <textarea name="expectations" id="id_expectations"
-          placeholder="e.g. detailed explanations of exercises, regular check-ins, strict nutrition guidance, flexible schedule…">{{ request.POST.expectations|default:'' }}</textarea>
+          placeholder="{% trans "e.g. detailed explanations of exercises, regular check-ins, strict nutrition guidance, flexible schedule…" %}">{{ request.POST.expectations|default:'' }}</textarea>
       </div>
     </div>
 
     <!-- Photo in sport clothes -->
     <div class="intake-section">
-      <div class="intake-section-title">📸 Photo in sport clothes</div>
+      <div class="intake-section-title">📸 {% trans "Photo in sport clothes" %}</div>
       <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:.75rem;">
-        A front and/or back photo in workout clothes helps your trainer see your starting point and track progress. Completely optional.
+        {% trans "A front and/or back photo in workout clothes helps your trainer see your starting point and track progress. Completely optional." %}
       </p>
       <label class="file-label" for="id_photo">
         <span style="font-size:1.2rem;">📷</span>
-        <span id="photo-label-text">Attach photo (JPG, PNG)</span>
+        <span id="photo-label-text">{% trans "Attach photo (JPG, PNG)" %}</span>
         <input type="file" name="photo" id="id_photo" accept=".jpg,.jpeg,.png,.webp">
       </label>
     </div>
 
     <!-- Training -->
     <div class="intake-section">
-      <div class="intake-section-title">🏋️ Training availability</div>
+      <div class="intake-section-title">🏋️ {% trans "Training availability" %}</div>
 
       <div class="ifield">
-        <label>How many days per week can you train? <span class="req">*</span></label>
+        <label>{% trans "How many days per week can you train?" %} <span class="req">*</span></label>
         <div class="pill-group">
           {% for d in "234567" %}
           <input type="radio" name="training_days_per_week" id="days_{{ d }}" value="{{ d }}"
             {% if request.POST.training_days_per_week == d %}checked{% elif not request.POST and d == "3" %}checked{% endif %}>
-          <label for="days_{{ d }}">{{ d }} days</label>
+          <label for="days_{{ d }}">{% blocktrans with d=d %}{{ d }} days{% endblocktrans %}</label>
           {% endfor %}
         </div>
       </div>
 
       <div class="ifield" style="margin-top:1.25rem;">
-        <label>Are you willing to follow nutrition recommendations? <span class="req">*</span></label>
+        <label>{% trans "Are you willing to follow nutrition recommendations?" %} <span class="req">*</span></label>
         <p style="font-size:.82rem;color:var(--text-muted);margin:.2rem 0 .5rem;">
-          Your trainer may suggest a meal plan alongside your workouts.
+          {% trans "Your trainer may suggest a meal plan alongside your workouts." %}
         </p>
         <div class="yn-group">
           <input type="radio" name="follow_nutrition" id="fn_yes" value="1"
             {% if request.POST.follow_nutrition == '1' %}checked{% endif %}>
-          <label for="fn_yes">✅ Yes, I'm in</label>
+          <label for="fn_yes">✅ {% trans "Yes, I'm in" %}</label>
 
           <input type="radio" name="follow_nutrition" id="fn_no" value="0"
             {% if request.POST.follow_nutrition == '0' %}checked{% endif %}>
-          <label for="fn_no">❌ Not right now</label>
+          <label for="fn_no">❌ {% trans "Not right now" %}</label>
         </div>
       </div>
     </div>
 
-    <button type="submit" class="submit-btn">Submit my form →</button>
+    <button type="submit" class="submit-btn">{% trans "Submit my form →" %}</button>
     <p style="text-align:center;font-size:.8rem;color:var(--text-muted);margin-top:.75rem;">
-      Your information is private and will only be used by your trainer to build your program.
+      {% trans "Your information is private and will only be used by your trainer to build your program." %}
     </p>
   </form>
 </div>
 
 <script>
+{% trans "Attach file" as msg_attach_file %}
+{% trans "Attach photo (JPG, PNG)" as msg_attach_photo %}
   document.getElementById('id_blood').addEventListener('change', function() {
     document.getElementById('blood-label-text').textContent =
-      this.files[0] ? this.files[0].name : 'Attach file';
+      this.files[0] ? this.files[0].name : '{{ msg_attach_file|escapejs }}';
   });
   document.getElementById('id_photo').addEventListener('change', function() {
     document.getElementById('photo-label-text').textContent =
-      this.files[0] ? this.files[0].name : 'Attach photo (JPG, PNG)';
+      this.files[0] ? this.files[0].name : '{{ msg_attach_photo|escapejs }}';
   });
 </script>
 {% endblock %}

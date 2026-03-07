@@ -1,10 +1,11 @@
 {% extends 'base.html' %}
+{% load i18n %}
 {% block title %}{{ title }} — GYMprogrm{% endblock %}
 
 {% block content %}
 <div class="page-header">
   <div>
-    <a href="{% url 'students:list' %}" style="color:var(--text-muted);font-size:.9rem;text-decoration:none;">← Students</a>
+    <a href="{% url 'students:list' %}" style="color:var(--text-muted);font-size:.9rem;text-decoration:none;">← {% trans "Students" %}</a>
     <h1 class="page-title" style="margin-top:.25rem;">{{ title }}</h1>
   </div>
 </div>
@@ -14,14 +15,14 @@
     {% csrf_token %}
 
     <div class="form-group">
-      <label class="form-label">Full Name *</label>
+      <label class="form-label">{% trans "Full Name" %} *</label>
       <input type="text" name="name" class="form-control" value="{{ form.name.value|default:'' }}" required>
       {% if form.name.errors %}<ul class="errorlist">{% for e in form.name.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
     </div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;">
       <div class="form-group">
-        <label class="form-label">Gender</label>
+        <label class="form-label">{% trans "Gender" %}</label>
         <select name="gender" class="form-control">
           <option value="">—</option>
           {% for val, label in form.fields.gender.choices %}
@@ -30,34 +31,34 @@
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label">Email</label>
+        <label class="form-label">{% trans "Email" %}</label>
         <input type="email" name="email" class="form-control" value="{{ form.email.value|default:'' }}">
       </div>
       <div class="form-group">
-        <label class="form-label">Phone</label>
+        <label class="form-label">{% trans "Phone" %}</label>
         <input type="text" name="phone" class="form-control" value="{{ form.phone.value|default:'' }}">
       </div>
     </div>
 
     <div class="form-group">
-      <label class="form-label">Date of Birth</label>
+      <label class="form-label">{% trans "Date of Birth" %}</label>
       <input type="date" name="date_of_birth" class="form-control"
         value="{% if student and student.date_of_birth %}{{ student.date_of_birth|date:'Y-m-d' }}{% endif %}">
     </div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
       <div class="form-group">
-        <label class="form-label">📏 Height (cm)</label>
+        <label class="form-label">📏 {% trans "Height (cm)" %}</label>
         <input type="number" name="height_cm" id="id_height_cm" class="form-control" step="0.1" min="50" max="250" value="{{ form.height_cm.value|default:'' }}" placeholder="e.g. 168">
       </div>
       <div class="form-group">
-        <label class="form-label">⚖️ Weight (kg)</label>
+        <label class="form-label">⚖️ {% trans "Weight (kg)" %}</label>
         <input type="number" name="weight_kg" id="id_weight_kg" class="form-control" step="0.1" min="20" max="300" value="{{ form.weight_kg.value|default:'' }}" placeholder="e.g. 62.5">
       </div>
     </div>
 
     <div id="desirable-weight-box" style="display:none;margin-bottom:1.25rem;padding:.75rem 1rem;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;font-size:.88rem;">
-      <span style="color:#15803d;font-weight:600;">🎯 Desirable weight: </span>
+      <span style="color:#15803d;font-weight:600;">🎯 {% trans "Desirable weight:" %} </span>
       <span id="desirable-weight-value" style="color:#15803d;font-weight:700;"></span>
       <span id="desirable-weight-formula" style="color:var(--text-muted);margin-left:.5rem;"></span>
     </div>
@@ -84,25 +85,23 @@
         var kg;
 
         if (age === null || age >= 18) {
-          // Broca–Brugsch formula
           if (gender === 'F') {
             kg = (h - 100) * 0.85;
-            label = 'Broca formula (F, 18+)';
+            label = '{% trans "Broca formula (F, 18+)" %}';
           } else if (gender === 'M') {
             kg = (h - 100) * 0.90;
-            label = 'Broca formula (M, 18+)';
+            label = '{% trans "Broca formula (M, 18+)" %}';
           } else {
             kg = (h - 100) * 0.875;
-            label = 'Broca formula (18+)';
+            label = '{% trans "Broca formula (18+)" %}';
           }
         } else if (age >= 13 && age <= 17) {
-          // BMI 50th-percentile (WHO)
           var bmiTable = (gender === 'M') ? boyBMI : girlBMI;
           var bmi = bmiTable[age] || (gender === 'M' ? 19.5 : 19.2);
           kg = bmi * Math.pow(h / 100, 2);
-          label = 'BMI 50th percentile (WHO, age ' + age + ')';
+          label = '{% blocktrans with age=age %}BMI 50th percentile (WHO, age {{ age }}){% endblocktrans %}';
         } else {
-          return null; // under 13 — too young for this formula
+          return null;
         }
 
         return {kg: Math.round(kg * 10) / 10, label: label};
@@ -137,57 +136,61 @@
     </script>
 
     <div class="form-group">
-      <label class="form-label">📷 Photo</label>
+      <label class="form-label">📷 {% trans "Photo" %}</label>
       {% if student and student.photo and photo_url %}
         <div style="margin-bottom:.75rem;">
           <img src="{{ photo_url }}" alt="{{ student.name }}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--border);">
         </div>
       {% endif %}
       <input type="file" name="photo" class="form-control" accept="image/*">
-      <div class="form-hint">JPG, PNG or WebP. Shown on the student profile.</div>
+      <div class="form-hint">{% trans "JPG, PNG or WebP. Shown on the student profile." %}</div>
     </div>
 
     <div class="form-group">
-      <label class="form-label">🩸 Blood Test Result (PDF or image)</label>
+      <label class="form-label">🩸 {% trans "Blood Test Result (PDF or image)" %}</label>
       {% if student and student.blood_test_file %}
         <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:.5rem;">
-          Current file:
+          {% trans "Current file:" %}
           {% if blood_test_url %}
             <a href="{{ blood_test_url }}" target="_blank">{{ student.blood_test_file.name }}</a>
           {% else %}
-            {{ student.blood_test_file.name }} (re-upload to refresh link)
+            {{ student.blood_test_file.name }} ({% trans "re-upload to refresh link" %})
           {% endif %}
         </p>
       {% endif %}
       <input type="file" name="blood_test_file" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
-      <div class="form-hint">Upload the lab results PDF or a photo.</div>
+      <div class="form-hint">{% trans "Upload the lab results PDF or a photo." %}</div>
     </div>
 
     <div class="form-group">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem;">
-        <label class="form-label" style="margin:0;">⚠️ Health Issues / Contraindications</label>
+        <label class="form-label" style="margin:0;">⚠️ {% trans "Health Issues / Contraindications" %}</label>
         <button type="button" class="ai-correct-btn" data-field="health_issues" data-target="id_health_issues"
           style="font-size:.78rem;padding:.25rem .65rem;border-radius:6px;border:1px solid #6366f1;background:#eef2ff;color:#4f46e5;cursor:pointer;display:flex;align-items:center;gap:.35rem;">
-          ✦ AI Correct
+          ✦ {% trans "AI Correct" %}
         </button>
       </div>
-      <textarea name="health_issues" id="id_health_issues" class="form-control" rows="4" placeholder="E.g. lower back pain, knee injury, hypertension...">{{ form.health_issues.value|default:'' }}</textarea>
+      <textarea name="health_issues" id="id_health_issues" class="form-control" rows="4" placeholder="{% trans "E.g. lower back pain, knee injury, hypertension..." %}">{{ form.health_issues.value|default:'' }}</textarea>
       <div class="ai-feedback" id="fb_health_issues" style="display:none;font-size:.8rem;margin-top:.35rem;color:#4f46e5;"></div>
     </div>
 
     <div class="form-group">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem;">
-        <label class="form-label" style="margin:0;">🎯 Goals & Wishes</label>
+        <label class="form-label" style="margin:0;">🎯 {% trans "Goals & Wishes" %}</label>
         <button type="button" class="ai-correct-btn" data-field="goals" data-target="id_goals"
           style="font-size:.78rem;padding:.25rem .65rem;border-radius:6px;border:1px solid #6366f1;background:#eef2ff;color:#4f46e5;cursor:pointer;display:flex;align-items:center;gap:.35rem;">
-          ✦ AI Correct
+          ✦ {% trans "AI Correct" %}
         </button>
       </div>
-      <textarea name="goals" id="id_goals" class="form-control" rows="4" placeholder="E.g. make glutes bigger, reduce body fat, improve stamina...">{{ form.goals.value|default:'' }}</textarea>
+      <textarea name="goals" id="id_goals" class="form-control" rows="4" placeholder="{% trans "E.g. make glutes bigger, reduce body fat, improve stamina..." %}">{{ form.goals.value|default:'' }}</textarea>
       <div class="ai-feedback" id="fb_goals" style="display:none;font-size:.8rem;margin-top:.35rem;color:#4f46e5;"></div>
     </div>
 
     <script>
+    {% trans "Correcting…" as msg_correcting %}
+    {% trans "AI Correct" as msg_ai_correct %}
+    {% trans "✓ Rewritten in professional language" as msg_rewritten %}
+    {% trans "✗ Error — try again" as msg_error %}
     document.querySelectorAll('.ai-correct-btn').forEach(function(btn) {
       btn.addEventListener('click', function() {
         var field  = btn.dataset.field;
@@ -197,7 +200,7 @@
         if (!text) return;
 
         btn.disabled = true;
-        btn.textContent = '⏳ Correcting…';
+        btn.textContent = '⏳ {{ msg_correcting|escapejs }}';
         fb.style.display = 'none';
 
         fetch('{% url "programs:ai_correct_text" %}', {
@@ -214,34 +217,34 @@
             target.value = data.corrected;
             target.style.background = '#f5f3ff';
             setTimeout(function() { target.style.background = ''; }, 1500);
-            fb.textContent = '✓ Rewritten in professional language';
+            fb.textContent = '{{ msg_rewritten|escapejs }}';
             fb.style.display = 'block';
           }
         })
         .catch(function() {
-          fb.textContent = '✗ Error — try again';
+          fb.textContent = '{{ msg_error|escapejs }}';
           fb.style.color = '#dc2626';
           fb.style.display = 'block';
         })
         .finally(function() {
           btn.disabled = false;
-          btn.innerHTML = '✦ AI Correct';
+          btn.innerHTML = '✦ {{ msg_ai_correct|escapejs }}';
         });
       });
     });
     </script>
 
     <div class="form-group">
-      <label class="form-label">📝 Additional Notes</label>
-      <textarea name="notes" class="form-control" rows="3" placeholder="Any other relevant information...">{{ form.notes.value|default:'' }}</textarea>
+      <label class="form-label">📝 {% trans "Additional Notes" %}</label>
+      <textarea name="notes" class="form-control" rows="3" placeholder="{% trans "Any other relevant information..." %}">{{ form.notes.value|default:'' }}</textarea>
     </div>
 
     <div style="display:flex;gap:.75rem;margin-top:1.5rem;">
-      <button type="submit" class="btn btn-primary">Save Student</button>
+      <button type="submit" class="btn btn-primary">{% trans "Save Student" %}</button>
       {% if student %}
-        <a href="{% url 'students:detail' student.pk %}" class="btn btn-outline">Cancel</a>
+        <a href="{% url 'students:detail' student.pk %}" class="btn btn-outline">{% trans "Cancel" %}</a>
       {% else %}
-        <a href="{% url 'students:list' %}" class="btn btn-outline">Cancel</a>
+        <a href="{% url 'students:list' %}" class="btn btn-outline">{% trans "Cancel" %}</a>
       {% endif %}
     </div>
   </form>

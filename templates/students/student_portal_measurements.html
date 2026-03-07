@@ -1,11 +1,12 @@
 {% extends 'base.html' %}
-{% block title %}Measurements — GYMprogrm{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Measurements" %} — GYMprogrm{% endblock %}
 
 {% block content %}
 <div class="page-header">
   <div>
-    <a href="{% url 'students:portal_dashboard' %}" style="color:var(--text-muted);font-size:.9rem;text-decoration:none;">← Dashboard</a>
-    <h1 class="page-title" style="margin-top:.25rem;">Body Measurements</h1>
+    <a href="{% url 'students:portal_dashboard' %}" style="color:var(--text-muted);font-size:.9rem;text-decoration:none;">← {% trans "Dashboard" %}</a>
+    <h1 class="page-title" style="margin-top:.25rem;">{% trans "Body Measurements" %}</h1>
   </div>
 </div>
 
@@ -14,62 +15,62 @@
 {% endif %}
 
 <div class="card" style="margin-bottom:1.5rem;">
-  <h2 style="font-size:1rem;font-weight:700;margin-bottom:1rem;">Log Today's Measurements</h2>
+  <h2 style="font-size:1rem;font-weight:700;margin-bottom:1rem;">{% trans "Log Today's Measurements" %}</h2>
   <form method="post">
     {% csrf_token %}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
       <div class="form-group" style="margin-bottom:.5rem;">
-        <label class="form-label" style="font-size:.82rem;">Date</label>
+        <label class="form-label" style="font-size:.82rem;">{% trans "Date" %}</label>
         <input class="form-control" type="date" name="date" value="{{ today }}">
       </div>
       <div class="form-group" style="margin-bottom:.5rem;">
-        <label class="form-label" style="font-size:.82rem;">Weight (kg)</label>
+        <label class="form-label" style="font-size:.82rem;">{% trans "Weight (kg)" %}</label>
         <input class="form-control" type="number" name="weight_kg" step="0.1" min="0" placeholder="e.g. 62.5">
       </div>
       <div class="form-group" style="margin-bottom:.5rem;">
-        <label class="form-label" style="font-size:.82rem;">Body Fat %</label>
+        <label class="form-label" style="font-size:.82rem;">{% trans "Body Fat %" %}</label>
         <input class="form-control" type="number" name="body_fat_pct" step="0.1" min="0" max="100" placeholder="e.g. 22.0">
       </div>
       <div class="form-group" style="margin-bottom:.5rem;">
-        <label class="form-label" style="font-size:.82rem;">Waist (cm)</label>
+        <label class="form-label" style="font-size:.82rem;">{% trans "Waist (cm)" %}</label>
         <input class="form-control" type="number" name="waist_cm" step="0.1" min="0" placeholder="cm">
       </div>
       <div class="form-group" style="margin-bottom:.5rem;">
-        <label class="form-label" style="font-size:.82rem;">Hips (cm)</label>
+        <label class="form-label" style="font-size:.82rem;">{% trans "Hips (cm)" %}</label>
         <input class="form-control" type="number" name="hips_cm" step="0.1" min="0" placeholder="cm">
       </div>
       <div class="form-group" style="margin-bottom:.5rem;">
-        <label class="form-label" style="font-size:.82rem;">Chest (cm)</label>
+        <label class="form-label" style="font-size:.82rem;">{% trans "Chest (cm)" %}</label>
         <input class="form-control" type="number" name="chest_cm" step="0.1" min="0" placeholder="cm">
       </div>
       <div class="form-group" style="margin-bottom:.5rem;">
-        <label class="form-label" style="font-size:.82rem;">Arms (cm)</label>
+        <label class="form-label" style="font-size:.82rem;">{% trans "Arms (cm)" %}</label>
         <input class="form-control" type="number" name="arms_cm" step="0.1" min="0" placeholder="cm">
       </div>
       <div class="form-group" style="margin-bottom:.5rem;">
-        <label class="form-label" style="font-size:.82rem;">Legs (cm)</label>
+        <label class="form-label" style="font-size:.82rem;">{% trans "Legs (cm)" %}</label>
         <input class="form-control" type="number" name="legs_cm" step="0.1" min="0" placeholder="cm">
       </div>
     </div>
-    <button type="submit" class="btn btn-primary" style="margin-top:.5rem;width:100%;justify-content:center;">Save Measurements</button>
+    <button type="submit" class="btn btn-primary" style="margin-top:.5rem;width:100%;justify-content:center;">{% trans "Save Measurements" %}</button>
   </form>
 </div>
 
 <!-- History table -->
 {% if measurements %}
 <div class="card" style="overflow-x:auto;">
-  <h2 style="font-size:1rem;font-weight:700;margin-bottom:1rem;">History</h2>
+  <h2 style="font-size:1rem;font-weight:700;margin-bottom:1rem;">{% trans "History" %}</h2>
   <table style="width:100%;border-collapse:collapse;font-size:.85rem;">
     <thead>
       <tr style="border-bottom:2px solid var(--border);text-align:left;">
-        <th style="padding:.5rem .75rem;font-size:.75rem;color:var(--text-muted);text-transform:uppercase;">Date</th>
-        <th style="padding:.5rem .75rem;font-size:.75rem;color:var(--text-muted);text-transform:uppercase;">Weight</th>
-        <th style="padding:.5rem .75rem;font-size:.75rem;color:var(--text-muted);text-transform:uppercase;">BF%</th>
-        <th style="padding:.5rem .75rem;font-size:.75rem;color:var(--text-muted);text-transform:uppercase;">Waist</th>
-        <th style="padding:.5rem .75rem;font-size:.75rem;color:var(--text-muted);text-transform:uppercase;">Hips</th>
-        <th style="padding:.5rem .75rem;font-size:.75rem;color:var(--text-muted);text-transform:uppercase;">Chest</th>
-        <th style="padding:.5rem .75rem;font-size:.75rem;color:var(--text-muted);text-transform:uppercase;">Arms</th>
-        <th style="padding:.5rem .75rem;font-size:.75rem;color:var(--text-muted);text-transform:uppercase;">Legs</th>
+        <th style="padding:.5rem .75rem;font-size:.75rem;color:var(--text-muted);text-transform:uppercase;">{% trans "Date" %}</th>
+        <th style="padding:.5rem .75rem;font-size:.75rem;color:var(--text-muted);text-transform:uppercase;">{% trans "Weight" %}</th>
+        <th style="padding:.5rem .75rem;font-size:.75rem;color:var(--text-muted);text-transform:uppercase;">{% trans "BF%" %}</th>
+        <th style="padding:.5rem .75rem;font-size:.75rem;color:var(--text-muted);text-transform:uppercase;">{% trans "Waist" %}</th>
+        <th style="padding:.5rem .75rem;font-size:.75rem;color:var(--text-muted);text-transform:uppercase;">{% trans "Hips" %}</th>
+        <th style="padding:.5rem .75rem;font-size:.75rem;color:var(--text-muted);text-transform:uppercase;">{% trans "Chest" %}</th>
+        <th style="padding:.5rem .75rem;font-size:.75rem;color:var(--text-muted);text-transform:uppercase;">{% trans "Arms" %}</th>
+        <th style="padding:.5rem .75rem;font-size:.75rem;color:var(--text-muted);text-transform:uppercase;">{% trans "Legs" %}</th>
       </tr>
     </thead>
     <tbody>
@@ -91,7 +92,7 @@
 {% else %}
 <div class="empty-state">
   <p style="font-size:2rem;">📏</p>
-  <p>No measurements logged yet. Fill in the form above to start tracking!</p>
+  <p>{% trans "No measurements logged yet. Fill in the form above to start tracking!" %}</p>
 </div>
 {% endif %}
 

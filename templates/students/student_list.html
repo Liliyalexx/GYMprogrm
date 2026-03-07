@@ -1,32 +1,36 @@
 {% extends 'base.html' %}
-{% block title %}Students — GYMprogrm{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Students" %} — GYMprogrm{% endblock %}
 
 {% block content %}
 <div class="page-header">
-  <h1 class="page-title">My Students</h1>
+  <h1 class="page-title">{% trans "My Students" %}</h1>
   <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;">
-    <a href="{% url 'students:create' %}" class="btn btn-primary">+ Add Student</a>
+    <a href="{% url 'students:create' %}" class="btn btn-primary">+ {% trans "Add Student" %}</a>
   </div>
 </div>
 
 <!-- Send intake form by email -->
 <div class="card" style="margin-bottom:1.5rem;padding:1rem 1.25rem;">
-  <div style="font-size:.88rem;font-weight:700;margin-bottom:.6rem;">📧 Send intake form by email</div>
+  <div style="font-size:.88rem;font-weight:700;margin-bottom:.6rem;">📧 {% trans "Send intake form by email" %}</div>
   <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
     <input type="email" id="intake-email-input" placeholder="client@example.com"
       style="flex:1;min-width:200px;padding:.5rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;">
-    <button class="btn btn-primary btn-sm" onclick="sendIntakeEmail()">Send</button>
-    <a href="/intake/" target="_blank" style="font-size:.82rem;color:var(--text-muted);text-decoration:none;">or copy link →</a>
+    <button class="btn btn-primary btn-sm" onclick="sendIntakeEmail()">{% trans "Send" %}</button>
+    <a href="/intake/" target="_blank" style="font-size:.82rem;color:var(--text-muted);text-decoration:none;">{% trans "or copy link →" %}</a>
   </div>
   <div id="intake-email-result" style="font-size:.85rem;margin-top:.5rem;"></div>
 </div>
 
 <script>
+{% trans "Please enter an email address." as msg_no_email %}
+{% trans "Sending…" as msg_sending %}
+{% trans "Network error — try again." as msg_net_error %}
 function sendIntakeEmail() {
   var email = document.getElementById('intake-email-input').value.trim();
   var result = document.getElementById('intake-email-result');
-  if (!email) { result.innerHTML = '<span style="color:#dc2626;">Please enter an email address.</span>'; return; }
-  result.textContent = 'Sending…';
+  if (!email) { result.innerHTML = '<span style="color:#dc2626;">{{ msg_no_email|escapejs }}</span>'; return; }
+  result.textContent = '{{ msg_sending|escapejs }}';
   fetch('{% url "send_intake_email" %}', {
     method: 'POST',
     headers: {'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/x-www-form-urlencoded'},
@@ -35,13 +39,13 @@ function sendIntakeEmail() {
   .then(function(r) { return r.json(); })
   .then(function(data) {
     if (data.ok) {
-      result.innerHTML = '<span style="color:#16a34a;font-weight:600;">✓ Email sent to ' + email + '</span>';
+      result.innerHTML = '<span style="color:#16a34a;font-weight:600;">✓ {% trans "Email sent to" %} ' + email + '</span>';
       document.getElementById('intake-email-input').value = '';
     } else {
-      result.innerHTML = '<span style="color:#dc2626;">Error: ' + (data.error || 'Unknown error') + '</span>';
+      result.innerHTML = '<span style="color:#dc2626;">{% trans "Error:" %} ' + (data.error || '{% trans "Unknown error" %}') + '</span>';
     }
   })
-  .catch(function() { result.innerHTML = '<span style="color:#dc2626;">Network error — try again.</span>'; });
+  .catch(function() { result.innerHTML = '<span style="color:#dc2626;">{{ msg_net_error|escapejs }}</span>'; });
 }
 </script>
 
@@ -49,11 +53,11 @@ function sendIntakeEmail() {
 {% for r in all_reminders %}
   {% if r.type == 'change_program' %}
   <div class="banner banner-warning">
-    ⏰ Time to update <strong>{{ r.student.name }}</strong>'s program — {{ r.days_since }} days since start ({{ r.program.duration_weeks }}-week block complete).
+    ⏰ {% blocktrans with name=r.student.name days=r.days_since weeks=r.program.duration_weeks %}Time to update <strong>{{ name }}</strong>'s program — {{ days }} days since start ({{ weeks }}-week block complete).{% endblocktrans %}
   </div>
   {% elif r.type == 'payment_due' %}
   <div class="banner banner-danger">
-    💳 <strong>{{ r.student.name }}</strong>'s {{ r.plan }} payment is due.
+    💳 <strong>{{ r.student.name }}</strong> — {% blocktrans with plan=r.plan %}{{ plan }} payment is due.{% endblocktrans %}
   </div>
   {% endif %}
 {% endfor %}
@@ -61,7 +65,7 @@ function sendIntakeEmail() {
 {% if pending %}
 <div style="margin-bottom:1.5rem;padding:1rem 1.25rem;background:#fefce8;border:1px solid #fde047;border-radius:12px;">
   <div style="font-size:.88rem;font-weight:700;color:#92400e;margin-bottom:.75rem;">
-    📥 New Applications ({{ pending.count }})
+    📥 {% trans "New Applications" %} ({{ pending.count }})
   </div>
   {% for s in pending %}
   <div style="display:flex;align-items:center;gap:.75rem;padding:.6rem .75rem;background:#fff;border:1px solid #fde047;border-radius:8px;margin-bottom:.4rem;">
@@ -71,18 +75,18 @@ function sendIntakeEmail() {
     <div style="flex:1;min-width:0;">
       <div style="font-weight:600;font-size:.9rem;">{{ s.name }}</div>
       <div style="font-size:.78rem;color:var(--text-muted);">
-        {% if s.age %}{{ s.age }} лет · {% endif %}
+        {% if s.age %}{{ s.age }} · {% endif %}
         {{ s.goals|truncatechars:60 }}
       </div>
     </div>
     <div style="display:flex;gap:.4rem;flex-shrink:0;">
       <a href="{% url 'students:detail' s.pk %}" style="font-size:.8rem;padding:.3rem .65rem;border-radius:6px;border:1px solid var(--border);background:#fff;text-decoration:none;color:inherit;">
-        View
+        {% trans "View" %}
       </a>
       <form method="post" action="{% url 'students:accept_intake' s.pk %}" style="margin:0;">
         {% csrf_token %}
         <button type="submit" style="font-size:.8rem;padding:.3rem .65rem;border-radius:6px;border:none;background:#16a34a;color:#fff;cursor:pointer;font-weight:600;">
-          ✓ Accept
+          ✓ {% trans "Accept" %}
         </button>
       </form>
     </div>
@@ -106,21 +110,21 @@ function sendIntakeEmail() {
     <a href="{% url 'students:detail' student.pk %}" style="flex:1;text-decoration:none;color:inherit;min-width:0;">
       <div style="font-weight:600;font-size:.97rem;">{{ student.name }}</div>
       <div style="font-size:.82rem;color:var(--text-muted);">
-        {% if student.age %}{{ student.age }} yo&ensp;·&ensp;{% endif %}{{ student.programs.count }} program{{ student.programs.count|pluralize }}
+        {% if student.age %}{{ student.age }} yo&ensp;·&ensp;{% endif %}{{ student.programs.count }} {% blocktrans count n=student.programs.count %}program{% plural %}programs{% endblocktrans %}
         {% if student.goals %}&ensp;·&ensp;{{ student.goals|truncatechars:50 }}{% endif %}
       </div>
     </a>
 
     <div style="display:flex;align-items:center;gap:.5rem;flex-shrink:0;">
       {% if student.user %}
-        <span style="font-size:.75rem;padding:.15rem .5rem;border-radius:999px;background:#d1fae5;color:#065f46;font-weight:600;">Active</span>
+        <span style="font-size:.75rem;padding:.15rem .5rem;border-radius:999px;background:#d1fae5;color:#065f46;font-weight:600;">{% trans "Active" %}</span>
       {% else %}
-        <span style="font-size:.75rem;padding:.15rem .5rem;border-radius:999px;background:#f1f5f9;color:var(--text-muted);font-weight:600;">No account</span>
+        <span style="font-size:.75rem;padding:.15rem .5rem;border-radius:999px;background:#f1f5f9;color:var(--text-muted);font-weight:600;">{% trans "No account" %}</span>
       {% endif %}
       {% if student.payment_plan %}
         <span style="font-size:.75rem;padding:.15rem .5rem;border-radius:999px;background:#e0f2fe;color:#0c4a6e;font-weight:600;">{{ student.get_payment_plan_display }}</span>
       {% endif %}
-      <a href="{% url 'students:delete' student.pk %}" style="color:#ef4444;text-decoration:none;font-size:.85rem;padding:.25rem .55rem;border-radius:6px;border:1px solid #ef4444;" title="Delete">✕</a>
+      <a href="{% url 'students:delete' student.pk %}" style="color:#ef4444;text-decoration:none;font-size:.85rem;padding:.25rem .55rem;border-radius:6px;border:1px solid #ef4444;" title="{% trans "Delete" %}">✕</a>
     </div>
   </div>
   {% endfor %}
@@ -128,8 +132,8 @@ function sendIntakeEmail() {
 {% else %}
 <div class="empty-state">
   <p style="font-size:2rem;">👤</p>
-  <p>No students yet. Add your first student!</p>
-  <a href="{% url 'students:create' %}" class="btn btn-primary">+ Add Student</a>
+  <p>{% trans "No students yet. Add your first student!" %}</p>
+  <a href="{% url 'students:create' %}" class="btn btn-primary">+ {% trans "Add Student" %}</a>
 </div>
 {% endif %}
 {% endblock %}

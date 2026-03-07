@@ -1,10 +1,11 @@
+{% load i18n %}
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login — GymProgram</title>
-  {% load static %}
+  <title>{% trans "Login" %} — GymProgram</title>
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
 </head>
 <body>
@@ -17,18 +18,18 @@
     <form method="post">
       {% csrf_token %}
       {% if form.errors %}
-        <div class="alert alert-error">Invalid username or password.</div>
+        <div class="alert alert-error">{% trans "Invalid username or password." %}</div>
       {% endif %}
       <div class="form-group">
-        <label class="form-label">Username</label>
+        <label class="form-label">{% trans "Username" %}</label>
         <input type="text" name="username" class="form-control" autofocus required>
       </div>
       <div class="form-group">
-        <label class="form-label">Password</label>
+        <label class="form-label">{% trans "Password" %}</label>
         <input type="password" name="password" class="form-control" required>
       </div>
       <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:.75rem;">
-        Sign In
+        {% trans "Sign In" %}
       </button>
     </form>
   </div>

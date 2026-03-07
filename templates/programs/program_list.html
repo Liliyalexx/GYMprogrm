@@ -1,13 +1,14 @@
 {% extends 'base.html' %}
-{% block title %}Программы — {{ student.name }}{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Training Programs" %} — {{ student.name }}{% endblock %}
 
 {% block content %}
 <div class="page-header">
   <div>
     <a href="{% url 'students:detail' student.pk %}" style="color:var(--text-muted);font-size:.9rem;text-decoration:none;">← {{ student.name }}</a>
-    <h1 class="page-title" style="margin-top:.25rem;">Программы тренировок</h1>
+    <h1 class="page-title" style="margin-top:.25rem;">{% trans "Training Programs" %}</h1>
   </div>
-  <a href="{% url 'programs:generate' student.pk %}" class="btn btn-accent">🤖 Создать программу</a>
+  <a href="{% url 'programs:generate' student.pk %}" class="btn btn-accent">🤖 {% trans "Create Program" %}</a>
 </div>
 
 {% if programs %}
@@ -19,16 +20,16 @@
       <div>
         <div style="font-weight:700;font-size:1.1rem;">{{ program.name }}</div>
         <div style="font-size:.82rem;color:var(--text-muted);margin-top:.25rem;">
-          {{ program.days.count }} день/дней · {{ program.training_days }} тренировки в неделю · Создана {{ program.created_at|date:"d M Y" }}
+          {% blocktrans count n=program.days.count with days=program.days.count weeks=program.training_days %}{{ days }} day · {{ weeks }} workouts per week · {% endblocktrans %}{% trans "Created" %} {{ program.created_at|date:"d M Y" }}
         </div>
       </div>
-      <a href="{% url 'programs:detail' program.pk %}" class="btn btn-outline btn-sm">Открыть программу →</a>
+      <a href="{% url 'programs:detail' program.pk %}" class="btn btn-outline btn-sm">{% trans "Open program →" %}</a>
     </div>
 
     <!-- Key findings as bullet list -->
     {% if program.description %}
     <div style="border-top:1px solid var(--border);padding-top:.85rem;">
-      <div style="font-size:.82rem;font-weight:600;color:var(--text-muted);margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.04em;">Выводы по анализу</div>
+      <div style="font-size:.82rem;font-weight:600;color:var(--text-muted);margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.04em;">{% trans "Analysis findings" %}</div>
       <ul style="margin:0;padding-left:1.25rem;">
         {% for line in program.description.splitlines %}
           {% if line %}
@@ -45,8 +46,8 @@
 {% else %}
   <div class="empty-state">
     <p style="font-size:2rem;">📋</p>
-    <p>Программ пока нет для {{ student.name }}.</p>
-    <a href="{% url 'programs:generate' student.pk %}" class="btn btn-accent">🤖 Создать первую программу</a>
+    <p>{% blocktrans with name=student.name %}No programs yet for {{ name }}.{% endblocktrans %}</p>
+    <a href="{% url 'programs:generate' student.pk %}" class="btn btn-accent">🤖 {% trans "Create first program" %}</a>
   </div>
 {% endif %}
 {% endblock %}

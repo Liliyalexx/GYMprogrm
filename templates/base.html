@@ -1,12 +1,48 @@
+{% load i18n %}
+{% load static %}
+{% get_current_language as CURRENT_LANG %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ CURRENT_LANG }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}GYMprogrm{% endblock %}</title>
-  {% load static %}
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
   {% block extra_css %}{% endblock %}
+  <style>
+    .lang-switcher { display:flex;align-items:center;gap:.2rem; }
+    .lang-pill {
+      background: none;
+      border: 1px solid rgba(255,255,255,.35);
+      border-radius: 5px;
+      color: inherit;
+      cursor: pointer;
+      font: inherit;
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+      line-height: 1;
+      padding: .2rem .45rem;
+      opacity: .65;
+      transition: opacity .15s, background .15s;
+    }
+    .lang-pill:hover { opacity: 1; }
+    .lang-pill.lang-active { background: rgba(255,255,255,.2); border-color: rgba(255,255,255,.7); opacity: 1; }
+    .lang-select {
+      background: none;
+      border: 1px solid rgba(255,255,255,.35);
+      border-radius: 5px;
+      color: inherit;
+      cursor: pointer;
+      font: inherit;
+      font-size: .72rem;
+      font-weight: 700;
+      padding: .15rem .3rem;
+      opacity: .65;
+    }
+    .lang-select:focus { opacity: 1; outline: none; }
+    .lang-select option { color: #111; background: #fff; }
+  </style>
 </head>
 <body>
 
@@ -31,19 +67,56 @@
   <div class="nav-links" id="nav-links">
     {% if user.is_staff or not user.student %}
       <!-- Trainer nav -->
-      <a href="{% url 'students:list' %}"><span>Students</span></a>
-      <a href="{% url 'programs:exercise_library' %}"><span>Exercises</span></a>
+      <a href="{% url 'students:list' %}"><span>{% trans "Students" %}</span></a>
+      <a href="{% url 'programs:exercise_library' %}"><span>{% trans "Exercises" %}</span></a>
     {% else %}
       <!-- Student nav -->
-      <a href="{% url 'students:portal_dashboard' %}"><span>Dashboard</span></a>
-      <a href="{% url 'students:portal_program' %}"><span>My Program</span></a>
-      <a href="{% url 'students:portal_measurements' %}"><span>Measurements</span></a>
-      <a href="{% url 'students:portal_history' %}"><span>History</span></a>
+      <a href="{% url 'students:portal_dashboard' %}"><span>{% trans "Dashboard" %}</span></a>
+      <a href="{% url 'students:portal_program' %}"><span>{% trans "My Program" %}</span></a>
+      <a href="{% url 'students:portal_measurements' %}"><span>{% trans "Measurements" %}</span></a>
+      <a href="{% url 'students:portal_history' %}"><span>{% trans "History" %}</span></a>
     {% endif %}
+
+    <!-- Language switcher -->
+    <div class="lang-switcher">
+      <form method="post" action="{% url 'set_language' %}" style="margin:0;">
+        {% csrf_token %}
+        <input type="hidden" name="language" value="en">
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <button type="submit" class="lang-pill {% if CURRENT_LANG == 'en' %}lang-active{% endif %}">EN</button>
+      </form>
+      <form method="post" action="{% url 'set_language' %}" style="margin:0;">
+        {% csrf_token %}
+        <input type="hidden" name="language" value="ru">
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <button type="submit" class="lang-pill {% if CURRENT_LANG == 'ru' %}lang-active{% endif %}">RU</button>
+      </form>
+      <form method="post" action="{% url 'set_language' %}" style="margin:0;">
+        {% csrf_token %}
+        <input type="hidden" name="language" value="es">
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <button type="submit" class="lang-pill {% if CURRENT_LANG == 'es' %}lang-active{% endif %}">ES</button>
+      </form>
+      <form method="post" action="{% url 'set_language' %}" style="margin:0;" id="lang-more-form">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <select name="language" class="lang-select" onchange="this.form.submit()">
+          <option value="">···</option>
+          <option value="fr" {% if CURRENT_LANG == 'fr' %}selected{% endif %}>FR</option>
+          <option value="de" {% if CURRENT_LANG == 'de' %}selected{% endif %}>DE</option>
+          <option value="it" {% if CURRENT_LANG == 'it' %}selected{% endif %}>IT</option>
+          <option value="pt" {% if CURRENT_LANG == 'pt' %}selected{% endif %}>PT</option>
+          <option value="zh-hans" {% if CURRENT_LANG == 'zh-hans' %}selected{% endif %}>ZH</option>
+          <option value="ar" {% if CURRENT_LANG == 'ar' %}selected{% endif %}>AR</option>
+          <option value="ja" {% if CURRENT_LANG == 'ja' %}selected{% endif %}>JA</option>
+        </select>
+      </form>
+    </div>
+
     <form method="post" action="{% url 'logout' %}" style="margin:0;">
       {% csrf_token %}
       <button type="submit" style="background:none;border:none;cursor:pointer;color:inherit;font:inherit;padding:.3rem .6rem;">
-        <span>Logout</span>
+        <span>{% trans "Logout" %}</span>
       </button>
     </form>
   </div>

@@ -1,12 +1,13 @@
 {% extends 'base.html' %}
-{% block title %}My Program — GYMprogrm{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "My Program" %} — GYMprogrm{% endblock %}
 
 {% block content %}
 <div class="page-header">
   <div>
-    <a href="{% url 'students:portal_dashboard' %}" style="color:var(--text-muted);font-size:.9rem;text-decoration:none;">← Dashboard</a>
+    <a href="{% url 'students:portal_dashboard' %}" style="color:var(--text-muted);font-size:.9rem;text-decoration:none;">← {% trans "Dashboard" %}</a>
     <h1 class="page-title" style="margin-top:.25rem;">
-      {% if program %}{{ program.name }}{% else %}My Program{% endif %}
+      {% if program %}{{ program.name }}{% else %}{% trans "My Program" %}{% endif %}
     </h1>
   </div>
 </div>
@@ -23,7 +24,7 @@
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
       <h2 style="font-size:1rem;font-weight:700;">{{ day.name }}</h2>
       <a href="{% url 'students:portal_log_workout' day.pk %}" class="btn btn-primary btn-sm">
-        + Log this workout
+        + {% trans "Log this workout" %}
       </a>
     </div>
 
@@ -47,7 +48,7 @@
         {% endif %}
         {% if ex.exercise.posture_tips %}
         <details style="margin-top:.5rem;">
-          <summary style="font-size:.8rem;color:var(--primary);cursor:pointer;">Technique tips</summary>
+          <summary style="font-size:.8rem;color:var(--primary);cursor:pointer;">{% trans "Technique tips" %}</summary>
           <div style="font-size:.82rem;color:var(--text-muted);margin-top:.35rem;padding-left:.5rem;">{{ ex.exercise.posture_tips }}</div>
         </details>
         {% endif %}
@@ -61,7 +62,7 @@
 {% else %}
   <div class="empty-state">
     <p style="font-size:2rem;">📋</p>
-    <p>Your trainer hasn't set up your program yet. Check back soon!</p>
+    <p>{% trans "Your trainer hasn't set up your program yet. Check back soon!" %}</p>
   </div>
 {% endif %}
 

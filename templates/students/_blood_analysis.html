@@ -1,14 +1,15 @@
+{% load i18n %}
 {% comment %}Partial: blood test analysis result. Expects 'analysis' context variable (dict).{% endcomment %}
 
 {% if analysis.summary %}
 <div style="background:#fef3c7;border:1px solid #fbbf24;border-radius:8px;padding:.75rem 1rem;margin-bottom:1rem;font-size:.9rem;color:#92400e;">
-  <strong>📋 Заключение:</strong> {{ analysis.summary }}
+  <strong>📋 {% trans "Summary:" %}</strong> {{ analysis.summary }}
 </div>
 {% endif %}
 
 {% if analysis.urgent_attention %}
 <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:.75rem 1rem;margin-bottom:1rem;">
-  <div style="font-weight:700;color:#dc2626;margin-bottom:.4rem;">⚠️ Требует внимания врача</div>
+  <div style="font-weight:700;color:#dc2626;margin-bottom:.4rem;">⚠️ {% trans "Requires doctor attention" %}</div>
   {% for item in analysis.urgent_attention %}
     <div style="font-size:.88rem;color:#7f1d1d;margin-bottom:.2rem;">• {{ item }}</div>
   {% endfor %}
@@ -17,15 +18,15 @@
 
 {% if analysis.markers %}
 <div style="margin-bottom:1rem;">
-  <div style="font-weight:700;font-size:.92rem;margin-bottom:.5rem;">📊 Показатели крови</div>
+  <div style="font-weight:700;font-size:.92rem;margin-bottom:.5rem;">📊 {% trans "Blood markers" %}</div>
   <div style="overflow-x:auto;">
     <table style="width:100%;border-collapse:collapse;font-size:.82rem;">
       <thead>
         <tr style="background:#f8fafc;">
-          <th style="text-align:left;padding:.4rem .6rem;border-bottom:1px solid var(--border);">Показатель</th>
-          <th style="text-align:center;padding:.4rem .6rem;border-bottom:1px solid var(--border);">Результат</th>
-          <th style="text-align:center;padding:.4rem .6rem;border-bottom:1px solid var(--border);">Норма</th>
-          <th style="text-align:left;padding:.4rem .6rem;border-bottom:1px solid var(--border);">Интерпретация</th>
+          <th style="text-align:left;padding:.4rem .6rem;border-bottom:1px solid var(--border);">{% trans "Marker" %}</th>
+          <th style="text-align:center;padding:.4rem .6rem;border-bottom:1px solid var(--border);">{% trans "Result" %}</th>
+          <th style="text-align:center;padding:.4rem .6rem;border-bottom:1px solid var(--border);">{% trans "Reference" %}</th>
+          <th style="text-align:left;padding:.4rem .6rem;border-bottom:1px solid var(--border);">{% trans "Interpretation" %}</th>
         </tr>
       </thead>
       <tbody>
@@ -48,7 +49,7 @@
 
 {% if analysis.deficiencies %}
 <div style="margin-bottom:1rem;">
-  <div style="font-weight:700;font-size:.92rem;margin-bottom:.5rem;">💊 Дефициты и рекомендации</div>
+  <div style="font-weight:700;font-size:.92rem;margin-bottom:.5rem;">💊 {% trans "Deficiencies & recommendations" %}</div>
   {% for d in analysis.deficiencies %}
   <div style="border:1px solid var(--border);border-radius:8px;padding:.75rem;margin-bottom:.6rem;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.3rem;">
@@ -57,14 +58,14 @@
         {% if d.severity == 'severe' %}background:#fef2f2;color:#dc2626;
         {% elif d.severity == 'moderate' %}background:#fffbeb;color:#92400e;
         {% else %}background:#f0fdf4;color:#166534;{% endif %}">
-        {% if d.severity == 'severe' %}Тяжёлый{% elif d.severity == 'moderate' %}Умеренный{% else %}Лёгкий{% endif %}
+        {% if d.severity == 'severe' %}{% trans "Severe" %}{% elif d.severity == 'moderate' %}{% trans "Moderate" %}{% else %}{% trans "Mild" %}{% endif %}
       </span>
     </div>
     {% if d.impact_on_training %}
       <div style="font-size:.82rem;color:#6b7280;margin-bottom:.3rem;">🏋️ {{ d.impact_on_training }}</div>
     {% endif %}
     {% if d.food_sources %}
-      <div style="font-size:.82rem;color:#6b7280;margin-bottom:.3rem;">🥦 Продукты: {{ d.food_sources|join:", " }}</div>
+      <div style="font-size:.82rem;color:#6b7280;margin-bottom:.3rem;">🥦 {% trans "Foods:" %} {{ d.food_sources|join:", " }}</div>
     {% endif %}
     {% if d.supplement %}
       <div style="font-size:.82rem;color:#6b7280;">💊 {{ d.supplement }}</div>
@@ -77,7 +78,7 @@
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:.75rem;">
   {% if analysis.exercise_recommendations %}
   <div style="background:#eff6ff;border-radius:8px;padding:.75rem;">
-    <div style="font-weight:700;font-size:.88rem;margin-bottom:.4rem;color:#1e40af;">🏋️ Влияние на тренировки</div>
+    <div style="font-weight:700;font-size:.88rem;margin-bottom:.4rem;color:#1e40af;">🏋️ {% trans "Impact on training" %}</div>
     {% for rec in analysis.exercise_recommendations %}
       <div style="font-size:.82rem;color:#1e3a8a;margin-bottom:.25rem;">• {{ rec }}</div>
     {% endfor %}
@@ -85,7 +86,7 @@
   {% endif %}
   {% if analysis.nutrition_recommendations %}
   <div style="background:#f0fdf4;border-radius:8px;padding:.75rem;">
-    <div style="font-weight:700;font-size:.88rem;margin-bottom:.4rem;color:#166534;">🥗 Питание по анализам</div>
+    <div style="font-weight:700;font-size:.88rem;margin-bottom:.4rem;color:#166534;">🥗 {% trans "Nutrition by test results" %}</div>
     {% for rec in analysis.nutrition_recommendations %}
       <div style="font-size:.82rem;color:#14532d;margin-bottom:.25rem;">• {{ rec }}</div>
     {% endfor %}
@@ -95,7 +96,7 @@
 
 {% if analysis.positive_findings %}
 <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:.75rem;">
-  <div style="font-weight:700;font-size:.88rem;margin-bottom:.4rem;color:#166534;">✅ Показатели в норме</div>
+  <div style="font-weight:700;font-size:.88rem;margin-bottom:.4rem;color:#166534;">✅ {% trans "Normal findings" %}</div>
   {% for item in analysis.positive_findings %}
     <div style="font-size:.82rem;color:#166534;margin-bottom:.2rem;">• {{ item }}</div>
   {% endfor %}
