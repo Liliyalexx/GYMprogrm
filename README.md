@@ -11,6 +11,8 @@
   ![Claude](https://img.shields.io/badge/AI-Claude%20Sonnet%204.6-purple?logo=anthropic)
   ![Deploy](https://img.shields.io/badge/Deploy-Railway%20%2F%20Render-black?logo=railway)
 
+  **🌐 Live at [gymprogrm.org](https://gymprogrm.org)**
+
 </div>
 
 ---
