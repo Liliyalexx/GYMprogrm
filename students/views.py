@@ -266,7 +266,7 @@ def send_intake_email(request):
             'https://api.resend.com/emails',
             headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
             json={
-                'from': 'GYMprogrm <onboarding@resend.dev>',
+                'from': 'GYMprogrm <noreply@gymprogrm.org>',
                 'to': [email],
                 'subject': 'Your trainer invited you to GYMprogrm',
                 'text': body,
@@ -360,7 +360,7 @@ def client_intake(request):
                         'https://api.resend.com/emails',
                         headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
                         json={
-                            'from': 'GYMprogrm <onboarding@resend.dev>',
+                            'from': 'GYMprogrm <noreply@gymprogrm.org>',
                             'to': trainer_emails,
                             'subject': f'New intake form: {student.name}',
                             'text': f'A new client submitted their intake form.\n\nName: {student.name}\nEmail: {student.email or "—"}\nGoals: {student.goals or "—"}\n\nView: https://gymprogrm.org/students/',
@@ -467,7 +467,7 @@ def portal_intake(request):
                         'https://api.resend.com/emails',
                         headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
                         json={
-                            'from': 'GYMprogrm <onboarding@resend.dev>',
+                            'from': 'GYMprogrm <noreply@gymprogrm.org>',
                             'to': trainer_emails,
                             'subject': f'New intake form submitted: {student.name}',
                             'text': (
