@@ -1,3 +1,4 @@
+import os
 import uuid
 from datetime import date, datetime
 from functools import wraps
@@ -22,7 +23,6 @@ def _safe_file_url(file_field):
     if not file_field:
         return None
     try:
-        import os
         url = file_field.url
         if url and 'cloudinary.com' in url and 'image/upload' in url:
             _, ext = os.path.splitext(file_field.name or '')
@@ -218,7 +218,7 @@ def invite_register(request, token):
                 student.email = email
             student.save(update_fields=['user', 'invite_token', 'email'])
             login(request, user)
-            return redirect('students:portal_dashboard')
+            return redirect('students:portal_intake')
 
     return render(request, 'students/invite_register.html', {'student': student, 'error': error})
 
@@ -230,29 +230,56 @@ def invite_register(request, token):
 @login_required
 @require_POST
 def send_intake_email(request):
-    """Trainer enters an email → system emails the intake form link."""
-    from django.core.mail import send_mail
+    """Trainer enters an email → creates student, generates invite token, emails the invite link."""
+    import httpx
     from django.conf import settings as django_settings
 
     email = request.POST.get('email', '').strip()
     if not email:
         return JsonResponse({'error': 'Email is required.'}, status=400)
 
-    intake_url = request.build_absolute_uri('/intake/')
-    subject = 'Your fitness intake form'
+    api_key = getattr(django_settings, 'RESEND_API_KEY', '') or os.environ.get('RESEND_API_KEY', '')
+    if not api_key:
+        return JsonResponse({'error': 'Email service not configured.'}, status=500)
+
+    # Find or create student by email
+    student = Student.objects.filter(email=email).first()
+    if not student:
+        student = Student.objects.create(email=email, name=email, intake_status='pending', is_active=False)
+
+    # Generate invite token
+    token = uuid.uuid4()
+    student.invite_token = token
+    student.save(update_fields=['invite_token'])
+
+    invite_url = request.build_absolute_uri(f'/invite/{token}/')
     body = (
         f'Hi!\n\n'
-        f'Your trainer has invited you to fill in a quick intake form.\n'
-        f'It takes about 3 minutes and helps build a program tailored just for you.\n\n'
-        f'Fill in your form here:\n{intake_url}\n\n'
+        f'Your personal trainer has invited you to create your account on GYMprogrm.\n\n'
+        f'Click the link below to get started — it only takes a few minutes:\n{invite_url}\n\n'
+        f'You\'ll set up your password and fill in a short intake form so your trainer can build a program tailored just for you.\n\n'
         f'— GYMprogrm'
     )
 
     try:
-        send_mail(subject, body, django_settings.DEFAULT_FROM_EMAIL, [email], fail_silently=False)
+        resp = httpx.post(
+            'https://api.resend.com/emails',
+            headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
+            json={
+                'from': 'GYMprogrm <onboarding@resend.dev>',
+                'to': [email],
+                'subject': 'Your trainer invited you to GYMprogrm',
+                'text': body,
+            },
+            timeout=15,
+        )
+        resp.raise_for_status()
+        print(f'[invite email] sent to {email}', flush=True)
         return JsonResponse({'ok': True})
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+    except Exception as exc:
+        print(f'[invite email] FAILED: {exc}', flush=True)
+        # Return invite URL so trainer can copy and send manually
+        return JsonResponse({'error': str(exc), 'invite_url': invite_url}, status=500)
 
 
 # ---------------------------------------------------------------------------
@@ -320,6 +347,29 @@ def client_intake(request):
                     **meas_data,
                 )
 
+            # Notify trainer via Resend API
+            try:
+                import httpx
+                from django.conf import settings as django_settings
+                api_key = getattr(django_settings, 'RESEND_API_KEY', '') or os.environ.get('RESEND_API_KEY', '')
+                trainer_emails = list(
+                    User.objects.filter(is_staff=True).exclude(email='').values_list('email', flat=True)
+                )
+                if api_key and trainer_emails:
+                    httpx.post(
+                        'https://api.resend.com/emails',
+                        headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
+                        json={
+                            'from': 'GYMprogrm <onboarding@resend.dev>',
+                            'to': trainer_emails,
+                            'subject': f'New intake form: {student.name}',
+                            'text': f'A new client submitted their intake form.\n\nName: {student.name}\nEmail: {student.email or "—"}\nGoals: {student.goals or "—"}\n\nView: https://gymprogrm.org/students/',
+                        },
+                        timeout=10,
+                    )
+            except Exception:
+                pass
+
             return redirect('intake_success')
 
     return render(request, 'students/intake_form.html', {'error': error})
@@ -342,12 +392,111 @@ def auth_redirect(request):
 
 
 # ---------------------------------------------------------------------------
+# Student portal — intake form
+# ---------------------------------------------------------------------------
+
+@student_required
+def portal_intake(request):
+    """Student fills in their intake form after registering."""
+    student = request.user.student
+    error = None
+
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        if not name:
+            error = 'Please enter your name.'
+        else:
+            dob_raw = request.POST.get('date_of_birth', '').strip()
+            dob = None
+            if dob_raw:
+                try:
+                    dob = datetime.strptime(dob_raw, '%Y-%m-%d').date()
+                except ValueError:
+                    pass
+
+            goals = request.POST.get('goals', '').strip()
+            expectations = request.POST.get('expectations', '').strip()
+            if expectations:
+                goals = goals + ('\n\nExpectations from trainer:\n' if goals else 'Expectations from trainer:\n') + expectations
+
+            height_raw = request.POST.get('height_cm', '').strip()
+            weight_raw = request.POST.get('weight_kg', '').strip()
+            days_raw = request.POST.get('training_days_per_week', '').strip()
+
+            student.name = name
+            student.gender = request.POST.get('gender', '')
+            student.phone = request.POST.get('phone', '').strip()
+            student.date_of_birth = dob
+            student.health_issues = request.POST.get('health_issues', '').strip()
+            student.goals = goals
+            student.training_days_per_week = int(days_raw) if days_raw.isdigit() else None
+            student.follow_nutrition = request.POST.get('follow_nutrition') == '1'
+            student.height_cm = height_raw or None
+            student.weight_kg = weight_raw or None
+            student.intake_status = 'pending'
+            student.save()
+
+            if request.FILES.get('blood_test_file'):
+                student.blood_test_file = request.FILES['blood_test_file']
+                student.save(update_fields=['blood_test_file'])
+            if request.FILES.get('photo'):
+                student.photo = request.FILES['photo']
+                student.save(update_fields=['photo'])
+
+            from measurements.models import BodyMeasurement
+            meas_fields = ['waist_cm', 'hips_cm', 'chest_cm', 'arms_cm', 'legs_cm']
+            meas_data = {f: request.POST.get(f, '').strip() or None for f in meas_fields}
+            if any(meas_data.values()):
+                BodyMeasurement.objects.create(
+                    student=student,
+                    date=dob or date.today(),
+                    weight_kg=weight_raw or None,
+                    **meas_data,
+                )
+
+            # Notify trainer via Resend
+            try:
+                import httpx
+                from django.conf import settings as django_settings
+                api_key = getattr(django_settings, 'RESEND_API_KEY', '') or os.environ.get('RESEND_API_KEY', '')
+                trainer_emails = list(
+                    User.objects.filter(is_staff=True).exclude(email='').values_list('email', flat=True)
+                )
+                if api_key and trainer_emails:
+                    httpx.post(
+                        'https://api.resend.com/emails',
+                        headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
+                        json={
+                            'from': 'GYMprogrm <onboarding@resend.dev>',
+                            'to': trainer_emails,
+                            'subject': f'New intake form submitted: {student.name}',
+                            'text': (
+                                f'Your client {student.name} has submitted their intake form.\n\n'
+                                f'Email: {student.email or "—"}\n'
+                                f'Goals: {student.goals or "—"}\n\n'
+                                f'Review and generate their program:\n'
+                                f'https://gymprogrm.org/students/{student.pk}/'
+                            ),
+                        },
+                        timeout=10,
+                    )
+            except Exception:
+                pass
+
+            return redirect('students:portal_dashboard')
+
+    return render(request, 'students/portal_intake.html', {'student': student, 'error': error})
+
+
+# ---------------------------------------------------------------------------
 # Student portal views
 # ---------------------------------------------------------------------------
 
 @student_required
 def portal_dashboard(request):
     student = request.user.student
+    if student.intake_status == 'pending':
+        return redirect('students:portal_intake')
     reminders = get_reminders(student)
     active_program = student.programs.filter(is_active=True).first()
 
@@ -533,11 +682,14 @@ def analyze_blood(request, pk):
 
     Student.objects.filter(pk=pk).update(blood_analysis={'_processing': True})
 
-    def _run(student_pk):
+    from django.utils.translation import get_language
+    _lang = get_language() or 'en'
+
+    def _run(student_pk, lang=_lang):
         try:
             from programs.ai import analyze_blood_test
             s = Student.objects.get(pk=student_pk)
-            analysis = analyze_blood_test(s)
+            analysis = analyze_blood_test(s, language=lang)
             if analysis is None:
                 Student.objects.filter(pk=student_pk).update(
                     blood_analysis={'_error': 'Could not read the blood test file.'})

@@ -7,6 +7,27 @@ from django.conf import settings
 import anthropic
 import openai as _openai_mod
 
+LANG_INSTRUCTION = {
+    'en': 'Respond in English.',
+    'ru': 'Отвечай на русском языке.',
+    'es': 'Responde en español.',
+    'fr': 'Réponds en français.',
+    'de': 'Antworte auf Deutsch.',
+    'it': 'Rispondi in italiano.',
+    'pt': 'Responda em português.',
+    'zh-hans': '用中文回答。',
+    'ar': 'أجب باللغة العربية.',
+    'ja': '日本語で答えてください。',
+}
+
+
+def _lang_suffix(language):
+    """Return a language instruction string to append to prompts."""
+    lang = (language or 'en').split('-')[0] if language else 'en'
+    # Try exact match first, then prefix match
+    instruction = LANG_INSTRUCTION.get(language or 'en') or LANG_INSTRUCTION.get(lang) or LANG_INSTRUCTION['en']
+    return f'\n\nIMPORTANT: {instruction}'
+
 
 def generate_exercise_illustration(exercise_name, muscle_group, description=''):
     """
@@ -71,6 +92,71 @@ def _encode_file(path):
     with open(path, 'rb') as f:
         data = base64.standard_b64encode(f.read()).decode('utf-8')
     return data, mime_type
+
+
+def _photo_block(student):
+    """Return (content_block_list, attached_bool) for the student's sport photo."""
+    blocks = []
+    if not student.photo:
+        return blocks, False
+
+    # Try local path first
+    try:
+        path = student.photo.path
+        if os.path.exists(path):
+            data, mime_type = _encode_file(path)
+            if mime_type.startswith('image/'):
+                blocks.append({'type': 'image',
+                               'source': {'type': 'base64', 'media_type': mime_type, 'data': data}})
+                return blocks, True
+    except Exception:
+        pass
+
+    # Fall back to remote URL (Cloudinary)
+    try:
+        import httpx
+        url = student.photo.url
+        resp = httpx.get(url, timeout=30, follow_redirects=True)
+        if resp.status_code == 200:
+            content_type = resp.headers.get('content-type', '').split(';')[0].strip()
+            if not content_type.startswith('image/'):
+                content_type = 'image/jpeg'
+            data = base64.standard_b64encode(resp.content).decode('utf-8')
+            blocks.append({'type': 'image',
+                           'source': {'type': 'base64', 'media_type': content_type, 'data': data}})
+            return blocks, True
+    except Exception:
+        pass
+
+    return blocks, False
+
+
+def _analyze_photo(client, student, photo_blocks):
+    """Use Claude Vision to analyse the client's sport photo for body composition and posture."""
+    if not photo_blocks:
+        return ''
+
+    age = student.age or 0
+    gender = student.get_gender_display() if student.gender else 'не указан'
+    goals = student.goals or 'не указаны'
+
+    prompt = (
+        f'Ты — персональный тренер. Внимательно посмотри на фото клиента в спортивной одежде.\n'
+        f'Клиент: {gender}, возраст {age}, цели: {goals}\n\n'
+        f'Дай краткое профессиональное описание (3–5 предложений) по следующим пунктам:\n'
+        f'1. Видимые мышечные группы и их развитие (что хорошо развито, что требует внимания)\n'
+        f'2. Осанка и положение тела (есть ли сутулость, перекосы, дисбаланс)\n'
+        f'3. Тип телосложения и примерный процент жира\n'
+        f'4. Рекомендации по приоритетным зонам с учётом целей клиента\n\n'
+        f'Отвечай ТОЛЬКО фактами, без предисловий. Максимум 5 предложений.'
+    )
+
+    msg = client.messages.create(
+        model='claude-sonnet-4-6',
+        max_tokens=512,
+        messages=[{'role': 'user', 'content': photo_blocks + [{'type': 'text', 'text': prompt}]}],
+    )
+    return msg.content[0].text.strip()
 
 
 def _blood_test_block(student):
@@ -249,7 +335,7 @@ def _normalize_health_issues(client, raw_text):
     return msg.content[0].text.strip()
 
 
-def suggest_nutrition(student, findings_summary=''):
+def suggest_nutrition(student, findings_summary='', language='ru'):
     """Re-run only Call 2 (nutrition plan) for an existing program."""
     client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
 
@@ -329,7 +415,7 @@ def suggest_nutrition(student, findings_summary=''):
 - fasting.reasoning: ровно 2 строки
 - notes верхнего уровня: ровно 2 объекта
 - Все строки — краткие (макс 15 слов)
-"""
+{_lang_suffix(language)}"""
 
     content = blood_blocks + [{'type': 'text', 'text': prompt}]
     msg = client.messages.create(
@@ -364,7 +450,7 @@ Step-Up, Donkey Kick, Fire Hydrant, Romanian Deadlift (гантели), Lateral 
     return '\n'.join(lines)
 
 
-def suggest_program(student, training_days=3, training_location='gym'):
+def suggest_program(student, training_days=3, training_location='gym', language='ru'):
     """
     Two separate Claude calls to avoid hitting the output token limit:
       Call 1 → key_findings + workout days (exercises)
@@ -389,6 +475,15 @@ def suggest_program(student, training_days=3, training_location='gym'):
 Дополнительные заметки: {student.notes or 'Нет'}"""
 
     blood_blocks, blood_attached = _blood_test_block(student)
+    photo_blocks, photo_attached = _photo_block(student)
+
+    # Analyse photo before building the main prompt
+    photo_analysis = ''
+    if photo_attached:
+        try:
+            photo_analysis = _analyze_photo(client, student, photo_blocks)
+        except Exception:
+            photo_analysis = ''
 
     hormone_note = ''
     if is_woman_40_plus:
@@ -410,6 +505,12 @@ def suggest_program(student, training_days=3, training_location='gym'):
         "Анализ крови не загружен — рекомендации по профилю клиента."
     )
 
+    photo_note = (
+        f'Анализ фото клиента:\n{photo_analysis}'
+        if photo_analysis else
+        'Фото клиента не загружено.'
+    )
+
     exercise_menu = _build_exercise_menu(training_location)
 
     home_muscle_group_field = (
@@ -419,12 +520,14 @@ def suggest_program(student, training_days=3, training_location='gym'):
 
     # ── CALL 1: workout program + key findings ──────────────────────────────
     prompt1 = f"""Ты — профессиональный персональный тренер.
-На основе профиля клиента{' и анализа крови' if blood_attached else ''} создай программу тренировок.
+На основе профиля клиента{' и анализа крови' if blood_attached else ''}{' и анализа фото' if photo_analysis else ''} создай программу тренировок.
 
 ПРОФИЛЬ:
 {profile}
 {hormone_note}
 {blood_note}
+
+{photo_note}
 
 ДОСТУПНЫЕ УПРАЖНЕНИЯ:
 {exercise_menu}
@@ -458,7 +561,8 @@ def suggest_program(student, training_days=3, training_location='gym'):
     "Одно предложение — главная цель клиента и фокус программы",
     "Одно предложение — почему выбрано такое распределение дней под цели клиента",
     "Одно предложение — возрастные/физические адаптации в программе",
-    "Одно предложение — ключевая находка из анализа крови (если есть)",
+    "Одно предложение — ключевая находка из анализа крови (если есть, иначе про здоровье клиента)",
+    "Одно предложение — наблюдение по фото: тип телосложения, осанка или приоритетные зоны (если фото загружено)",
     "Одно предложение — рекомендация по восстановлению и прогрессии"
   ],
   "days": [
@@ -485,7 +589,7 @@ def suggest_program(student, training_days=3, training_location='gym'):
 - "name_ru" — русское название
 - key_findings — каждый элемент это ОДНО предложение
 - Если анализ крови загружен — включи реальные числовые значения в findings
-"""
+{_lang_suffix(language)}"""
 
     content1 = blood_blocks + [{'type': 'text', 'text': prompt1}]
     msg1 = client.messages.create(
@@ -540,7 +644,7 @@ def suggest_program(student, training_days=3, training_location='gym'):
 - fasting.reasoning: ровно 2 строки
 - notes верхнего уровня: ровно 2 объекта
 - Все строки — краткие (макс 15 слов)
-"""
+{_lang_suffix(language)}"""
 
     content2 = blood_blocks + [{'type': 'text', 'text': prompt2}]
     msg2 = client.messages.create(
@@ -554,7 +658,7 @@ def suggest_program(student, training_days=3, training_location='gym'):
     return result
 
 
-def analyze_blood_test(student):
+def analyze_blood_test(student, language='ru'):
     """
     Deep standalone analysis of a blood test file.
     Returns structured JSON with every marker, deficiencies, and exercise/nutrition recommendations.
@@ -629,7 +733,7 @@ def analyze_blood_test(student):
 - nutrition_recommendations: ровно 3 строки, макс 12 слов каждая
 - urgent_attention: пустой массив если нет критических значений
 - positive_findings: ровно 2 строки — группы показателей в норме
-"""
+{_lang_suffix(language)}"""
 
     content = blood_blocks + [{'type': 'text', 'text': prompt}]
     msg = client.messages.create(

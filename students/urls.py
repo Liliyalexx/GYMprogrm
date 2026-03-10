@@ -17,6 +17,7 @@ urlpatterns = [
 
     # Student portal
     path('portal/', views.portal_dashboard, name='portal_dashboard'),
+    path('portal/intake/', views.portal_intake, name='portal_intake'),
     path('portal/program/', views.portal_program, name='portal_program'),
     path('portal/log/<int:program_day_id>/', views.portal_log_workout, name='portal_log_workout'),
     path('portal/measurements/', views.portal_measurements, name='portal_measurements'),

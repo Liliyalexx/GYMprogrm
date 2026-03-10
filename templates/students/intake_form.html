@@ -223,26 +223,6 @@
           <label for="id_weight">{% trans "Weight, kg" %} <span class="opt">({% trans "optional" %})</span></label>
           <input type="number" name="weight_kg" id="id_weight" placeholder="62" min="30" max="300" step="0.1" value="{{ request.POST.weight_kg|default:'' }}">
         </div>
-        <div class="ifield">
-          <label for="id_waist">{% trans "Waist, cm" %} <span class="opt">({% trans "optional" %})</span></label>
-          <input type="number" name="waist_cm" id="id_waist" placeholder="72" min="40" max="200" step="0.1" value="{{ request.POST.waist_cm|default:'' }}">
-        </div>
-        <div class="ifield">
-          <label for="id_hips">{% trans "Hips, cm" %} <span class="opt">({% trans "optional" %})</span></label>
-          <input type="number" name="hips_cm" id="id_hips" placeholder="96" min="40" max="200" step="0.1" value="{{ request.POST.hips_cm|default:'' }}">
-        </div>
-        <div class="ifield">
-          <label for="id_chest">{% trans "Chest, cm" %} <span class="opt">({% trans "optional" %})</span></label>
-          <input type="number" name="chest_cm" id="id_chest" placeholder="88" min="40" max="200" step="0.1" value="{{ request.POST.chest_cm|default:'' }}">
-        </div>
-        <div class="ifield">
-          <label for="id_arms">{% trans "Arms, cm" %} <span class="opt">({% trans "optional" %})</span></label>
-          <input type="number" name="arms_cm" id="id_arms" placeholder="28" min="10" max="100" step="0.1" value="{{ request.POST.arms_cm|default:'' }}">
-        </div>
-        <div class="ifield">
-          <label for="id_legs">{% trans "Legs (thigh), cm" %} <span class="opt">({% trans "optional" %})</span></label>
-          <input type="number" name="legs_cm" id="id_legs" placeholder="54" min="20" max="120" step="0.1" value="{{ request.POST.legs_cm|default:'' }}">
-        </div>
       </div>
     </div>
 

@@ -1,98 +1,101 @@
-# Russian translations for GYMprogrm
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: GYMprogrm\n"
+"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-07 19:23+0000\n"
-"PO-Revision-Date: 2026-03-07 00:00+0000\n"
-"Last-Translator: GYMprogrm\n"
-"Language-Team: Russian\n"
-"Language: ru\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n%100>=11 && n%100<=14)? 2 : 3);\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: gymprogrm/settings.py:90
 msgid "English"
-msgstr "English"
+msgstr ""
 
 #: gymprogrm/settings.py:91
 msgid "Русский"
-msgstr "Русский"
+msgstr ""
 
 #: gymprogrm/settings.py:92
 msgid "Español"
-msgstr "Español"
+msgstr ""
 
 #: gymprogrm/settings.py:93
 msgid "Français"
-msgstr "Français"
+msgstr ""
 
 #: gymprogrm/settings.py:94
 msgid "Deutsch"
-msgstr "Deutsch"
+msgstr ""
 
 #: gymprogrm/settings.py:95
 msgid "Italiano"
-msgstr "Italiano"
+msgstr ""
 
 #: gymprogrm/settings.py:96
 msgid "Português"
-msgstr "Português"
+msgstr ""
 
 #: gymprogrm/settings.py:97
 msgid "中文"
-msgstr "中文"
+msgstr ""
 
 #: gymprogrm/settings.py:98
 msgid "العربية"
-msgstr "العربية"
+msgstr ""
 
 #: gymprogrm/settings.py:99
 msgid "日本語"
-msgstr "日本語"
+msgstr ""
 
 #: templates/base.html:70 templates/students/student_detail.html:8
 #: templates/students/student_form.html:8
 #: templates/students/student_list.html:3
 msgid "Students"
-msgstr "Ученики"
+msgstr ""
 
 #: templates/base.html:71
 msgid "Exercises"
-msgstr "Упражнения"
+msgstr ""
 
 #: templates/base.html:74 templates/students/student_portal_history.html:8
 #: templates/students/student_portal_measurements.html:8
 #: templates/students/student_portal_program.html:8
 msgid "Dashboard"
-msgstr "Главная"
+msgstr ""
 
 #: templates/base.html:75 templates/students/student_portal_program.html:3
 #: templates/students/student_portal_program.html:10
 msgid "My Program"
-msgstr "Моя программа"
+msgstr ""
 
 #: templates/base.html:76 templates/students/student_portal_measurements.html:3
 msgid "Measurements"
-msgstr "Замеры"
+msgstr ""
 
 #: templates/base.html:77
 #: templates/students/student_portal_measurements.html:62
 msgid "History"
-msgstr "История"
+msgstr ""
 
 #: templates/base.html:119
 msgid "Logout"
-msgstr "Выйти"
+msgstr ""
 
 #: templates/programs/exercise_library.html:4
 #: templates/programs/exercise_library.html:8
-#, fuzzy
-#| msgid "Exercises"
 msgid "Exercise Library"
-msgstr "Упражнения"
+msgstr ""
 
 #: templates/programs/exercise_library.html:13
 msgid "All"
@@ -104,13 +107,11 @@ msgstr ""
 #: templates/programs/exercise_library.html:192
 #: templates/students/student_detail.html:14
 msgid "Edit"
-msgstr "Редактировать"
+msgstr ""
 
 #: templates/programs/exercise_library.html:45
-#, fuzzy
-#| msgid "Generate New"
 msgid "Generate"
-msgstr "Создать новую"
+msgstr ""
 
 #: templates/programs/exercise_library.html:61
 #: templates/programs/exercise_library.html:159
@@ -119,21 +120,16 @@ msgid "Posture tips"
 msgstr ""
 
 #: templates/programs/exercise_library.html:70
-#, fuzzy
-#| msgid "program"
-#| msgid_plural "programs"
 msgid "Add to program"
-msgstr "программа"
+msgstr ""
 
 #: templates/programs/exercise_library.html:98
 msgid "No active students with programs."
 msgstr ""
 
 #: templates/programs/exercise_library.html:106
-#, fuzzy
-#| msgid "Exercises"
 msgid "Exercises not found."
-msgstr "Упражнения"
+msgstr ""
 
 #: templates/programs/exercise_library.html:113
 msgid "Photo / Video URL"
@@ -149,7 +145,7 @@ msgstr ""
 #: templates/students/student_form.html:247
 #: templates/students/student_portal_log_workout.html:69
 msgid "Cancel"
-msgstr "Отмена"
+msgstr ""
 
 #: templates/programs/exercise_library.html:124
 msgid "Save"
@@ -158,31 +154,27 @@ msgstr ""
 #: templates/programs/exercise_library.html:131
 #: templates/students/student_detail.html:187
 msgid "Generating…"
-msgstr "Генерация…"
+msgstr ""
 
 #: templates/programs/exercise_library.html:132
-#, fuzzy
-#| msgid "Error:"
 msgid "Error"
-msgstr "Ошибка:"
+msgstr ""
 
 #: templates/programs/program_detail.html:9
 #: templates/students/student_detail.html:13
 #: templates/students/student_detail.html:226
 msgid "Programs"
-msgstr "Программы"
+msgstr ""
 
 #: templates/programs/program_detail.html:16
 #: templates/students/student_detail.html:92
 #: templates/students/student_form.html:179
 msgid "Goals & Wishes"
-msgstr "Цели и пожелания"
+msgstr ""
 
 #: templates/programs/program_detail.html:27
-#, fuzzy
-#| msgid "Analysis findings"
 msgid "Analysis & findings"
-msgstr "Результаты анализа"
+msgstr ""
 
 #: templates/programs/program_detail.html:41
 msgid "Daily nutrition plan"
@@ -217,10 +209,8 @@ msgid "kcal"
 msgstr ""
 
 #: templates/programs/program_detail.html:99
-#, fuzzy
-#| msgid "Deficiencies & recommendations"
 msgid "Fasting recommendations"
-msgstr "Дефициты и рекомендации"
+msgstr ""
 
 #: templates/programs/program_detail.html:101
 msgid "eating window:"
@@ -231,29 +221,21 @@ msgid "Fasting not recommended"
 msgstr ""
 
 #: templates/programs/program_detail.html:119
-#, fuzzy
-#| msgid "Students"
 msgid "Supplements:"
-msgstr "Ученики"
+msgstr ""
 
 #: templates/programs/program_detail.html:131
-#, fuzzy
-#| msgid "Deficiencies & recommendations"
 msgid "General recommendations:"
-msgstr "Дефициты и рекомендации"
+msgstr ""
 
 #: templates/programs/program_detail.html:180
 #: templates/programs/program_detail.html:229
-#, fuzzy
-#| msgid "Confirm password"
 msgid "Confirmed"
-msgstr "Подтвердите пароль"
+msgstr ""
 
 #: templates/programs/program_detail.html:182
-#, fuzzy
-#| msgid "Personal information"
 msgid "Pending confirmation"
-msgstr "Личная информация"
+msgstr ""
 
 #: templates/programs/program_detail.html:187
 msgid "sets"
@@ -264,10 +246,8 @@ msgid "reps"
 msgstr ""
 
 #: templates/programs/program_detail.html:210
-#, fuzzy
-#| msgid "Confirm password"
 msgid "Confirm"
-msgstr "Подтвердите пароль"
+msgstr ""
 
 #: templates/programs/program_detail.html:214
 msgid "Skip"
@@ -278,58 +258,56 @@ msgid "Exercises not yet added."
 msgstr ""
 
 #: templates/programs/program_detail.html:225
-#, fuzzy
-#| msgid "Program created:"
 msgid "Program days not yet created."
-msgstr "Программа создана:"
+msgstr ""
 
 #: templates/programs/program_generate.html:3
 #: templates/programs/program_generate.html:9
 #: templates/programs/program_generate.html:76
 #: templates/students/student_detail.html:12
 msgid "Generate Program"
-msgstr "Создать программу"
+msgstr ""
 
 #: templates/programs/program_generate.html:15
 #: templates/students/student_detail.html:208
 #: templates/students/student_list.html:45
 msgid "Error:"
-msgstr "Ошибка:"
+msgstr ""
 
 #: templates/programs/program_generate.html:16
 msgid "Make sure your ANTHROPIC_API_KEY is set in .env"
-msgstr "Убедитесь, что ANTHROPIC_API_KEY задан в .env"
+msgstr ""
 
 #: templates/programs/program_generate.html:23
 #, python-format
 msgid "Generate AI-powered program for %(name)s"
-msgstr "Создать AI-программу для %(name)s"
+msgstr ""
 
 #: templates/programs/program_generate.html:26
 msgid "Goals:"
-msgstr "Цели:"
+msgstr ""
 
 #: templates/programs/program_generate.html:26
 #: templates/students/student_detail.html:93
 msgid "Not specified"
-msgstr "Не указано"
+msgstr ""
 
 #: templates/programs/program_generate.html:27
 msgid "Health issues:"
-msgstr "Проблемы со здоровьем:"
+msgstr ""
 
 #: templates/programs/program_generate.html:27
 #: templates/students/student_detail.html:97
 msgid "None reported"
-msgstr "Не указаны"
+msgstr ""
 
 #: templates/programs/program_generate.html:28
 msgid "Blood test:"
-msgstr "Анализ крови:"
+msgstr ""
 
 #: templates/programs/program_generate.html:28
 msgid "File uploaded"
-msgstr "Файл загружен"
+msgstr ""
 
 #: templates/programs/program_generate.html:32
 msgid "Claude AI will analyse the student's profile and create a personalised workout program. You will then review and confirm each exercise."
@@ -337,35 +315,35 @@ msgstr ""
 
 #: templates/programs/program_generate.html:40
 msgid "Where will the student train?"
-msgstr "Где будет тренироваться ученик?"
+msgstr ""
 
 #: templates/programs/program_generate.html:46
 msgid "Gym"
-msgstr "Зал"
+msgstr ""
 
 #: templates/programs/program_generate.html:47
 msgid "Machines, barbells, cables"
-msgstr "Тренажёры, штанги, блоки"
+msgstr ""
 
 #: templates/programs/program_generate.html:54
 msgid "Home"
-msgstr "Дома"
+msgstr ""
 
 #: templates/programs/program_generate.html:55
 msgid "Bodyweight & dumbbells"
-msgstr "Своё тело и гантели"
+msgstr ""
 
 #: templates/programs/program_generate.html:63
 msgid "How many days per week will the student train?"
-msgstr "Сколько дней в неделю будет тренироваться?"
+msgstr ""
 
 #: templates/programs/program_generate.html:72
 msgid "days / week"
-msgstr "дней в неделю"
+msgstr ""
 
 #: templates/programs/program_generate.html:126
 msgid "Program created:"
-msgstr "Программа создана:"
+msgstr ""
 
 #: templates/programs/program_generate.html:127
 msgid "Review each exercise below. Confirm the ones you want to include — you can adjust sets, reps, and weight."
@@ -374,152 +352,152 @@ msgstr ""
 #: templates/programs/program_list.html:3
 #: templates/programs/program_list.html:9
 msgid "Training Programs"
-msgstr "Программы тренировок"
+msgstr ""
 
 #: templates/programs/program_list.html:11
 msgid "Create Program"
-msgstr "Создать программу"
+msgstr ""
 
 #: templates/programs/program_list.html:23
 #, python-format
 msgid "%(days)s day · %(weeks)s workouts per week · "
-msgstr "%(days)s дней · %(weeks)s тренировок в неделю · "
+msgstr ""
 
 #: templates/programs/program_list.html:23
 #: templates/students/student_detail.html:235
 msgid "Created"
-msgstr "Создана"
+msgstr ""
 
 #: templates/programs/program_list.html:26
 msgid "Open program →"
-msgstr "Открыть программу →"
+msgstr ""
 
 #: templates/programs/program_list.html:32
 msgid "Analysis findings"
-msgstr "Результаты анализа"
+msgstr ""
 
 #: templates/programs/program_list.html:49
 #, python-format
 msgid "No programs yet for %(name)s."
-msgstr "Программ пока нет для %(name)s."
+msgstr ""
 
 #: templates/programs/program_list.html:50
 msgid "Create first program"
-msgstr "Создать первую программу"
+msgstr ""
 
 #: templates/registration/login.html:8
 msgid "Login"
-msgstr "Вход"
+msgstr ""
 
 #: templates/registration/login.html:21
 msgid "Invalid username or password."
-msgstr "Неверный логин или пароль."
+msgstr ""
 
 #: templates/registration/login.html:24
 msgid "Username"
-msgstr "Имя пользователя"
+msgstr ""
 
 #: templates/registration/login.html:28
 #: templates/students/invite_register.html:25
 msgid "Password"
-msgstr "Пароль"
+msgstr ""
 
 #: templates/registration/login.html:32
 msgid "Sign In"
-msgstr "Войти"
+msgstr ""
 
 #: templates/students/_blood_analysis.html:7
 msgid "Summary:"
-msgstr "Резюме:"
+msgstr ""
 
 #: templates/students/_blood_analysis.html:13
 msgid "Requires doctor attention"
-msgstr "Требует внимания врача"
+msgstr ""
 
 #: templates/students/_blood_analysis.html:22
 msgid "Blood markers"
-msgstr "Показатели крови"
+msgstr ""
 
 #: templates/students/_blood_analysis.html:27
 msgid "Marker"
-msgstr "Показатель"
+msgstr ""
 
 #: templates/students/_blood_analysis.html:28
 msgid "Result"
-msgstr "Результат"
+msgstr ""
 
 #: templates/students/_blood_analysis.html:29
 msgid "Reference"
-msgstr "Норма"
+msgstr ""
 
 #: templates/students/_blood_analysis.html:30
 msgid "Interpretation"
-msgstr "Интерпретация"
+msgstr ""
 
 #: templates/students/_blood_analysis.html:53
 msgid "Deficiencies & recommendations"
-msgstr "Дефициты и рекомендации"
+msgstr ""
 
 #: templates/students/_blood_analysis.html:62
 msgid "Severe"
-msgstr "Тяжёлый"
+msgstr ""
 
 #: templates/students/_blood_analysis.html:62
 msgid "Moderate"
-msgstr "Умеренный"
+msgstr ""
 
 #: templates/students/_blood_analysis.html:62
 msgid "Mild"
-msgstr "Лёгкий"
+msgstr ""
 
 #: templates/students/_blood_analysis.html:69
 msgid "Foods:"
-msgstr "Продукты:"
+msgstr ""
 
 #: templates/students/_blood_analysis.html:82
 msgid "Impact on training"
-msgstr "Влияние на тренировки"
+msgstr ""
 
 #: templates/students/_blood_analysis.html:90
 msgid "Nutrition by test results"
-msgstr "Питание по результатам анализов"
+msgstr ""
 
 #: templates/students/_blood_analysis.html:100
 msgid "Normal findings"
-msgstr "Нормальные показатели"
+msgstr ""
 
 #: templates/students/intake_form.html:3
 msgid "Client Intake Form"
-msgstr "Анкета клиента"
+msgstr ""
 
 #: templates/students/intake_form.html:166
 msgid "Your Personal Fitness Intake Form"
-msgstr "Ваша персональная фитнес-анкета"
+msgstr ""
 
 #: templates/students/intake_form.html:167
 msgid "Takes about 3 minutes to complete."
-msgstr "Займёт около 3 минут."
+msgstr ""
 
 #: templates/students/intake_form.html:167
 msgid "Your trainer will review this and build a program tailored just for you."
-msgstr "Тренер изучит анкету и составит программу специально для вас."
+msgstr ""
 
 #: templates/students/intake_form.html:179
 msgid "Personal information"
-msgstr "Личная информация"
+msgstr ""
 
 #: templates/students/intake_form.html:182
 msgid "Full name"
-msgstr "Полное имя"
+msgstr ""
 
 #: templates/students/intake_form.html:188
 msgid "Date of birth"
-msgstr "Дата рождения"
+msgstr ""
 
 #: templates/students/intake_form.html:192
 #: templates/students/student_form.html:25
 msgid "Gender"
-msgstr "Пол"
+msgstr ""
 
 #: templates/students/intake_form.html:192
 #: templates/students/intake_form.html:204
@@ -534,174 +512,174 @@ msgstr "Пол"
 #: templates/students/intake_form.html:254
 #: templates/students/intake_form.html:278
 msgid "optional"
-msgstr "необязательно"
+msgstr ""
 
 #: templates/students/intake_form.html:194
 msgid "not specified"
-msgstr "не указан"
+msgstr ""
 
 #: templates/students/intake_form.html:195
 msgid "Female"
-msgstr "Женский"
+msgstr ""
 
 #: templates/students/intake_form.html:196
 msgid "Male"
-msgstr "Мужской"
+msgstr ""
 
 #: templates/students/intake_form.html:197
 msgid "Other"
-msgstr "Другой"
+msgstr ""
 
 #: templates/students/intake_form.html:204
 #: templates/students/student_detail.html:53
 #: templates/students/student_form.html:34
 msgid "Email"
-msgstr "Email"
+msgstr ""
 
 #: templates/students/intake_form.html:208
 #: templates/students/student_detail.html:57
 #: templates/students/student_form.html:38
 msgid "Phone"
-msgstr "Телефон"
+msgstr ""
 
 #: templates/students/intake_form.html:216
 msgid "Body measurements"
-msgstr "Замеры тела"
+msgstr ""
 
 #: templates/students/intake_form.html:219
 msgid "Height, cm"
-msgstr "Рост, см"
+msgstr ""
 
 #: templates/students/intake_form.html:223
 msgid "Weight, kg"
-msgstr "Вес, кг"
+msgstr ""
 
 #: templates/students/intake_form.html:227
 msgid "Waist, cm"
-msgstr "Талия, см"
+msgstr ""
 
 #: templates/students/intake_form.html:231
 msgid "Hips, cm"
-msgstr "Бёдра, см"
+msgstr ""
 
 #: templates/students/intake_form.html:235
 msgid "Chest, cm"
-msgstr "Грудь, см"
+msgstr ""
 
 #: templates/students/intake_form.html:239
 msgid "Arms, cm"
-msgstr "Руки, см"
+msgstr ""
 
 #: templates/students/intake_form.html:243
 msgid "Legs (thigh), cm"
-msgstr "Ноги (бедро), см"
+msgstr ""
 
 #: templates/students/intake_form.html:251
 msgid "Health & injuries"
-msgstr "Здоровье и травмы"
+msgstr ""
 
 #: templates/students/intake_form.html:254
 msgid "Health issues, injuries or contraindications"
-msgstr "Проблемы со здоровьем, травмы или противопоказания"
+msgstr ""
 
 #: templates/students/intake_form.html:256
 msgid "e.g. lower back pain, varicose veins, high blood pressure, knee surgery in 2020…"
-msgstr "напр. боль в пояснице, варикоз, гипертония, операция на колене в 2020…"
+msgstr ""
 
 #: templates/students/intake_form.html:260
 msgid "Blood test results"
-msgstr "Результаты анализа крови"
+msgstr ""
 
 #: templates/students/intake_form.html:260
 msgid "optional — PDF or photo"
-msgstr "необязательно — PDF или фото"
+msgstr ""
 
 #: templates/students/intake_form.html:263
 #: templates/students/intake_form.html:337
 msgid "Attach file"
-msgstr "Прикрепить файл"
+msgstr ""
 
 #: templates/students/intake_form.html:271
 msgid "Goals & expectations"
-msgstr "Цели и ожидания"
+msgstr ""
 
 #: templates/students/intake_form.html:273
 msgid "What do you want to achieve?"
-msgstr "Чего вы хотите достичь?"
+msgstr ""
 
 #: templates/students/intake_form.html:275
 msgid "e.g. lose 15 lbs, tone glutes and legs, improve posture, build muscle, increase stamina…"
-msgstr "напр. похудеть на 7 кг, подтянуть ягодицы и ноги, улучшить осанку, набрать мышцы…"
+msgstr ""
 
 #: templates/students/intake_form.html:278
 msgid "What do you expect from your trainer?"
-msgstr "Чего вы ожидаете от тренера?"
+msgstr ""
 
 #: templates/students/intake_form.html:280
 msgid "e.g. detailed explanations of exercises, regular check-ins, strict nutrition guidance, flexible schedule…"
-msgstr "напр. подробные объяснения упражнений, регулярные проверки, строгое питание…"
+msgstr ""
 
 #: templates/students/intake_form.html:286
 msgid "Photo in sport clothes"
-msgstr "Фото в спортивной одежде"
+msgstr ""
 
 #: templates/students/intake_form.html:288
 msgid "A front and/or back photo in workout clothes helps your trainer see your starting point and track progress. Completely optional."
-msgstr "Фото спереди и/или сзади в спортивной одежде помогает тренеру видеть стартовую точку и отслеживать прогресс. Полностью по желанию."
+msgstr ""
 
 #: templates/students/intake_form.html:292
 #: templates/students/intake_form.html:338
 msgid "Attach photo (JPG, PNG)"
-msgstr "Прикрепить фото (JPG, PNG)"
+msgstr ""
 
 #: templates/students/intake_form.html:299
 msgid "Training availability"
-msgstr "Расписание тренировок"
+msgstr ""
 
 #: templates/students/intake_form.html:302
 msgid "How many days per week can you train?"
-msgstr "Сколько дней в неделю вы можете тренироваться?"
+msgstr ""
 
 #: templates/students/intake_form.html:307
 #, python-format
 msgid "%(d)s days"
-msgstr "%(d)s дней"
+msgstr ""
 
 #: templates/students/intake_form.html:313
 msgid "Are you willing to follow nutrition recommendations?"
-msgstr "Готовы следовать рекомендациям по питанию?"
+msgstr ""
 
 #: templates/students/intake_form.html:315
 msgid "Your trainer may suggest a meal plan alongside your workouts."
-msgstr "Тренер может предложить план питания вместе с тренировками."
+msgstr ""
 
 #: templates/students/intake_form.html:320
 msgid "Yes, I'm in"
-msgstr "Да, я готова / готов"
+msgstr ""
 
 #: templates/students/intake_form.html:324
 msgid "Not right now"
-msgstr "Пока нет"
+msgstr ""
 
 #: templates/students/intake_form.html:329
 msgid "Submit my form →"
-msgstr "Отправить анкету →"
+msgstr ""
 
 #: templates/students/intake_form.html:331
 msgid "Your information is private and will only be used by your trainer to build your program."
-msgstr "Ваши данные конфиденциальны и используются только тренером для составления программы."
+msgstr ""
 
 #: templates/students/intake_success.html:4
 msgid "Form Submitted"
-msgstr "Анкета отправлена"
+msgstr ""
 
 #: templates/students/intake_success.html:11
 msgid "You're all set!"
-msgstr "Всё готово!"
+msgstr ""
 
 #: templates/students/intake_success.html:13
 msgid "Your trainer has received your intake form and will be in touch soon."
-msgstr "Тренер получил вашу анкету и скоро свяжется с вами."
+msgstr ""
 
 #: templates/students/intake_success.html:14
 msgid "A personalised workout program will be built based on your goals and health information."
@@ -709,59 +687,59 @@ msgstr ""
 
 #: templates/students/intake_success.html:17
 msgid "What happens next:"
-msgstr "Что будет дальше:"
+msgstr ""
 
 #: templates/students/intake_success.html:18
 msgid "Your trainer reviews your intake form"
-msgstr "Тренер изучает вашу анкету"
+msgstr ""
 
 #: templates/students/intake_success.html:19
 msgid "A program tailored to your goals is created"
-msgstr "Создаётся программа под ваши цели"
+msgstr ""
 
 #: templates/students/intake_success.html:20
 msgid "Your trainer will contact you to go over the details"
-msgstr "Тренер свяжется с вами для обсуждения деталей"
+msgstr ""
 
 #: templates/students/invite_register.html:3
 msgid "Create Account"
-msgstr "Создать аккаунт"
+msgstr ""
 
 #: templates/students/invite_register.html:10
 #, python-format
 msgid "Welcome, %(name)s!"
-msgstr "Добро пожаловать, %(name)s!"
+msgstr ""
 
 #: templates/students/invite_register.html:11
 msgid "Create your account to access your workout portal."
-msgstr "Создайте аккаунт для доступа к порталу тренировок."
+msgstr ""
 
 #: templates/students/invite_register.html:21
 #: venv/lib/python3.11/site-packages/django/db/models/fields/__init__.py:1920
 msgid "Email address"
-msgstr "Email адрес"
+msgstr ""
 
 #: templates/students/invite_register.html:27
 msgid "At least 8 characters."
-msgstr "Минимум 8 символов."
+msgstr ""
 
 #: templates/students/invite_register.html:30
 msgid "Confirm password"
-msgstr "Подтвердите пароль"
+msgstr ""
 
 #: templates/students/invite_register.html:34
 msgid "Create Account & Go to My Portal"
-msgstr "Создать аккаунт и перейти в портал"
+msgstr ""
 
 #: templates/students/student_confirm_delete.html:3
 #, python-format
 msgid "Delete %(name)s"
-msgstr "Удалить %(name)s"
+msgstr ""
 
 #: templates/students/student_confirm_delete.html:9
 #, python-format
 msgid "Delete %(name)s?"
-msgstr "Удалить %(name)s?"
+msgstr ""
 
 #: templates/students/student_confirm_delete.html:10
 msgid "This will permanently delete the student and all their programs. This cannot be undone."
@@ -769,13 +747,13 @@ msgstr ""
 
 #: templates/students/student_confirm_delete.html:13
 msgid "Yes, Delete"
-msgstr "Да, удалить"
+msgstr ""
 
 #: templates/students/student_detail.html:15
 #: templates/students/student_list.html:127
 #: venv/lib/python3.11/site-packages/django/forms/formsets.py:499
 msgid "Delete"
-msgstr "Удалить"
+msgstr ""
 
 #: templates/students/student_detail.html:23
 #, python-format
@@ -784,296 +762,294 @@ msgstr ""
 
 #: templates/students/student_detail.html:24
 msgid "Generate new →"
-msgstr "Создать новую →"
+msgstr ""
 
 #: templates/students/student_detail.html:28
 #, python-format
 msgid "%(plan)s payment is due for this student."
-msgstr "Оплата «%(plan)s» для этого ученика просрочена."
+msgstr ""
 
 #: templates/students/student_detail.html:41
 msgid "Profile"
-msgstr "Профиль"
+msgstr ""
 
 #: templates/students/student_detail.html:45
 msgid "Age"
-msgstr "Возраст"
+msgstr ""
 
 #: templates/students/student_detail.html:46
 #, python-format
 msgid "%(age)s years old"
-msgstr "%(age)s лет"
+msgstr ""
 
 #: templates/students/student_detail.html:49
 #: templates/students/student_form.html:44
 msgid "Date of Birth"
-msgstr "Дата рождения"
+msgstr ""
 
 #: templates/students/student_detail.html:67
 msgid "Student Account"
-msgstr "Аккаунт ученика"
+msgstr ""
 
 #: templates/students/student_detail.html:69
 msgid "Account active"
-msgstr "Аккаунт активен"
+msgstr ""
 
 #: templates/students/student_detail.html:72
 msgid "No account yet. Send an invite link for the student to register."
-msgstr "Аккаунта нет. Отправьте ссылку-приглашение для регистрации."
+msgstr ""
 
 #: templates/students/student_detail.html:73
 msgid "Send Invite Link"
-msgstr "Отправить ссылку"
+msgstr ""
 
 #: templates/students/student_detail.html:80
 msgid "Billing"
-msgstr "Оплата"
+msgstr ""
 
 #: templates/students/student_detail.html:81
 msgid "Plan:"
-msgstr "Тариф:"
+msgstr ""
 
 #: templates/students/student_detail.html:83
 msgid "Started:"
-msgstr "Начало:"
+msgstr ""
 
 #: templates/students/student_detail.html:85
 msgid "Edit payment info →"
-msgstr "Редактировать оплату →"
+msgstr ""
 
 #: templates/students/student_detail.html:96
 msgid "Health Issues"
-msgstr "Здоровье"
+msgstr ""
 
 #: templates/students/student_detail.html:104
 msgid "Blood Test"
-msgstr "Анализ крови"
+msgstr ""
 
 #: templates/students/student_detail.html:108
 msgid "View File"
-msgstr "Просмотреть файл"
+msgstr ""
 
 #: templates/students/student_detail.html:110
 #: templates/students/student_detail.html:127
 #: templates/students/student_detail.html:137
 msgid "Analyze Blood Test"
-msgstr "Анализировать"
+msgstr ""
 
 #: templates/students/student_detail.html:112
 msgid "Upload / Replace"
-msgstr "Загрузить / Заменить"
+msgstr ""
 
 #: templates/students/student_detail.html:118
 msgid "No blood test uploaded yet."
-msgstr "Анализ крови не загружен."
+msgstr ""
 
 #: templates/students/student_detail.html:119
 msgid "Upload now →"
-msgstr "Загрузить →"
+msgstr ""
 
 #: templates/students/student_detail.html:127
 msgid "Blood test file uploaded. Click"
-msgstr "Файл анализа загружен. Нажмите"
+msgstr ""
 
 #: templates/students/student_detail.html:127
 msgid "above."
-msgstr "выше."
+msgstr ""
 
 #: templates/students/student_detail.html:135
 msgid "Starting…"
-msgstr "Запуск…"
+msgstr ""
 
 #: templates/students/student_detail.html:136
 msgid "Analysing…"
-msgstr "Анализируем…"
+msgstr ""
 
 #: templates/students/student_detail.html:138
 #: templates/students/student_detail.html:190
 msgid "Network error — please try again."
-msgstr "Ошибка сети — попробуйте снова."
+msgstr ""
 
 #: templates/students/student_detail.html:139
 msgid "Analysis failed."
-msgstr "Анализ не удался."
+msgstr ""
 
 #: templates/students/student_detail.html:188
 msgid "Link copied!"
-msgstr "Ссылка скопирована!"
+msgstr ""
 
 #: templates/students/student_detail.html:189
 msgid "Copy this link:"
-msgstr "Скопируйте ссылку:"
+msgstr ""
 
 #: templates/students/student_detail.html:208
 #: templates/students/student_list.html:45
 msgid "Unknown error"
-msgstr "Неизвестная ошибка"
+msgstr ""
 
 #: templates/students/student_detail.html:218
 msgid "Notes"
-msgstr "Заметки"
+msgstr ""
 
 #: templates/students/student_detail.html:227
 msgid "Generate New"
-msgstr "Создать новую"
+msgstr ""
 
 #: templates/students/student_detail.html:235
 msgid "day"
 msgid_plural "days"
-msgstr[0] "день"
-msgstr[1] "дня"
-msgstr[2] "дней"
-msgstr[3] "дней"
+msgstr[0] ""
+msgstr[1] ""
 
 #: templates/students/student_detail.html:236
 msgid "Started"
-msgstr "Начата"
+msgstr ""
 
 #: templates/students/student_detail.html:241
 msgid "No programs yet."
-msgstr "Программ пока нет."
+msgstr ""
 
 #: templates/students/student_detail.html:241
 msgid "Generate one →"
-msgstr "Создать →"
+msgstr ""
 
 #: templates/students/student_form.html:18
 msgid "Full Name"
-msgstr "Полное имя"
+msgstr ""
 
 #: templates/students/student_form.html:51
 msgid "Height (cm)"
-msgstr "Рост (см)"
+msgstr ""
 
 #: templates/students/student_form.html:55
 #: templates/students/student_portal_log_workout.html:48
 #: templates/students/student_portal_measurements.html:27
 msgid "Weight (kg)"
-msgstr "Вес (кг)"
+msgstr ""
 
 #: templates/students/student_form.html:61
 msgid "Desirable weight:"
-msgstr "Желаемый вес:"
+msgstr ""
 
 #: templates/students/student_form.html:90
 msgid "Broca formula (F, 18+)"
-msgstr "Формула Брока (Ж, 18+)"
+msgstr ""
 
 #: templates/students/student_form.html:93
 msgid "Broca formula (M, 18+)"
-msgstr "Формула Брока (М, 18+)"
+msgstr ""
 
 #: templates/students/student_form.html:96
 msgid "Broca formula (18+)"
-msgstr "Формула Брока (18+)"
+msgstr ""
 
 #: templates/students/student_form.html:102
 #, python-format
 msgid "BMI 50th percentile (WHO, age %(age)s)"
-msgstr "ИМТ 50-й процентиль (ВОЗ, возраст %(age)s)"
+msgstr ""
 
 #: templates/students/student_form.html:139
 msgid "Photo"
-msgstr "Фото"
+msgstr ""
 
 #: templates/students/student_form.html:146
 msgid "JPG, PNG or WebP. Shown on the student profile."
-msgstr "JPG, PNG или WebP. Отображается в профиле ученика."
+msgstr ""
 
 #: templates/students/student_form.html:150
 msgid "Blood Test Result (PDF or image)"
-msgstr "Результат анализа крови (PDF или фото)"
+msgstr ""
 
 #: templates/students/student_form.html:153
 msgid "Current file:"
-msgstr "Текущий файл:"
+msgstr ""
 
 #: templates/students/student_form.html:157
 msgid "re-upload to refresh link"
-msgstr "загрузите снова для обновления ссылки"
+msgstr ""
 
 #: templates/students/student_form.html:162
 msgid "Upload the lab results PDF or a photo."
-msgstr "Загрузите PDF или фото с результатами лаборатории."
+msgstr ""
 
 #: templates/students/student_form.html:167
 msgid "Health Issues / Contraindications"
-msgstr "Проблемы со здоровьем / Противопоказания"
+msgstr ""
 
 #: templates/students/student_form.html:170
 #: templates/students/student_form.html:182
 #: templates/students/student_form.html:191
 msgid "AI Correct"
-msgstr "Исправить (AI)"
+msgstr ""
 
 #: templates/students/student_form.html:173
 msgid "E.g. lower back pain, knee injury, hypertension..."
-msgstr "Напр. боль в пояснице, травма колена, гипертония..."
+msgstr ""
 
 #: templates/students/student_form.html:185
 msgid "E.g. make glutes bigger, reduce body fat, improve stamina..."
-msgstr "Напр. увеличить ягодицы, снизить жир, улучшить выносливость..."
+msgstr ""
 
 #: templates/students/student_form.html:190
 msgid "Correcting…"
-msgstr "Исправление…"
+msgstr ""
 
 #: templates/students/student_form.html:192
 msgid "✓ Rewritten in professional language"
-msgstr "✓ Переформулировано профессионально"
+msgstr ""
 
 #: templates/students/student_form.html:193
 msgid "✗ Error — try again"
-msgstr "✗ Ошибка — попробуйте снова"
+msgstr ""
 
 #: templates/students/student_form.html:238
 msgid "Additional Notes"
-msgstr "Дополнительные заметки"
+msgstr ""
 
 #: templates/students/student_form.html:239
 msgid "Any other relevant information..."
-msgstr "Любая другая важная информация..."
+msgstr ""
 
 #: templates/students/student_form.html:243
 msgid "Save Student"
-msgstr "Сохранить ученика"
+msgstr ""
 
 #: templates/students/student_list.html:7
 msgid "My Students"
-msgstr "Мои ученики"
+msgstr ""
 
 #: templates/students/student_list.html:9
 #: templates/students/student_list.html:136
 msgid "Add Student"
-msgstr "Добавить ученика"
+msgstr ""
 
 #: templates/students/student_list.html:15
 msgid "Send intake form by email"
-msgstr "Отправить анкету по email"
+msgstr ""
 
 #: templates/students/student_list.html:19
 msgid "Send"
-msgstr "Отправить"
+msgstr ""
 
 #: templates/students/student_list.html:20
 msgid "or copy link →"
-msgstr "или скопировать ссылку →"
+msgstr ""
 
 #: templates/students/student_list.html:26
 msgid "Please enter an email address."
-msgstr "Введите email адрес."
+msgstr ""
 
 #: templates/students/student_list.html:27
 msgid "Sending…"
-msgstr "Отправка…"
+msgstr ""
 
 #: templates/students/student_list.html:28
 msgid "Network error — try again."
-msgstr "Ошибка сети — попробуйте снова."
+msgstr ""
 
 #: templates/students/student_list.html:42
 msgid "Email sent to"
-msgstr "Email отправлен на"
+msgstr ""
 
 #: templates/students/student_list.html:56
 #, python-format
@@ -1083,273 +1059,269 @@ msgstr ""
 #: templates/students/student_list.html:60
 #, python-format
 msgid "%(plan)s payment is due."
-msgstr "Оплата «%(plan)s» просрочена."
+msgstr ""
 
 #: templates/students/student_list.html:68
 msgid "New Applications"
-msgstr "Новые заявки"
+msgstr ""
 
 #: templates/students/student_list.html:84
 msgid "View"
-msgstr "Просмотр"
+msgstr ""
 
 #: templates/students/student_list.html:89
 msgid "Accept"
-msgstr "Принять"
+msgstr ""
 
 #: templates/students/student_list.html:113
 msgid "program"
 msgid_plural "programs"
-msgstr[0] "программа"
-msgstr[1] "программы"
-msgstr[2] "программ"
-msgstr[3] "программ"
+msgstr[0] ""
+msgstr[1] ""
 
 #: templates/students/student_list.html:120
 msgid "Active"
-msgstr "Активен"
+msgstr ""
 
 #: templates/students/student_list.html:122
 msgid "No account"
-msgstr "Нет аккаунта"
+msgstr ""
 
 #: templates/students/student_list.html:135
 msgid "No students yet. Add your first student!"
-msgstr "Учеников пока нет. Добавьте первого!"
+msgstr ""
 
 #: templates/students/student_portal_dashboard.html:3
 msgid "My Portal"
-msgstr "Мой портал"
+msgstr ""
 
 #: templates/students/student_portal_dashboard.html:11
 msgid "Your trainer will be updating your program soon — keep up the great work!"
-msgstr "Тренер скоро обновит вашу программу — продолжайте в том же духе!"
+msgstr ""
 
 #: templates/students/student_portal_dashboard.html:15
 #, python-format
 msgid "Your subscription (%(plan)s) is coming up for renewal — contact your trainer."
-msgstr "Ваша подписка «%(plan)s» скоро заканчивается — свяжитесь с тренером."
+msgstr ""
 
 #: templates/students/student_portal_dashboard.html:21
 #, python-format
 msgid "Hi, %(name)s!"
-msgstr "Привет, %(name)s!"
+msgstr ""
 
 #: templates/students/student_portal_dashboard.html:26
 msgid "Current Program"
-msgstr "Текущая программа"
+msgstr ""
 
 #: templates/students/student_portal_dashboard.html:32
 #, python-format
 msgid "%(n)s day remaining in this 2-week block"
 msgid_plural "%(n)s days remaining in this 2-week block"
-msgstr[0] "%(n)s день осталось в этом блоке"
-msgstr[1] "%(n)s дня осталось в этом блоке"
-msgstr[2] "%(n)s дней осталось в этом блоке"
-msgstr[3] "%(n)s дней осталось в этом блоке"
+msgstr[0] ""
+msgstr[1] ""
 
 #: templates/students/student_portal_dashboard.html:34
 msgid "Program period complete — new program coming soon!"
-msgstr "Период программы завершён — скоро новая программа!"
+msgstr ""
 
 #: templates/students/student_portal_dashboard.html:38
 msgid "View Full Program"
-msgstr "Смотреть программу"
+msgstr ""
 
 #: templates/students/student_portal_dashboard.html:40
 msgid "No active program yet. Your trainer will set one up for you."
-msgstr "Активной программы нет. Тренер скоро её составит."
+msgstr ""
 
 #: templates/students/student_portal_dashboard.html:48
 msgid "Log Measurements"
-msgstr "Записать замеры"
+msgstr ""
 
 #: templates/students/student_portal_dashboard.html:50
 #, python-format
 msgid "Last: %(d)s"
-msgstr "Последний: %(d)s"
+msgstr ""
 
 #: templates/students/student_portal_dashboard.html:50
 msgid "No logs yet"
-msgstr "Записей нет"
+msgstr ""
 
 #: templates/students/student_portal_dashboard.html:55
 msgid "My History"
-msgstr "Моя история"
+msgstr ""
 
 #: templates/students/student_portal_dashboard.html:56
 msgid "Past workouts & progress"
-msgstr "Прошлые тренировки и прогресс"
+msgstr ""
 
 #: templates/students/student_portal_dashboard.html:63
 msgid "Recent Workouts"
-msgstr "Недавние тренировки"
+msgstr ""
 
 #: templates/students/student_portal_dashboard.html:67
 #: templates/students/student_portal_history.html:18
 msgid "Workout"
-msgstr "Тренировка"
+msgstr ""
 
 #: templates/students/student_portal_dashboard.html:70
 msgid "Done"
-msgstr "Готово"
+msgstr ""
 
 #: templates/students/student_portal_dashboard.html:73
 msgid "View all history →"
-msgstr "Вся история →"
+msgstr ""
 
 #: templates/students/student_portal_history.html:3
 #: templates/students/student_portal_history.html:9
 msgid "Workout History"
-msgstr "История тренировок"
+msgstr ""
 
 #: templates/students/student_portal_history.html:21
 msgid "Completed"
-msgstr "Завершено"
+msgstr ""
 
 #: templates/students/student_portal_history.html:46
 msgid "No workouts logged yet. Go log your first workout!"
-msgstr "Тренировок пока нет. Запишите первую!"
+msgstr ""
 
 #: templates/students/student_portal_history.html:47
 msgid "View Program"
-msgstr "Смотреть программу"
+msgstr ""
 
 #: templates/students/student_portal_log_workout.html:3
 msgid "Log Workout"
-msgstr "Записать тренировку"
+msgstr ""
 
 #: templates/students/student_portal_log_workout.html:8
 msgid "Program"
-msgstr "Программа"
+msgstr ""
 
 #: templates/students/student_portal_log_workout.html:9
 msgid "Log:"
-msgstr "Запись:"
+msgstr ""
 
 #: templates/students/student_portal_log_workout.html:32
 msgid "Target:"
-msgstr "Цель:"
+msgstr ""
 
 #: templates/students/student_portal_log_workout.html:38
 msgid "Sets done"
-msgstr "Выполнено подходов"
+msgstr ""
 
 #: templates/students/student_portal_log_workout.html:43
 msgid "Reps"
-msgstr "Повторения"
+msgstr ""
 
 #: templates/students/student_portal_log_workout.html:55
 msgid "Notes (optional)"
-msgstr "Заметки (необязательно)"
+msgstr ""
 
 #: templates/students/student_portal_log_workout.html:56
 msgid "How did it feel?"
-msgstr "Как ощущения?"
+msgstr ""
 
 #: templates/students/student_portal_log_workout.html:63
 msgid "Workout notes (optional)"
-msgstr "Заметки о тренировке (необязательно)"
+msgstr ""
 
 #: templates/students/student_portal_log_workout.html:64
 msgid "Overall notes for this session..."
-msgstr "Общие заметки о занятии..."
+msgstr ""
 
 #: templates/students/student_portal_log_workout.html:68
 msgid "Save Workout"
-msgstr "Сохранить тренировку"
+msgstr ""
 
 #: templates/students/student_portal_measurements.html:9
 msgid "Body Measurements"
-msgstr "Замеры тела"
+msgstr ""
 
 #: templates/students/student_portal_measurements.html:18
 msgid "Log Today's Measurements"
-msgstr "Записать сегодняшние замеры"
+msgstr ""
 
 #: templates/students/student_portal_measurements.html:23
 #: templates/students/student_portal_measurements.html:66
 msgid "Date"
-msgstr "Дата"
+msgstr ""
 
 #: templates/students/student_portal_measurements.html:31
 #, python-format
 msgid "Body Fat %%"
-msgstr "%% жира"
+msgstr ""
 
 #: templates/students/student_portal_measurements.html:35
 msgid "Waist (cm)"
-msgstr "Талия (см)"
+msgstr ""
 
 #: templates/students/student_portal_measurements.html:39
 msgid "Hips (cm)"
-msgstr "Бёдра (см)"
+msgstr ""
 
 #: templates/students/student_portal_measurements.html:43
 msgid "Chest (cm)"
-msgstr "Грудь (см)"
+msgstr ""
 
 #: templates/students/student_portal_measurements.html:47
 msgid "Arms (cm)"
-msgstr "Руки (см)"
+msgstr ""
 
 #: templates/students/student_portal_measurements.html:51
 msgid "Legs (cm)"
-msgstr "Ноги (см)"
+msgstr ""
 
 #: templates/students/student_portal_measurements.html:55
 msgid "Save Measurements"
-msgstr "Сохранить замеры"
+msgstr ""
 
 #: templates/students/student_portal_measurements.html:67
 msgid "Weight"
-msgstr "Вес"
+msgstr ""
 
 #: templates/students/student_portal_measurements.html:68
 #, python-format
 msgid "BF%%"
-msgstr "%% жира"
+msgstr ""
 
 #: templates/students/student_portal_measurements.html:69
 msgid "Waist"
-msgstr "Талия"
+msgstr ""
 
 #: templates/students/student_portal_measurements.html:70
 msgid "Hips"
-msgstr "Бёдра"
+msgstr ""
 
 #: templates/students/student_portal_measurements.html:71
 msgid "Chest"
-msgstr "Грудь"
+msgstr ""
 
 #: templates/students/student_portal_measurements.html:72
 msgid "Arms"
-msgstr "Руки"
+msgstr ""
 
 #: templates/students/student_portal_measurements.html:73
 msgid "Legs"
-msgstr "Ноги"
+msgstr ""
 
 #: templates/students/student_portal_measurements.html:95
 msgid "No measurements logged yet. Fill in the form above to start tracking!"
-msgstr "Замеров пока нет. Заполните форму выше, чтобы начать отслеживать!"
+msgstr ""
 
 #: templates/students/student_portal_program.html:27
 msgid "Log this workout"
-msgstr "Записать тренировку"
+msgstr ""
 
 #: templates/students/student_portal_program.html:51
 msgid "Technique tips"
-msgstr "Советы по технике"
+msgstr ""
 
 #: templates/students/student_portal_program.html:65
 msgid "Your trainer hasn't set up your program yet. Check back soon!"
-msgstr "Тренер ещё не составил программу. Проверьте позже!"
+msgstr ""
 
 #: venv/lib/python3.11/site-packages/cloudinary/forms.py:55
 #: venv/lib/python3.11/site-packages/cloudinary/forms.py:124
 msgid "No file selected!"
-msgstr "Файл не выбран!"
+msgstr ""
 
 #: venv/lib/python3.11/site-packages/django/contrib/messages/apps.py:16
 msgid "Messages"
@@ -1403,10 +1375,8 @@ msgid "Enter a valid integer."
 msgstr ""
 
 #: venv/lib/python3.11/site-packages/django/core/validators.py:211
-#, fuzzy
-#| msgid "Please enter an email address."
 msgid "Enter a valid email address."
-msgstr "Введите email адрес."
+msgstr ""
 
 #. Translators: "letters" means latin letters: a-z and A-Z.
 #: venv/lib/python3.11/site-packages/django/core/validators.py:289
@@ -1473,8 +1443,6 @@ msgid "Ensure this value has at least %(limit_value)d character (it has %(show_v
 msgid_plural "Ensure this value has at least %(limit_value)d characters (it has %(show_value)d)."
 msgstr[0] ""
 msgstr[1] ""
-msgstr[2] ""
-msgstr[3] ""
 
 #: venv/lib/python3.11/site-packages/django/core/validators.py:491
 #, python-format
@@ -1482,8 +1450,6 @@ msgid "Ensure this value has at most %(limit_value)d character (it has %(show_va
 msgid_plural "Ensure this value has at most %(limit_value)d characters (it has %(show_value)d)."
 msgstr[0] ""
 msgstr[1] ""
-msgstr[2] ""
-msgstr[3] ""
 
 #: venv/lib/python3.11/site-packages/django/core/validators.py:514
 #: venv/lib/python3.11/site-packages/django/forms/fields.py:366
@@ -1497,8 +1463,6 @@ msgid "Ensure that there are no more than %(max)s digit in total."
 msgid_plural "Ensure that there are no more than %(max)s digits in total."
 msgstr[0] ""
 msgstr[1] ""
-msgstr[2] ""
-msgstr[3] ""
 
 #: venv/lib/python3.11/site-packages/django/core/validators.py:521
 #, python-format
@@ -1506,8 +1470,6 @@ msgid "Ensure that there are no more than %(max)s decimal place."
 msgid_plural "Ensure that there are no more than %(max)s decimal places."
 msgstr[0] ""
 msgstr[1] ""
-msgstr[2] ""
-msgstr[3] ""
 
 #: venv/lib/python3.11/site-packages/django/core/validators.py:526
 #, python-format
@@ -1515,8 +1477,6 @@ msgid "Ensure that there are no more than %(max)s digit before the decimal point
 msgid_plural "Ensure that there are no more than %(max)s digits before the decimal point."
 msgstr[0] ""
 msgstr[1] ""
-msgstr[2] ""
-msgstr[3] ""
 
 #: venv/lib/python3.11/site-packages/django/core/validators.py:597
 #, python-format
@@ -1647,10 +1607,8 @@ msgid "Duration"
 msgstr ""
 
 #: venv/lib/python3.11/site-packages/django/db/models/fields/__init__.py:1945
-#, fuzzy
-#| msgid "File uploaded"
 msgid "File path"
-msgstr "Файл загружен"
+msgstr ""
 
 #: venv/lib/python3.11/site-packages/django/db/models/fields/__init__.py:2023
 #, python-format
@@ -1679,16 +1637,12 @@ msgid "Small integer"
 msgstr ""
 
 #: venv/lib/python3.11/site-packages/django/db/models/fields/__init__.py:2188
-#, fuzzy
-#| msgid "Email address"
 msgid "IPv4 address"
-msgstr "Email адрес"
+msgstr ""
 
 #: venv/lib/python3.11/site-packages/django/db/models/fields/__init__.py:2219
-#, fuzzy
-#| msgid "Email address"
 msgid "IP address"
-msgstr "Email адрес"
+msgstr ""
 
 #: venv/lib/python3.11/site-packages/django/db/models/fields/__init__.py:2310
 #: venv/lib/python3.11/site-packages/django/db/models/fields/__init__.py:2311
@@ -1753,10 +1707,8 @@ msgid "Universally unique identifier"
 msgstr ""
 
 #: venv/lib/python3.11/site-packages/django/db/models/fields/files.py:244
-#, fuzzy
-#| msgid "View File"
 msgid "File"
-msgstr "Просмотреть файл"
+msgstr ""
 
 #: venv/lib/python3.11/site-packages/django/db/models/fields/files.py:420
 msgid "Image"
@@ -1839,10 +1791,8 @@ msgid "No file was submitted. Check the encoding type on the form."
 msgstr ""
 
 #: venv/lib/python3.11/site-packages/django/forms/fields.py:641
-#, fuzzy
-#| msgid "No file selected!"
 msgid "No file was submitted."
-msgstr "Файл не выбран!"
+msgstr ""
 
 #: venv/lib/python3.11/site-packages/django/forms/fields.py:642
 msgid "The submitted file is empty."
@@ -1854,8 +1804,6 @@ msgid "Ensure this filename has at most %(max)d character (it has %(length)d)."
 msgid_plural "Ensure this filename has at most %(max)d characters (it has %(length)d)."
 msgstr[0] ""
 msgstr[1] ""
-msgstr[2] ""
-msgstr[3] ""
 
 #: venv/lib/python3.11/site-packages/django/forms/fields.py:649
 msgid "Please either submit a file or check the clear checkbox, not both."
@@ -1911,8 +1859,6 @@ msgid "Please submit at most %(num)d form."
 msgid_plural "Please submit at most %(num)d forms."
 msgstr[0] ""
 msgstr[1] ""
-msgstr[2] ""
-msgstr[3] ""
 
 #: venv/lib/python3.11/site-packages/django/forms/formsets.py:70
 #, python-format
@@ -1920,8 +1866,6 @@ msgid "Please submit at least %(num)d form."
 msgid_plural "Please submit at least %(num)d forms."
 msgstr[0] ""
 msgstr[1] ""
-msgstr[2] ""
-msgstr[3] ""
 
 #: venv/lib/python3.11/site-packages/django/forms/formsets.py:484
 #: venv/lib/python3.11/site-packages/django/forms/formsets.py:491
@@ -1970,20 +1914,16 @@ msgid "Clear"
 msgstr ""
 
 #: venv/lib/python3.11/site-packages/django/forms/widgets.py:528
-#, fuzzy
-#| msgid "Current file:"
 msgid "Currently"
-msgstr "Текущий файл:"
+msgstr ""
 
 #: venv/lib/python3.11/site-packages/django/forms/widgets.py:529
 msgid "Change"
 msgstr ""
 
 #: venv/lib/python3.11/site-packages/django/forms/widgets.py:866
-#, fuzzy
-#| msgid "Unknown error"
 msgid "Unknown"
-msgstr "Неизвестная ошибка"
+msgstr ""
 
 #: venv/lib/python3.11/site-packages/django/forms/widgets.py:867
 msgid "Yes"
@@ -2005,8 +1945,6 @@ msgid "%(size)d byte"
 msgid_plural "%(size)d bytes"
 msgstr[0] ""
 msgstr[1] ""
-msgstr[2] ""
-msgstr[3] ""
 
 #: venv/lib/python3.11/site-packages/django/template/defaultfilters.py:922
 #, python-format
@@ -2106,10 +2044,8 @@ msgid "Fri"
 msgstr ""
 
 #: venv/lib/python3.11/site-packages/django/utils/dates.py:21
-#, fuzzy
-#| msgid "Started"
 msgid "Sat"
-msgstr "Начата"
+msgstr ""
 
 #: venv/lib/python3.11/site-packages/django/utils/dates.py:22
 msgid "Sun"
@@ -2132,11 +2068,8 @@ msgid "April"
 msgstr ""
 
 #: venv/lib/python3.11/site-packages/django/utils/dates.py:29
-#, fuzzy
-#| msgid "day"
-#| msgid_plural "days"
 msgid "May"
-msgstr "день"
+msgstr ""
 
 #: venv/lib/python3.11/site-packages/django/utils/dates.py:30
 msgid "June"
@@ -2183,11 +2116,8 @@ msgid "apr"
 msgstr ""
 
 #: venv/lib/python3.11/site-packages/django/utils/dates.py:43
-#, fuzzy
-#| msgid "day"
-#| msgid_plural "days"
 msgid "may"
-msgstr "день"
+msgstr ""
 
 #: venv/lib/python3.11/site-packages/django/utils/dates.py:44
 msgid "jun"
@@ -2238,12 +2168,9 @@ msgid "April"
 msgstr ""
 
 #: venv/lib/python3.11/site-packages/django/utils/dates.py:57
-#, fuzzy
-#| msgid "day"
-#| msgid_plural "days"
 msgctxt "abbrev. month"
 msgid "May"
-msgstr "день"
+msgstr ""
 
 #: venv/lib/python3.11/site-packages/django/utils/dates.py:58
 msgctxt "abbrev. month"
@@ -2301,12 +2228,9 @@ msgid "April"
 msgstr ""
 
 #: venv/lib/python3.11/site-packages/django/utils/dates.py:71
-#, fuzzy
-#| msgid "day"
-#| msgid_plural "days"
 msgctxt "alt. month"
 msgid "May"
-msgstr "день"
+msgstr ""
 
 #: venv/lib/python3.11/site-packages/django/utils/dates.py:72
 msgctxt "alt. month"
@@ -2369,8 +2293,6 @@ msgid "%(num)d year"
 msgid_plural "%(num)d years"
 msgstr[0] ""
 msgstr[1] ""
-msgstr[2] ""
-msgstr[3] ""
 
 #: venv/lib/python3.11/site-packages/django/utils/timesince.py:9
 #, python-format
@@ -2378,8 +2300,6 @@ msgid "%(num)d month"
 msgid_plural "%(num)d months"
 msgstr[0] ""
 msgstr[1] ""
-msgstr[2] ""
-msgstr[3] ""
 
 #: venv/lib/python3.11/site-packages/django/utils/timesince.py:10
 #, python-format
@@ -2387,18 +2307,13 @@ msgid "%(num)d week"
 msgid_plural "%(num)d weeks"
 msgstr[0] ""
 msgstr[1] ""
-msgstr[2] ""
-msgstr[3] ""
 
 #: venv/lib/python3.11/site-packages/django/utils/timesince.py:11
-#, fuzzy, python-format
-#| msgid "%(d)s days"
+#, python-format
 msgid "%(num)d day"
 msgid_plural "%(num)d days"
-msgstr[0] "%(d)s дней"
-msgstr[1] "%(d)s дней"
-msgstr[2] "%(d)s дней"
-msgstr[3] "%(d)s дней"
+msgstr[0] ""
+msgstr[1] ""
 
 #: venv/lib/python3.11/site-packages/django/utils/timesince.py:12
 #, python-format
@@ -2406,8 +2321,6 @@ msgid "%(num)d hour"
 msgid_plural "%(num)d hours"
 msgstr[0] ""
 msgstr[1] ""
-msgstr[2] ""
-msgstr[3] ""
 
 #: venv/lib/python3.11/site-packages/django/utils/timesince.py:13
 #, python-format
@@ -2415,8 +2328,6 @@ msgid "%(num)d minute"
 msgid_plural "%(num)d minutes"
 msgstr[0] ""
 msgstr[1] ""
-msgstr[2] ""
-msgstr[3] ""
 
 #: venv/lib/python3.11/site-packages/django/views/csrf.py:29
 msgid "Forbidden"
@@ -2451,36 +2362,26 @@ msgid "More information is available with DEBUG=True."
 msgstr ""
 
 #: venv/lib/python3.11/site-packages/django/views/generic/dates.py:44
-#, fuzzy
-#| msgid "Not specified"
 msgid "No year specified"
-msgstr "Не указано"
+msgstr ""
 
 #: venv/lib/python3.11/site-packages/django/views/generic/dates.py:64
 #: venv/lib/python3.11/site-packages/django/views/generic/dates.py:115
 #: venv/lib/python3.11/site-packages/django/views/generic/dates.py:214
-#, fuzzy
-#| msgid "Date of birth"
 msgid "Date out of range"
-msgstr "Дата рождения"
+msgstr ""
 
 #: venv/lib/python3.11/site-packages/django/views/generic/dates.py:94
-#, fuzzy
-#| msgid "Not specified"
 msgid "No month specified"
-msgstr "Не указано"
+msgstr ""
 
 #: venv/lib/python3.11/site-packages/django/views/generic/dates.py:147
-#, fuzzy
-#| msgid "Not specified"
 msgid "No day specified"
-msgstr "Не указано"
+msgstr ""
 
 #: venv/lib/python3.11/site-packages/django/views/generic/dates.py:194
-#, fuzzy
-#| msgid "Not specified"
 msgid "No week specified"
-msgstr "Не указано"
+msgstr ""
 
 #: venv/lib/python3.11/site-packages/django/views/generic/dates.py:353
 #: venv/lib/python3.11/site-packages/django/views/generic/dates.py:384
@@ -2571,6 +2472,3 @@ msgstr ""
 #: venv/lib/python3.11/site-packages/django/views/templates/default_urlconf.html:236
 msgid "Connect, get help, or contribute"
 msgstr ""
-
-#~ msgid "This action cannot be undone. All programs and data for this student will be permanently removed."
-#~ msgstr "Это действие необратимо. Все программы и данные ученика будут удалены навсегда."

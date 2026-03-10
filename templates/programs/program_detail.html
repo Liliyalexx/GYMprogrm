@@ -1,18 +1,19 @@
 {% extends 'base.html' %}
+{% load i18n %}
 {% load program_filters %}
 {% block title %}{{ program.name }}{% endblock %}
 
 {% block content %}
 <div class="page-header">
   <div>
-    <a href="{% url 'programs:list' program.student.pk %}" style="color:var(--text-muted);font-size:.9rem;text-decoration:none;">← Программы {{ program.student.name }}</a>
+    <a href="{% url 'programs:list' program.student.pk %}" style="color:var(--text-muted);font-size:.9rem;text-decoration:none;">← {% trans "Programs" %} {{ program.student.name }}</a>
     <h1 class="page-title" style="margin-top:.25rem;">{{ program.name }}</h1>
   </div>
 </div>
 
 {% if program.student.goals %}
 <div class="card" style="margin-bottom:1.5rem;">
-  <h2 style="font-size:1rem;font-weight:700;margin-bottom:1rem;">🎯 Goals & Wishes</h2>
+  <h2 style="font-size:1rem;font-weight:700;margin-bottom:1rem;">🎯 {% trans "Goals & Wishes" %}</h2>
   <ol style="margin:0;padding-left:1.25rem;display:flex;flex-direction:column;gap:.65rem;">
     {% for goal in program.student.goals|split_goals %}
       <li style="font-size:.92rem;color:var(--text-muted);line-height:1.55;">{{ goal }}</li>
@@ -23,7 +24,7 @@
 
 {% if program.description %}
 <div class="card" style="margin-bottom:1.5rem;">
-  <h2 style="font-size:1rem;font-weight:700;margin-bottom:.75rem;">📋 Анализ и выводы</h2>
+  <h2 style="font-size:1rem;font-weight:700;margin-bottom:.75rem;">📋 {% trans "Analysis & findings" %}</h2>
   <ul style="margin:0;padding-left:1.25rem;">
     {% for line in program.description.splitlines %}
       {% if line %}<li style="margin-bottom:.5rem;font-size:.92rem;color:var(--text-muted);line-height:1.5;">{{ line }}</li>{% endif %}
@@ -37,10 +38,10 @@
 <!-- Nutrition Plan -->
 <div class="card" style="margin-bottom:1.5rem;">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
-    <h2 style="font-size:1.1rem;font-weight:700;margin:0;">🥗 План питания на день</h2>
+    <h2 style="font-size:1.1rem;font-weight:700;margin:0;">🥗 {% trans "Daily nutrition plan" %}</h2>
     <form method="post" action="{% url 'programs:regenerate_nutrition' program.pk %}">
       {% csrf_token %}
-      <button type="submit" style="font-size:.78rem;padding:.3rem .75rem;border-radius:6px;border:1px solid var(--border);background:#f8fafc;cursor:pointer;color:var(--text-muted);">↻ Обновить план</button>
+      <button type="submit" style="font-size:.78rem;padding:.3rem .75rem;border-radius:6px;border:1px solid var(--border);background:#f8fafc;cursor:pointer;color:var(--text-muted);">↻ {% trans "Update plan" %}</button>
     </form>
   </div>
 
@@ -48,31 +49,31 @@
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem;">
     <div style="text-align:center;padding:.75rem;background:#f0fdf4;border-radius:8px;">
       <div style="font-size:1.4rem;font-weight:700;color:#16a34a;">{{ n.daily_calories }}</div>
-      <div style="font-size:.78rem;color:var(--text-muted);">ккал / день</div>
+      <div style="font-size:.78rem;color:var(--text-muted);">{% trans "kcal / day" %}</div>
     </div>
     <div style="text-align:center;padding:.75rem;background:#eff6ff;border-radius:8px;">
-      <div style="font-size:1.4rem;font-weight:700;color:#2563eb;">{{ n.macros.protein_g }}г</div>
-      <div style="font-size:.78rem;color:var(--text-muted);">Белки</div>
+      <div style="font-size:1.4rem;font-weight:700;color:#2563eb;">{{ n.macros.protein_g }}g</div>
+      <div style="font-size:.78rem;color:var(--text-muted);">{% trans "Protein" %}</div>
     </div>
     <div style="text-align:center;padding:.75rem;background:#fefce8;border-radius:8px;">
-      <div style="font-size:1.4rem;font-weight:700;color:#ca8a04;">{{ n.macros.carbs_g }}г</div>
-      <div style="font-size:.78rem;color:var(--text-muted);">Углеводы</div>
+      <div style="font-size:1.4rem;font-weight:700;color:#ca8a04;">{{ n.macros.carbs_g }}g</div>
+      <div style="font-size:.78rem;color:var(--text-muted);">{% trans "Carbs" %}</div>
     </div>
     <div style="text-align:center;padding:.75rem;background:#fdf4ff;border-radius:8px;">
-      <div style="font-size:1.4rem;font-weight:700;color:#9333ea;">{{ n.macros.fat_g }}г</div>
-      <div style="font-size:.78rem;color:var(--text-muted);">Жиры</div>
+      <div style="font-size:1.4rem;font-weight:700;color:#9333ea;">{{ n.macros.fat_g }}g</div>
+      <div style="font-size:.78rem;color:var(--text-muted);">{% trans "Fat" %}</div>
     </div>
   </div>
 
   <!-- Meals -->
-  <h3 style="font-size:.95rem;font-weight:700;margin-bottom:.75rem;">🍽 Приёмы пищи</h3>
+  <h3 style="font-size:.95rem;font-weight:700;margin-bottom:.75rem;">🍽 {% trans "Meals" %}</h3>
   {% for meal in n.meals %}
   <div style="padding:.85rem;border:1px solid var(--border);border-radius:8px;margin-bottom:.65rem;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
       <div style="display:flex;align-items:center;gap:.6rem;">
         <strong style="font-size:.95rem;">{{ meal.meal }}</strong>
         {% if meal.calories %}
-        <span style="font-size:.78rem;font-weight:700;color:#16a34a;background:#f0fdf4;padding:.15rem .45rem;border-radius:5px;">{{ meal.calories }} ккал</span>
+        <span style="font-size:.78rem;font-weight:700;color:#16a34a;background:#f0fdf4;padding:.15rem .45rem;border-radius:5px;">{{ meal.calories }} {% trans "kcal" %}</span>
         {% endif %}
       </div>
       <span style="font-size:.82rem;color:var(--text-muted);">🕐 {{ meal.time }}</span>
@@ -95,11 +96,11 @@
   <!-- Fasting -->
   {% if n.fasting %}
   <div style="margin-top:1.25rem;padding:1rem;border-radius:8px;{% if n.fasting.recommended %}background:#f0fdf4;border:1px solid #86efac;{% else %}background:#fef9c3;border:1px solid #fde047;{% endif %}">
-    <h3 style="font-size:.95rem;font-weight:700;margin-bottom:.6rem;">⏱ Рекомендации по голоданию</h3>
+    <h3 style="font-size:.95rem;font-weight:700;margin-bottom:.6rem;">⏱ {% trans "Fasting recommendations" %}</h3>
     {% if n.fasting.recommended %}
-      <p style="font-size:.9rem;margin-bottom:.4rem;"><strong>✅ {{ n.fasting.type }}</strong>{% if n.fasting.eating_window %} — окно питания: {{ n.fasting.eating_window }}{% endif %}</p>
+      <p style="font-size:.9rem;margin-bottom:.4rem;"><strong>✅ {{ n.fasting.type }}</strong>{% if n.fasting.eating_window %} — {% trans "eating window:" %} {{ n.fasting.eating_window }}{% endif %}</p>
     {% else %}
-      <p style="font-size:.9rem;margin-bottom:.4rem;"><strong>❌ Голодание не рекомендуется</strong></p>
+      <p style="font-size:.9rem;margin-bottom:.4rem;"><strong>❌ {% trans "Fasting not recommended" %}</strong></p>
     {% endif %}
     <ul style="margin:.3rem 0 .3rem 1.1rem;padding:0;">
       {% for reason in n.fasting.reasoning|split_numbered %}
@@ -115,7 +116,7 @@
   <!-- Supplements -->
   {% if n.supplements %}
   <div style="margin-top:1rem;padding:.75rem;background:#f8fafc;border-radius:8px;">
-    <strong style="font-size:.88rem;">💊 Добавки:</strong>
+    <strong style="font-size:.88rem;">💊 {% trans "Supplements:" %}</strong>
     <ul style="margin:.4rem 0 0 1.2rem;padding:0;">
       {% for s in n.supplements %}
       <li style="font-size:.88rem;color:var(--text-muted);margin-bottom:.2rem;">{{ s }}</li>
@@ -127,7 +128,7 @@
   <!-- Notes -->
   {% if n.notes %}
   <div style="margin-top:.75rem;padding:.75rem;background:#f8fafc;border-radius:8px;">
-    <strong style="font-size:.88rem;">📝 Общие рекомендации:</strong>
+    <strong style="font-size:.88rem;">📝 {% trans "General recommendations:" %}</strong>
     {% for section in n.notes|as_sections %}
       {% if section.title %}
       <div style="margin-top:.65rem;">
@@ -176,15 +177,15 @@
         <strong style="font-size:.98rem;">{{ pe.name_ru|default:pe.exercise.name }}</strong>
         <span class="badge badge-{{ pe.exercise.muscle_group }}">{{ pe.exercise.get_muscle_group_display }}</span>
         {% if pe.confirmed %}
-          <span style="font-size:.75rem;color:var(--success);font-weight:600;">✓ Подтверждено</span>
+          <span style="font-size:.75rem;color:var(--success);font-weight:600;">✓ {% trans "Confirmed" %}</span>
         {% else %}
-          <span style="font-size:.75rem;color:var(--text-muted);">Ожидает подтверждения</span>
+          <span style="font-size:.75rem;color:var(--text-muted);">{% trans "Pending confirmation" %}</span>
         {% endif %}
       </div>
 
       <div style="font-size:.85rem;color:var(--text-muted);margin-bottom:.4rem;">
-        {{ pe.sets }} подхода × {{ pe.reps }} повторений
-        {% if pe.weight_kg %} · {{ pe.weight_kg }} кг{% endif %}
+        {{ pe.sets }} {% trans "sets" %} × {{ pe.reps }} {% trans "reps" %}
+        {% if pe.weight_kg %} · {{ pe.weight_kg }} kg{% endif %}
       </div>
 
       {% if pe.reason_ru %}
@@ -193,7 +194,7 @@
 
       {% if pe.exercise.posture_tips %}
       <div style="margin-top:.4rem;padding:.5rem .65rem;background:#faf5ff;border-radius:7px;border-left:3px solid #a855f7;">
-        <div style="font-size:.72rem;font-weight:700;color:#7c3aed;margin-bottom:.25rem;">🧘 Posture tips</div>
+        <div style="font-size:.72rem;font-weight:700;color:#7c3aed;margin-bottom:.25rem;">🧘 {% trans "Posture tips" %}</div>
         <div style="font-size:.78rem;color:#6b21a8;line-height:1.55;white-space:pre-line;">{{ pe.exercise.posture_tips }}</div>
       </div>
       {% endif %}
@@ -206,25 +207,26 @@
       <div style="display:flex;gap:.5rem;margin-top:.75rem;flex-wrap:wrap;">
         <button onclick="confirmExercise({{ pe.pk }}, this)"
           style="font-size:.8rem;padding:.35rem .8rem;border-radius:7px;border:1px solid #16a34a;background:#f0fdf4;color:#15803d;cursor:pointer;font-weight:600;">
-          ✓ Confirm
+          ✓ {% trans "Confirm" %}
         </button>
         <button onclick="skipExercise({{ pe.pk }}, this)"
           style="font-size:.8rem;padding:.35rem .8rem;border-radius:7px;border:1px solid var(--border);background:#f8fafc;color:var(--text-muted);cursor:pointer;">
-          ✕ Skip
+          ✕ {% trans "Skip" %}
         </button>
       </div>
       {% endif %}
     </div>
   </div>
   {% empty %}
-  <p style="color:var(--text-muted);font-size:.9rem;">Упражнения ещё не добавлены.</p>
+  <p style="color:var(--text-muted);font-size:.9rem;">{% trans "Exercises not yet added." %}</p>
   {% endfor %}
 </div>
 {% empty %}
-<div class="empty-state">Дни программы ещё не созданы.</div>
+<div class="empty-state">{% trans "Program days not yet created." %}</div>
 {% endfor %}
 
 <script>
+{% trans "Confirmed" as msg_confirmed %}
 const CSRF = '{{ csrf_token }}';
 
 function confirmExercise(id, btn) {
@@ -242,7 +244,7 @@ function confirmExercise(id, btn) {
       if (badge) {
         badge.style.color = 'var(--success)';
         badge.style.fontWeight = '600';
-        badge.textContent = '✓ Подтверждено';
+        badge.textContent = '✓ {{ msg_confirmed|escapejs }}';
       }
       btn.closest('div[style*="display:flex;gap"]').remove();
     }

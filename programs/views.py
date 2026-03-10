@@ -5,6 +5,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
+from django.utils.translation import get_language
 
 from students.models import Student
 from .models import ExerciseLibrary, WorkoutProgram, ProgramDay, ProgramExercise
@@ -37,7 +38,7 @@ def program_generate(request, student_pk):
         training_days = int(request.POST.get('training_days', 3))
         training_location = request.POST.get('training_location', 'gym')
         try:
-            ai_result = suggest_program(student, training_days, training_location=training_location)
+            ai_result = suggest_program(student, training_days, training_location=training_location, language=get_language() or 'en')
         except Exception as e:
             return render(request, 'programs/program_generate.html', {
                 'student': student,
@@ -156,7 +157,7 @@ def regenerate_nutrition(request, pk):
     program = get_object_or_404(WorkoutProgram, pk=pk)
     findings_summary = program.description or ''
     try:
-        nutrition = suggest_nutrition(program.student, findings_summary)
+        nutrition = suggest_nutrition(program.student, findings_summary, language=get_language() or 'en')
         program.nutrition_plan = nutrition
         program.save(update_fields=['nutrition_plan'])
     except Exception as e:

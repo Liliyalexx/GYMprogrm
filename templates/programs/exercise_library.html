@@ -1,15 +1,16 @@
 {% extends 'base.html' %}
+{% load i18n %}
 {% load program_filters %}
-{% block title %}Библиотека упражнений — GYMprogrm{% endblock %}
+{% block title %}{% trans "Exercise Library" %} — GYMprogrm{% endblock %}
 
 {% block content %}
 <div class="page-header">
-  <h1 class="page-title">Библиотека упражнений</h1>
+  <h1 class="page-title">{% trans "Exercise Library" %}</h1>
 </div>
 
 <!-- Muscle filter -->
 <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem;">
-  <a href="{% url 'programs:exercise_library' %}" class="btn {% if not muscle_filter %}btn-primary{% else %}btn-outline{% endif %} btn-sm">Все</a>
+  <a href="{% url 'programs:exercise_library' %}" class="btn {% if not muscle_filter %}btn-primary{% else %}btn-outline{% endif %} btn-sm">{% trans "All" %}</a>
   {% for val, label in muscle_choices %}
   <a href="?muscle={{ val }}" class="btn {% if muscle_filter == val %}btn-primary{% else %}btn-outline{% endif %} btn-sm">{{ label }}</a>
   {% endfor %}
@@ -34,14 +35,14 @@
         {% endif %}
         <button onclick="openPhotoEdit({{ ex.pk }}, this)"
           style="position:absolute;bottom:.4rem;right:.4rem;font-size:.72rem;padding:.2rem .5rem;border-radius:5px;border:none;background:rgba(0,0,0,.45);color:#fff;cursor:pointer;">
-          ✎ Edit
+          ✎ {% trans "Edit" %}
         </button>
       {% else %}
         <div id="media-svg-{{ ex.pk }}" style="width:100%;height:100%;">{{ ex.muscle_group|exercise_illustration }}</div>
         <div style="position:absolute;bottom:0;left:0;right:0;text-align:center;padding:.4rem;background:linear-gradient(transparent,rgba(255,255,255,.9));">
           <button onclick="generateIllustration({{ ex.pk }}, this)"
             style="font-size:.75rem;padding:.3rem .75rem;border-radius:6px;border:none;background:linear-gradient(135deg,#a855f7,#6366f1);color:#fff;cursor:pointer;font-weight:600;">
-            ✨ Generate
+            ✨ {% trans "Generate" %}
           </button>
         </div>
       {% endif %}
@@ -57,7 +58,7 @@
 
     {% if ex.posture_tips %}
     <div style="margin-top:.6rem;padding:.6rem .75rem;background:#faf5ff;border-radius:8px;border-left:3px solid #a855f7;">
-      <div style="font-size:.75rem;font-weight:700;color:#7c3aed;margin-bottom:.3rem;">🧘 Posture tips</div>
+      <div style="font-size:.75rem;font-weight:700;color:#7c3aed;margin-bottom:.3rem;">🧘 {% trans "Posture tips" %}</div>
       <div style="font-size:.78rem;color:#6b21a8;line-height:1.6;white-space:pre-line;">{{ ex.posture_tips }}</div>
     </div>
     {% endif %}
@@ -66,7 +67,7 @@
     <div style="margin-top:1rem;padding-top:.85rem;border-top:1px solid var(--border);">
       <details>
         <summary style="cursor:pointer;font-size:.85rem;font-weight:600;color:var(--primary);list-style:none;display:flex;align-items:center;gap:.4rem;">
-          <span>＋ Добавить в программу</span>
+          <span>＋ {% trans "Add to program" %}</span>
         </summary>
 
         <div style="margin-top:.75rem;">
@@ -94,7 +95,7 @@
               {% endif %}
             {% endfor %}
           {% else %}
-            <p style="font-size:.82rem;color:var(--text-muted);">Нет активных студентов с программами.</p>
+            <p style="font-size:.82rem;color:var(--text-muted);">{% trans "No active students with programs." %}</p>
           {% endif %}
         </div>
       </details>
@@ -102,36 +103,38 @@
 
   </div>
   {% empty %}
-  <div class="empty-state" style="grid-column:1/-1;">Упражнения не найдены.</div>
+  <div class="empty-state" style="grid-column:1/-1;">{% trans "Exercises not found." %}</div>
   {% endfor %}
 </div>
 
 <!-- Photo edit modal -->
 <div id="photo-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;">
   <div style="background:#fff;border-radius:12px;padding:1.5rem;width:min(420px,90vw);box-shadow:0 8px 32px rgba(0,0,0,.2);">
-    <h3 style="margin:0 0 1rem;font-size:1rem;">📷 Photo / Video URL</h3>
+    <h3 style="margin:0 0 1rem;font-size:1rem;">📷 {% trans "Photo / Video URL" %}</h3>
     <input id="photo-url-input" type="url" placeholder="https://… (.jpg, .png, .mp4)"
       style="width:100%;padding:.6rem .8rem;border:1px solid var(--border);border-radius:8px;font-size:.9rem;box-sizing:border-box;margin-bottom:.35rem;">
-    <p style="font-size:.78rem;color:var(--text-muted);margin:0 0 1rem;">Paste a direct image or .mp4 video URL</p>
+    <p style="font-size:.78rem;color:var(--text-muted);margin:0 0 1rem;">{% trans "Paste a direct image or .mp4 video URL" %}</p>
     <div style="display:flex;gap:.6rem;justify-content:flex-end;">
       <button onclick="closePhotoModal()"
         style="padding:.45rem 1rem;border-radius:7px;border:1px solid var(--border);background:#f8fafc;cursor:pointer;font-size:.88rem;">
-        Cancel
+        {% trans "Cancel" %}
       </button>
       <button onclick="savePhoto()"
         style="padding:.45rem 1rem;border-radius:7px;border:none;background:var(--primary);color:#fff;cursor:pointer;font-size:.88rem;font-weight:600;">
-        Save
+        {% trans "Save" %}
       </button>
     </div>
   </div>
 </div>
 
 <script>
+{% trans "Generating…" as msg_generating %}
+{% trans "Error" as msg_error %}
 let _currentExId = null;
 
 function generateIllustration(exId, btn) {
   btn.disabled = true;
-  btn.textContent = '⏳ Generating…';
+  btn.textContent = '⏳ {{ msg_generating|escapejs }}';
   fetch('{% url "programs:generate_illustration" %}', {
     method: 'POST',
     headers: {'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}'},
@@ -143,8 +146,7 @@ function generateIllustration(exId, btn) {
       const container = document.getElementById('media-' + exId);
       container.innerHTML =
         `<img src="${data.image_url}" style="width:100%;height:100%;object-fit:cover;clip-path:inset(0 0 18% 0);" alt="exercise illustration">` +
-        `<button onclick="openPhotoEdit(${exId})" style="position:absolute;bottom:.4rem;right:.4rem;font-size:.72rem;padding:.2rem .5rem;border-radius:5px;border:none;background:rgba(0,0,0,.45);color:#fff;cursor:pointer;">✎ Edit</button>`;
-      // show posture tips
+        `<button onclick="openPhotoEdit(${exId})" style="position:absolute;bottom:.4rem;right:.4rem;font-size:.72rem;padding:.2rem .5rem;border-radius:5px;border:none;background:rgba(0,0,0,.45);color:#fff;cursor:pointer;">✎ {% trans "Edit" %}</button>`;
       const card = container.closest('.card');
       let tipsBox = card.querySelector('.posture-tips-box');
       if (!tipsBox) {
@@ -154,11 +156,11 @@ function generateIllustration(exId, btn) {
         card.insertBefore(tipsBox, card.querySelector('[style*="margin-top:1rem"]'));
       }
       tipsBox.innerHTML =
-        `<div style="font-size:.75rem;font-weight:700;color:#7c3aed;margin-bottom:.3rem;">🧘 Posture tips</div>` +
+        `<div style="font-size:.75rem;font-weight:700;color:#7c3aed;margin-bottom:.3rem;">🧘 {% trans "Posture tips" %}</div>` +
         `<div style="font-size:.78rem;color:#6b21a8;line-height:1.6;white-space:pre-line;">${data.posture_tips}</div>`;
     }
   })
-  .catch(() => { btn.textContent = '✗ Error'; btn.disabled = false; });
+  .catch(() => { btn.textContent = '✗ {{ msg_error|escapejs }}'; btn.disabled = false; });
 }
 
 function openPhotoEdit(exId) {
@@ -186,8 +188,8 @@ function savePhoto() {
       const container = document.getElementById('media-' + _currentExId);
       const id = _currentExId;
       container.innerHTML = isVideo
-        ? `<video src="${url}" autoplay muted loop playsinline style="width:100%;height:100%;object-fit:cover;clip-path:inset(0 0 18% 0);"></video><button onclick="openPhotoEdit(${id})" style="position:absolute;bottom:.4rem;right:.4rem;font-size:.72rem;padding:.2rem .5rem;border-radius:5px;border:none;background:rgba(0,0,0,.45);color:#fff;cursor:pointer;">✎ Edit</button>`
-        : `<img src="${url}" style="width:100%;height:100%;object-fit:cover;clip-path:inset(0 0 18% 0);"><button onclick="openPhotoEdit(${id})" style="position:absolute;bottom:.4rem;right:.4rem;font-size:.72rem;padding:.2rem .5rem;border-radius:5px;border:none;background:rgba(0,0,0,.45);color:#fff;cursor:pointer;">✎ Edit</button>`;
+        ? `<video src="${url}" autoplay muted loop playsinline style="width:100%;height:100%;object-fit:cover;clip-path:inset(0 0 18% 0);"></video><button onclick="openPhotoEdit(${id})" style="position:absolute;bottom:.4rem;right:.4rem;font-size:.72rem;padding:.2rem .5rem;border-radius:5px;border:none;background:rgba(0,0,0,.45);color:#fff;cursor:pointer;">✎ {% trans "Edit" %}</button>`
+        : `<img src="${url}" style="width:100%;height:100%;object-fit:cover;clip-path:inset(0 0 18% 0);"><button onclick="openPhotoEdit(${id})" style="position:absolute;bottom:.4rem;right:.4rem;font-size:.72rem;padding:.2rem .5rem;border-radius:5px;border:none;background:rgba(0,0,0,.45);color:#fff;cursor:pointer;">✎ {% trans "Edit" %}</button>`;
       closePhotoModal();
     }
   });

@@ -10,27 +10,24 @@
   </div>
 </div>
 
-<!-- Send intake form by email -->
+<!-- Send invite by email -->
 <div class="card" style="margin-bottom:1.5rem;padding:1rem 1.25rem;">
-  <div style="font-size:.88rem;font-weight:700;margin-bottom:.6rem;">📧 {% trans "Send intake form by email" %}</div>
+  <div style="font-size:.88rem;font-weight:700;margin-bottom:.4rem;">📧 {% trans "Invite new client by email" %}</div>
+  <div style="font-size:.82rem;color:var(--text-muted);margin-bottom:.6rem;">{% trans "They'll receive a link to create their account and fill in the intake form." %}</div>
   <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
     <input type="email" id="intake-email-input" placeholder="client@example.com"
       style="flex:1;min-width:200px;padding:.5rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;">
-    <button class="btn btn-primary btn-sm" onclick="sendIntakeEmail()">{% trans "Send" %}</button>
-    <a href="/intake/" target="_blank" style="font-size:.82rem;color:var(--text-muted);text-decoration:none;">{% trans "or copy link →" %}</a>
+    <button class="btn btn-primary btn-sm" onclick="sendIntakeEmail()">{% trans "Send Invite" %}</button>
   </div>
   <div id="intake-email-result" style="font-size:.85rem;margin-top:.5rem;"></div>
 </div>
 
 <script>
-{% trans "Please enter an email address." as msg_no_email %}
-{% trans "Sending…" as msg_sending %}
-{% trans "Network error — try again." as msg_net_error %}
 function sendIntakeEmail() {
   var email = document.getElementById('intake-email-input').value.trim();
   var result = document.getElementById('intake-email-result');
-  if (!email) { result.innerHTML = '<span style="color:#dc2626;">{{ msg_no_email|escapejs }}</span>'; return; }
-  result.textContent = '{{ msg_sending|escapejs }}';
+  if (!email) { result.innerHTML = '<span style="color:#dc2626;">Please enter an email address.</span>'; return; }
+  result.textContent = 'Sending…';
   fetch('{% url "send_intake_email" %}', {
     method: 'POST',
     headers: {'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/x-www-form-urlencoded'},
@@ -39,13 +36,16 @@ function sendIntakeEmail() {
   .then(function(r) { return r.json(); })
   .then(function(data) {
     if (data.ok) {
-      result.innerHTML = '<span style="color:#16a34a;font-weight:600;">✓ {% trans "Email sent to" %} ' + email + '</span>';
+      result.innerHTML = '<span style="color:#16a34a;font-weight:600;">✓ Invite sent to ' + email + '</span>';
       document.getElementById('intake-email-input').value = '';
+    } else if (data.invite_url) {
+      result.innerHTML = '<span style="color:#d97706;font-weight:600;">Email failed — copy this invite link manually:</span><br>'
+        + '<a href="' + data.invite_url + '" target="_blank" style="font-size:.82rem;word-break:break-all;">' + data.invite_url + '</a>';
     } else {
-      result.innerHTML = '<span style="color:#dc2626;">{% trans "Error:" %} ' + (data.error || '{% trans "Unknown error" %}') + '</span>';
+      result.innerHTML = '<span style="color:#dc2626;">Error: ' + (data.error || 'Unknown error') + '</span>';
     }
   })
-  .catch(function() { result.innerHTML = '<span style="color:#dc2626;">{{ msg_net_error|escapejs }}</span>'; });
+  .catch(function() { result.innerHTML = '<span style="color:#dc2626;">Network error — try again.</span>'; });
 }
 </script>
 
