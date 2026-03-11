@@ -77,12 +77,42 @@
 
   <!-- Payment -->
   <div class="card">
-    <h2 style="font-size:1rem;font-weight:700;margin-bottom:.75rem;">💳 {% trans "Billing" %}</h2>
-    <div style="font-size:.85rem;color:var(--text-muted);margin-bottom:.25rem;">{% trans "Plan:" %} <strong>{{ student.get_payment_plan_display }}</strong></div>
-    <div style="font-size:.85rem;color:var(--text-muted);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:.5rem;">
+      <h2 style="font-size:1rem;font-weight:700;">💳 {% trans "Billing" %}</h2>
+      {% if student.payment_status == 'paid' %}
+        <span style="font-size:.75rem;padding:.2rem .6rem;border-radius:999px;background:#dcfce7;color:#15803d;font-weight:600;">✓ {% trans "Paid" %}</span>
+      {% elif student.payment_status == 'overdue' %}
+        <span style="font-size:.75rem;padding:.2rem .6rem;border-radius:999px;background:#fee2e2;color:#dc2626;font-weight:600;">⚠ {% trans "Overdue" %}</span>
+      {% elif student.payment_status == 'pending' %}
+        <span style="font-size:.75rem;padding:.2rem .6rem;border-radius:999px;background:#fef9c3;color:#a16207;font-weight:600;">⏳ {% trans "Pending" %}</span>
+      {% endif %}
+    </div>
+    <div style="font-size:.85rem;color:var(--text-muted);margin-bottom:.2rem;">{% trans "Plan:" %} <strong>{{ student.get_payment_plan_display }}</strong></div>
+    <div style="font-size:.85rem;color:var(--text-muted);margin-bottom:.2rem;">
       {% trans "Started:" %} {% if student.payment_start_date %}{{ student.payment_start_date|date:"d M Y" }}{% else %}—{% endif %}
     </div>
-    <a href="{% url 'students:edit' student.pk %}" style="font-size:.82rem;color:var(--primary);text-decoration:none;display:inline-block;margin-top:.65rem;">{% trans "Edit payment info →" %}</a>
+    {% if student.payment_method %}
+    <div style="font-size:.85rem;color:var(--text-muted);margin-bottom:.5rem;">
+      {% trans "Method:" %} <strong>{{ student.get_payment_method_display }}</strong>
+      {% if student.payment_handle %}<span style="color:var(--text-muted);">· {{ student.payment_handle }}</span>{% endif %}
+    </div>
+    {% endif %}
+    {% if student.payment_handle %}
+      {% if student.payment_method == 'venmo' %}
+        {% if student.payment_handle|slice:":1" == '@' %}
+          <a href="https://venmo.com/{{ student.payment_handle|slice:'1:' }}" target="_blank" class="btn btn-primary btn-sm" style="margin-bottom:.5rem;">💸 {% trans "Pay via Venmo" %}</a>
+        {% else %}
+          <a href="https://venmo.com/{{ student.payment_handle }}" target="_blank" class="btn btn-primary btn-sm" style="margin-bottom:.5rem;">💸 {% trans "Pay via Venmo" %}</a>
+        {% endif %}
+      {% elif student.payment_method == 'paypal' %}
+        {% if 'paypal.me' in student.payment_handle or 'paypal.com' in student.payment_handle %}
+          <a href="{{ student.payment_handle }}" target="_blank" class="btn btn-primary btn-sm" style="margin-bottom:.5rem;">💸 {% trans "Pay via PayPal" %}</a>
+        {% else %}
+          <a href="https://paypal.me/{{ student.payment_handle }}" target="_blank" class="btn btn-primary btn-sm" style="margin-bottom:.5rem;">💸 {% trans "Pay via PayPal" %}</a>
+        {% endif %}
+      {% endif %}
+    {% endif %}
+    <a href="{% url 'students:edit' student.pk %}" style="font-size:.82rem;color:var(--primary);text-decoration:none;display:block;margin-top:.25rem;">{% trans "Edit billing info →" %}</a>
   </div>
 </div>
 
@@ -97,6 +127,23 @@
     <p style="color:var(--text-muted);font-size:.92rem;">{% if student.health_issues %}{{ student.health_issues|linebreaksbr }}{% else %}{% trans "None reported" %}{% endif %}</p>
   </div>
 </div>
+
+<!-- Photo Analysis -->
+{% if student.photo and photo_url %}
+<div class="card" style="margin-bottom:1.5rem;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:.5rem;">
+    <h2 style="font-size:1rem;font-weight:700;">📸 {% trans "Photo Analysis" %}</h2>
+    <button id="analyze-photo-btn" class="btn btn-accent btn-sm" onclick="analyzePhoto()">🔍 {% trans "Analyze Photo" %}</button>
+  </div>
+  <div id="photo-analysis-area">
+    {% if student.photo_analysis %}
+      <p style="font-size:.92rem;color:var(--text-muted);white-space:pre-wrap;">{{ student.photo_analysis }}</p>
+    {% else %}
+      <p style="color:var(--text-muted);font-size:.9rem;">{% trans "Click" %} <strong>"🔍 {% trans "Analyze Photo" %}"</strong> {% trans "above to get an AI body composition assessment." %}</p>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
 
 <!-- Blood Test -->
 <div class="card" style="margin-bottom:1.5rem;">
@@ -181,6 +228,58 @@ function pollAnalysis() {
       }
     })
     .catch(function() { pollAnalysis(); });
+  }, 3000);
+}
+
+{% trans "Analyzing…" as msg_photo_analysing %}
+{% trans "Analyze Photo" as msg_photo_analyze %}
+function analyzePhoto() {
+  var btn = document.getElementById('analyze-photo-btn');
+  if (!btn) return;
+  btn.disabled = true;
+  btn.textContent = '⏳ {% trans "Starting…"|escapejs %}';
+
+  fetch('{% url "students:analyze_photo" student.pk %}', {
+    method: 'POST',
+    headers: {'X-CSRFToken': '{{ csrf_token }}'},
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.error) {
+      alert(data.error);
+      btn.disabled = false;
+      btn.textContent = '🔍 {{ msg_photo_analyze|escapejs }}';
+      return;
+    }
+    btn.textContent = '⏳ {{ msg_photo_analysing|escapejs }}';
+    pollPhotoAnalysis();
+  })
+  .catch(function() {
+    alert('{% trans "Network error — please try again."|escapejs %}');
+    btn.disabled = false;
+    btn.textContent = '🔍 {{ msg_photo_analyze|escapejs }}';
+  });
+}
+
+function pollPhotoAnalysis() {
+  setTimeout(function() {
+    fetch('{% url "students:check_photo_analysis" student.pk %}')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.status === 'done') {
+        var area = document.getElementById('photo-analysis-area');
+        if (area) area.innerHTML = '<p style="font-size:.92rem;color:var(--text-muted);white-space:pre-wrap;">' + data.analysis.replace(/</g,'&lt;') + '</p>';
+        var btn = document.getElementById('analyze-photo-btn');
+        if (btn) { btn.disabled = false; btn.textContent = '🔍 {{ msg_photo_analyze|escapejs }}'; }
+      } else if (data.status === 'error') {
+        alert(data.error || '{% trans "Analysis failed."|escapejs %}');
+        var btn = document.getElementById('analyze-photo-btn');
+        if (btn) { btn.disabled = false; btn.textContent = '🔍 {{ msg_photo_analyze|escapejs }}'; }
+      } else {
+        pollPhotoAnalysis();
+      }
+    })
+    .catch(function() { pollPhotoAnalysis(); });
   }, 3000);
 }
 

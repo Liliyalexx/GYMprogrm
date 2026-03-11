@@ -14,11 +14,26 @@ class Student(models.Model):
         ('monthly', 'Monthly (2 programs)'),
         ('3months', '3 Months (6 programs)'),
     ]
+    PAYMENT_METHOD_CHOICES = [
+        ('venmo', 'Venmo'),
+        ('paypal', 'PayPal'),
+        ('cash', 'Cash'),
+        ('bank', 'Bank Transfer'),
+        ('other', 'Other'),
+    ]
+    PAYMENT_STATUS_CHOICES = [
+        ('paid', 'Paid'),
+        ('pending', 'Payment Pending'),
+        ('overdue', 'Overdue'),
+    ]
 
     user = models.OneToOneField(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='student')
     invite_token = models.UUIDField(null=True, blank=True)
     payment_plan = models.CharField(max_length=20, choices=PAYMENT_PLAN_CHOICES, default='monthly')
     payment_start_date = models.DateField(null=True, blank=True)
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, blank=True)
+    payment_handle = models.CharField(max_length=200, blank=True, help_text='Venmo @handle, PayPal email/link, etc.')
+    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, blank=True)
 
     name = models.CharField(max_length=200)
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True)
@@ -35,6 +50,7 @@ class Student(models.Model):
     follow_nutrition = models.BooleanField(default=False, help_text='Client agrees to follow nutrition recommendations')
     notes = models.TextField(blank=True)
     blood_analysis = models.JSONField(null=True, blank=True, help_text='Cached AI blood test analysis')
+    photo_analysis = models.TextField(blank=True, help_text='Cached AI photo analysis')
     intake_status = models.CharField(max_length=20, choices=INTAKE_STATUS_CHOICES, default='active')
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)

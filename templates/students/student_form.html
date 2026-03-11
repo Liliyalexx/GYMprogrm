@@ -11,6 +11,18 @@
 </div>
 
 <div class="card" style="max-width:640px;">
+  {% if error %}
+  <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:.75rem 1rem;color:#b91c1c;font-size:.9rem;margin-bottom:1rem;">⚠ {{ error }}</div>
+  {% endif %}
+  {% if form.errors %}
+  <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:.75rem 1rem;color:#b91c1c;font-size:.9rem;margin-bottom:1rem;">
+    {% trans "Please fix the following:" %}
+    <ul style="margin:.4rem 0 0 1rem;padding:0;">
+      {% for field, errs in form.errors.items %}<li><strong>{{ field }}</strong>: {% for e in errs %}{{ e }}{% endfor %}</li>{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
 
@@ -137,10 +149,14 @@
 
     <div class="form-group">
       <label class="form-label">📷 {% trans "Photo" %}</label>
-      {% if student and student.photo and photo_url %}
-        <div style="margin-bottom:.75rem;">
-          <img src="{{ photo_url }}" alt="{{ student.name }}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--border);">
-        </div>
+      {% if student and student.photo %}
+        {% if photo_url %}
+          <div style="margin-bottom:.75rem;">
+            <img src="{{ photo_url }}" alt="{{ student.name }}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--border);">
+          </div>
+        {% else %}
+          <p style="font-size:.85rem;color:#dc2626;margin-bottom:.5rem;">⚠ {% trans "Photo was saved locally and is no longer accessible. Please re-upload." %}</p>
+        {% endif %}
       {% endif %}
       <input type="file" name="photo" class="form-control" accept="image/*">
       <div class="form-hint">{% trans "JPG, PNG or WebP. Shown on the student profile." %}</div>
@@ -237,6 +253,54 @@
     <div class="form-group">
       <label class="form-label">📝 {% trans "Additional Notes" %}</label>
       <textarea name="notes" class="form-control" rows="3" placeholder="{% trans "Any other relevant information..." %}">{{ form.notes.value|default:'' }}</textarea>
+    </div>
+
+    <hr style="border:none;border-top:1px solid var(--border);margin:1.5rem 0;">
+    <h3 style="font-size:.95rem;font-weight:700;margin-bottom:1rem;">💳 {% trans "Billing" %}</h3>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+      <div class="form-group">
+        <label class="form-label">{% trans "Plan" %}</label>
+        <select name="payment_plan" class="form-control">
+          {% for val, label in form.fields.payment_plan.choices %}
+            <option value="{{ val }}" {% if form.payment_plan.value == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">{% trans "Started" %}</label>
+        <input type="date" name="payment_start_date" class="form-control"
+          value="{% if student and student.payment_start_date %}{{ student.payment_start_date|date:'Y-m-d' }}{% endif %}">
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+      <div class="form-group">
+        <label class="form-label">{% trans "Payment Method" %}</label>
+        <select name="payment_method" class="form-control">
+          <option value="">— {% trans "Not set" %} —</option>
+          {% for val, label in form.fields.payment_method.choices %}
+            {% if val %}<option value="{{ val }}" {% if form.payment_method.value == val %}selected{% endif %}>{{ label }}</option>{% endif %}
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">{% trans "Payment Status" %}</label>
+        <select name="payment_status" class="form-control">
+          <option value="">— {% trans "Not set" %} —</option>
+          {% for val, label in form.fields.payment_status.choices %}
+            {% if val %}<option value="{{ val }}" {% if form.payment_status.value == val %}selected{% endif %}>{{ label }}</option>{% endif %}
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">{% trans "Payment Handle / Link" %}</label>
+      <input type="text" name="payment_handle" class="form-control"
+        value="{{ form.payment_handle.value|default:'' }}"
+        placeholder="{% trans "e.g. @username, paypal.me/name, or email" %}">
+      <div class="form-hint">{% trans "Venmo @handle, PayPal.me link, or bank details — used for the quick-pay button." %}</div>
     </div>
 
     <div style="display:flex;gap:.75rem;margin-top:1.5rem;">

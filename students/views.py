@@ -19,11 +19,14 @@ from .forms import StudentForm
 # ---------------------------------------------------------------------------
 
 def _safe_file_url(file_field):
-    """Return a working URL for a FileField/ImageField."""
+    """Return a working URL for a FileField/ImageField, or None if not accessible."""
     if not file_field:
         return None
     try:
         url = file_field.url
+        # Local /media/ URLs don't exist on Railway — treat as missing
+        if url and url.startswith('/media/'):
+            return None
         if url and 'cloudinary.com' in url and 'image/upload' in url:
             _, ext = os.path.splitext(file_field.name or '')
             if ext.lower() not in ('.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tiff'):
@@ -133,11 +136,36 @@ def student_edit(request, pk):
     if hasattr(request.user, 'student'):
         return redirect('students:portal_dashboard')
     student = get_object_or_404(Student, pk=pk)
+    error = None
     if request.method == 'POST':
         form = StudentForm(request.POST, request.FILES, instance=student)
         if form.is_valid():
-            form.save()
-            return redirect('students:detail', pk=student.pk)
+            # Save non-file fields first so they always persist
+            instance = form.save(commit=False)
+            instance.save(update_fields=[
+                f for f in form.changed_data if f not in ('blood_test_file', 'photo')
+            ] if any(f not in ('blood_test_file', 'photo') for f in form.changed_data) else None)
+
+            # Handle file fields separately so a Cloudinary failure doesn't block the rest
+            if 'blood_test_file' in request.FILES:
+                try:
+                    instance.blood_test_file = request.FILES['blood_test_file']
+                    instance.save(update_fields=['blood_test_file'])
+                except Exception as e:
+                    error = f'Could not save blood test file: {e}'
+
+            if 'photo' in request.FILES:
+                try:
+                    instance.photo = request.FILES['photo']
+                    instance.save(update_fields=['photo'])
+                except Exception as e:
+                    if not error:
+                        error = f'Could not save photo: {e}'
+
+            if not error:
+                return redirect('students:detail', pk=student.pk)
+            student = instance
+        # fall through to render with form errors or file error
     else:
         form = StudentForm(instance=student)
     return render(request, 'students/student_form.html', {
@@ -146,6 +174,7 @@ def student_edit(request, pk):
         'student': student,
         'blood_test_url': _safe_file_url(student.blood_test_file),
         'photo_url': _safe_file_url(student.photo),
+        'error': error,
     })
 
 
@@ -327,25 +356,24 @@ def client_intake(request):
             )
             student.save()
 
+            file_error = None
             if request.FILES.get('blood_test_file'):
-                student.blood_test_file = request.FILES['blood_test_file']
-                student.save(update_fields=['blood_test_file'])
+                try:
+                    student.blood_test_file = request.FILES['blood_test_file']
+                    student.save(update_fields=['blood_test_file'])
+                except Exception as e:
+                    file_error = f'Could not save blood test file: {e}'
 
             if request.FILES.get('photo'):
-                student.photo = request.FILES['photo']
-                student.save(update_fields=['photo'])
+                try:
+                    student.photo = request.FILES['photo']
+                    student.save(update_fields=['photo'])
+                except Exception as e:
+                    if not file_error:
+                        file_error = f'Could not save photo: {e}'
 
-            # Save initial body measurements if any provided
-            from measurements.models import BodyMeasurement
-            meas_fields = ['waist_cm', 'hips_cm', 'chest_cm', 'arms_cm', 'legs_cm']
-            meas_data = {f: request.POST.get(f, '').strip() or None for f in meas_fields}
-            if any(meas_data.values()):
-                BodyMeasurement.objects.create(
-                    student=student,
-                    date=dob or date.today(),
-                    weight_kg=weight_raw if weight_raw else None,
-                    **meas_data,
-                )
+            if file_error:
+                return render(request, 'students/intake_form.html', {'student': student, 'error': file_error})
 
             # Notify trainer via Resend API
             try:
@@ -436,23 +464,24 @@ def portal_intake(request):
             student.intake_status = 'pending'
             student.save()
 
+            file_error = None
             if request.FILES.get('blood_test_file'):
-                student.blood_test_file = request.FILES['blood_test_file']
-                student.save(update_fields=['blood_test_file'])
-            if request.FILES.get('photo'):
-                student.photo = request.FILES['photo']
-                student.save(update_fields=['photo'])
+                try:
+                    student.blood_test_file = request.FILES['blood_test_file']
+                    student.save(update_fields=['blood_test_file'])
+                except Exception as e:
+                    file_error = f'Could not save blood test file: {e}'
 
-            from measurements.models import BodyMeasurement
-            meas_fields = ['waist_cm', 'hips_cm', 'chest_cm', 'arms_cm', 'legs_cm']
-            meas_data = {f: request.POST.get(f, '').strip() or None for f in meas_fields}
-            if any(meas_data.values()):
-                BodyMeasurement.objects.create(
-                    student=student,
-                    date=dob or date.today(),
-                    weight_kg=weight_raw or None,
-                    **meas_data,
-                )
+            if request.FILES.get('photo'):
+                try:
+                    student.photo = request.FILES['photo']
+                    student.save(update_fields=['photo'])
+                except Exception as e:
+                    if not file_error:
+                        file_error = f'Could not save photo: {e}'
+
+            if file_error:
+                return render(request, 'students/portal_intake.html', {'student': student, 'error': file_error})
 
             # Notify trainer via Resend
             try:
@@ -595,11 +624,6 @@ def portal_measurements(request):
             date=mdate,
             weight_kg=_dec('weight_kg'),
             body_fat_pct=_dec('body_fat_pct'),
-            waist_cm=_dec('waist_cm'),
-            hips_cm=_dec('hips_cm'),
-            chest_cm=_dec('chest_cm'),
-            arms_cm=_dec('arms_cm'),
-            legs_cm=_dec('legs_cm'),
         )
         return redirect('students:portal_measurements')
 
@@ -729,3 +753,61 @@ def check_blood_analysis(request, pk):
         Student.objects.filter(pk=pk).update(blood_analysis=None)
         return JsonResponse({'status': 'error', 'error': err})
     return JsonResponse({'status': 'done'})
+
+
+# ---------------------------------------------------------------------------
+# Photo analysis (trainer only)
+# ---------------------------------------------------------------------------
+
+@login_required
+@require_POST
+def analyze_photo(request, pk):
+    import threading
+    from django.db import connections
+
+    if hasattr(request.user, 'student'):
+        return JsonResponse({'error': 'Not authorized'}, status=403)
+
+    student = get_object_or_404(Student, pk=pk)
+    if not student.photo:
+        return JsonResponse({'error': 'No photo uploaded'}, status=400)
+
+    Student.objects.filter(pk=pk).update(photo_analysis='_processing')
+
+    def _run(student_pk):
+        try:
+            import anthropic
+            from programs.ai import _photo_block, _analyze_photo
+            s = Student.objects.get(pk=student_pk)
+            client = anthropic.Anthropic()
+            photo_blocks, attached = _photo_block(s)
+            if not attached:
+                Student.objects.filter(pk=student_pk).update(photo_analysis='_error:Could not load photo.')
+                return
+            analysis = _analyze_photo(client, s, photo_blocks)
+            Student.objects.filter(pk=student_pk).update(photo_analysis=analysis or '_error:No result.')
+        except Exception as e:
+            Student.objects.filter(pk=student_pk).update(photo_analysis=f'_error:{e}')
+        finally:
+            connections.close_all()
+
+    t = threading.Thread(target=_run, args=(pk,), daemon=True)
+    t.start()
+    return JsonResponse({'status': 'processing'})
+
+
+@login_required
+def check_photo_analysis(request, pk):
+    if hasattr(request.user, 'student'):
+        return JsonResponse({'error': 'Not authorized'}, status=403)
+    student = get_object_or_404(Student, pk=pk)
+    val = student.photo_analysis or ''
+    if not val:
+        return JsonResponse({'status': 'none'})
+    if val == '_processing':
+        return JsonResponse({'status': 'processing'})
+    if val.startswith('_error:'):
+        err = val[len('_error:'):]
+        Student.objects.filter(pk=pk).update(photo_analysis='')
+        return JsonResponse({'status': 'error', 'error': err})
+    return JsonResponse({'status': 'done', 'analysis': val})

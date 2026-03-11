@@ -13,6 +13,8 @@ urlpatterns = [
     path('<int:pk>/accept/', views.accept_intake, name='accept_intake'),
     path('<int:pk>/analyze-blood/', views.analyze_blood, name='analyze_blood'),
     path('<int:pk>/check-blood-analysis/', views.check_blood_analysis, name='check_blood_analysis'),
+    path('<int:pk>/analyze-photo/', views.analyze_photo, name='analyze_photo'),
+    path('<int:pk>/check-photo-analysis/', views.check_photo_analysis, name='check_photo_analysis'),
     path('<int:pk>/send-invite/', views.send_invite, name='send_invite'),
 
     # Student portal

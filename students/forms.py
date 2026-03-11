@@ -8,7 +8,8 @@ class StudentForm(forms.ModelForm):
         fields = ['name', 'gender', 'email', 'phone', 'date_of_birth',
                   'photo', 'blood_test_file', 'height_cm', 'weight_kg',
                   'health_issues', 'goals', 'notes',
-                  'payment_plan', 'payment_start_date']
+                  'payment_plan', 'payment_start_date',
+                  'payment_method', 'payment_handle', 'payment_status']
         widgets = {
             'date_of_birth': forms.DateInput(attrs={'type': 'date'}),
             'payment_start_date': forms.DateInput(attrs={'type': 'date'}),
