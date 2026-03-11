@@ -1,72 +1,213 @@
 {% extends 'base.html' %}
-{% load i18n %}
-{% block title %}{% trans "Log Workout" %} — GYMprogrm{% endblock %}
+{% load i18n student_extras %}
+{% block title %}{{ program_day.name }} — GYMprogrm{% endblock %}
+
+{% block extra_css %}
+<style>
+  .workout-header {
+    background: linear-gradient(135deg, var(--primary), #7c3aed);
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    color: #fff;
+    margin-bottom: 1.5rem;
+  }
+  .workout-header h1 { font-size: 1.1rem; font-weight: 800; }
+  .workout-header p  { font-size: .83rem; opacity: .8; margin-top: .2rem; }
+
+  .ex-log-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .ex-log-top {
+    display: flex;
+    gap: .85rem;
+    align-items: center;
+    padding: 1rem 1rem .75rem;
+  }
+  .ex-log-photo {
+    width: 64px; height: 64px;
+    border-radius: 10px;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+  .ex-log-placeholder {
+    width: 64px; height: 64px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #e0e7ff, #ede9fe);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; flex-shrink: 0;
+  }
+  .ex-log-name { font-weight: 700; font-size: .95rem; }
+  .ex-log-target { font-size: .82rem; color: var(--text-muted); margin-top: .15rem; }
+  .ex-log-prev {
+    display: inline-flex; align-items: center; gap: .25rem;
+    font-size: .76rem; font-weight: 600;
+    background: #dcfce7; color: #15803d;
+    padding: .18rem .5rem; border-radius: 999px;
+    margin-top: .3rem;
+  }
+
+  .ex-log-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: .6rem;
+    padding: 0 1rem 1rem;
+  }
+  .log-input-group label {
+    display: block;
+    font-size: .75rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin-bottom: .3rem;
+  }
+  .log-input {
+    width: 100%;
+    padding: .6rem .75rem;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-size: .95rem;
+    font-weight: 700;
+    text-align: center;
+    font-family: inherit;
+    color: var(--text);
+    background: #f8fafc;
+    box-sizing: border-box;
+    transition: border-color .15s;
+  }
+  .log-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+  }
+
+  .save-bar {
+    position: sticky;
+    bottom: 0;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    padding: 1rem;
+    margin-top: 1rem;
+    display: flex;
+    gap: .75rem;
+  }
+  .save-btn {
+    flex: 1;
+    padding: .9rem;
+    background: linear-gradient(135deg, var(--primary), #7c3aed);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity .15s;
+  }
+  .save-btn:hover { opacity: .9; }
+  .cancel-btn {
+    padding: .9rem 1.25rem;
+    background: transparent;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    font-size: .95rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    text-decoration: none;
+    display: flex; align-items: center;
+  }
+  .cancel-btn:hover { border-color: var(--primary); color: var(--primary); }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="page-header">
-  <div>
-    <a href="{% url 'students:portal_program' %}" style="color:var(--text-muted);font-size:.9rem;text-decoration:none;">← {% trans "Program" %}</a>
-    <h1 class="page-title" style="margin-top:.25rem;">{% trans "Log:" %} {{ program_day.name }}</h1>
+<div style="max-width:620px;margin:0 auto;padding-bottom:6rem;">
+
+  <div class="workout-header">
+    <a href="{% url 'students:portal_program' %}" style="font-size:.8rem;opacity:.75;text-decoration:none;color:#fff;display:inline-block;margin-bottom:.5rem;">← {% trans "Back to program" %}</a>
+    <h1>{{ program_day.name }}</h1>
+    <p>{{ total }} {% trans "exercises" %} · {% trans "Log your weights and reps below" %}</p>
   </div>
-</div>
 
-{% if error %}
-<div class="alert alert-error">{{ error }}</div>
-{% endif %}
-
-<form method="post">
-  {% csrf_token %}
-
-  {% for ex in exercises %}
-  {% if ex.confirmed %}
-  <div class="card" style="margin-bottom:1rem;">
-    <div style="display:flex;gap:1rem;align-items:flex-start;margin-bottom:.75rem;">
-      {% if ex.exercise.photo_url %}
-      <img src="{{ ex.exercise.photo_url }}" alt="{{ ex.exercise.name }}"
-           style="width:56px;height:56px;object-fit:cover;border-radius:8px;flex-shrink:0;">
-      {% endif %}
-      <div>
-        <div style="font-weight:600;font-size:.95rem;">
-          {% if ex.name_ru %}{{ ex.name_ru }}{% else %}{{ ex.exercise.name }}{% endif %}
-        </div>
-        <div style="font-size:.82rem;color:var(--text-muted);">{% trans "Target:" %} {{ ex.sets }}×{{ ex.reps }}{% if ex.weight_kg %} @ {{ ex.weight_kg }}kg{% endif %}</div>
-      </div>
-    </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;">
-      <div class="form-group" style="margin-bottom:0;">
-        <label class="form-label" style="font-size:.8rem;">{% trans "Sets done" %}</label>
-        <input class="form-control" type="number" name="exercise_{{ ex.pk }}_sets"
-               value="{{ ex.sets }}" min="0" max="20" style="text-align:center;">
-      </div>
-      <div class="form-group" style="margin-bottom:0;">
-        <label class="form-label" style="font-size:.8rem;">{% trans "Reps" %}</label>
-        <input class="form-control" type="text" name="exercise_{{ ex.pk }}_reps"
-               value="{{ ex.reps }}" placeholder="e.g. 10,10,8">
-      </div>
-      <div class="form-group" style="margin-bottom:0;">
-        <label class="form-label" style="font-size:.8rem;">{% trans "Weight (kg)" %}</label>
-        <input class="form-control" type="number" name="exercise_{{ ex.pk }}_weight"
-               value="{% if ex.weight_kg %}{{ ex.weight_kg }}{% endif %}"
-               step="0.5" min="0" placeholder="kg">
-      </div>
-    </div>
-    <div class="form-group" style="margin-bottom:0;margin-top:.6rem;">
-      <label class="form-label" style="font-size:.8rem;">{% trans "Notes (optional)" %}</label>
-      <input class="form-control" type="text" name="exercise_{{ ex.pk }}_notes" placeholder="{% trans "How did it feel?" %}">
-    </div>
-  </div>
+  {% if error %}
+  <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:.75rem 1rem;color:#b91c1c;font-size:.9rem;margin-bottom:1rem;">{{ error }}</div>
   {% endif %}
-  {% endfor %}
 
-  <div class="form-group">
-    <label class="form-label">{% trans "Workout notes (optional)" %}</label>
-    <textarea class="form-control" name="notes" rows="2" placeholder="{% trans "Overall notes for this session..." %}"></textarea>
-  </div>
+  <form method="post" id="workout-form">
+    {% csrf_token %}
 
-  <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
-    <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center;">{% trans "Save Workout" %}</button>
-    <a href="{% url 'students:portal_program' %}" class="btn btn-outline">{% trans "Cancel" %}</a>
-  </div>
-</form>
+    {% for ex in exercises %}
+    {% with lw=last_weights|get_item:ex.pk %}
+    <div class="ex-log-card">
+      <div class="ex-log-top">
+        {% if ex.exercise.photo_url %}
+          <img src="{{ ex.exercise.photo_url }}" alt="{{ ex.exercise.name }}" class="ex-log-photo">
+        {% else %}
+          <div class="ex-log-placeholder">💪</div>
+        {% endif %}
+        <div style="flex:1;min-width:0;">
+          <div class="ex-log-name">{% if ex.name_ru %}{{ ex.name_ru }}{% else %}{{ ex.exercise.name }}{% endif %}</div>
+          <div class="ex-log-target">🎯 {% trans "Target" %}: {{ ex.sets }} {% trans "sets" %} × {{ ex.reps }} {% trans "reps" %}{% if ex.weight_kg %} · {{ ex.weight_kg }} kg{% endif %}</div>
+          {% if lw %}
+          <span class="ex-log-prev">
+            ✓ {% trans "Last" %}:
+            {% if lw.weight %}{{ lw.weight }} kg{% endif %}
+            {% if lw.reps %} · {{ lw.reps }}{% endif %}
+            · {{ lw.date|date:"d M" }}
+          </span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="ex-log-inputs">
+        <div class="log-input-group">
+          <label>{% trans "Sets" %}</label>
+          <input class="log-input" type="number" name="exercise_{{ ex.pk }}_sets"
+                 value="{{ ex.sets }}" min="0" max="20">
+        </div>
+        <div class="log-input-group">
+          <label>{% trans "Reps" %}</label>
+          <input class="log-input" type="text" name="exercise_{{ ex.pk }}_reps"
+                 value="{% if lw and lw.reps %}{{ lw.reps }}{% else %}{{ ex.reps }}{% endif %}"
+                 placeholder="10,10,8">
+        </div>
+        <div class="log-input-group">
+          <label>{% trans "Weight kg" %}</label>
+          <input class="log-input" type="number" name="exercise_{{ ex.pk }}_weight"
+                 value="{% if lw and lw.weight %}{{ lw.weight }}{% elif ex.weight_kg %}{{ ex.weight_kg }}{% endif %}"
+                 step="0.5" min="0" placeholder="—">
+        </div>
+      </div>
+
+      {% if ex.exercise.posture_tips %}
+      <div style="padding: 0 1rem .85rem;">
+        <details>
+          <summary style="font-size:.78rem;color:var(--primary);cursor:pointer;font-weight:600;">{% trans "Technique tips" %} ›</summary>
+          <div style="font-size:.8rem;color:var(--text-muted);margin-top:.3rem;line-height:1.5;">{{ ex.exercise.posture_tips }}</div>
+        </details>
+      </div>
+      {% endif %}
+    </div>
+    {% endwith %}
+    {% endfor %}
+
+    <div class="form-group" style="margin-top:.5rem;">
+      <label class="form-label" style="font-size:.82rem;">📝 {% trans "Workout notes (optional)" %}</label>
+      <textarea class="form-control" name="notes" rows="2"
+                placeholder="{% trans "How did it feel? Any PRs?" %}"></textarea>
+    </div>
+
+    <div class="save-bar">
+      <button type="submit" class="save-btn">✅ {% trans "Save Workout" %}</button>
+      <a href="{% url 'students:portal_program' %}" class="cancel-btn">{% trans "Cancel" %}</a>
+    </div>
+  </form>
+
+</div>
 {% endblock %}

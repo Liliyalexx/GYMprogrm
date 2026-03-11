@@ -1,69 +1,188 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n student_extras %}
 {% block title %}{% trans "My Program" %} — GYMprogrm{% endblock %}
 
+{% block extra_css %}
+<style>
+  .program-hero {
+    background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
+    border-radius: 16px;
+    padding: 1.5rem;
+    color: #fff;
+    margin-bottom: 1.5rem;
+  }
+  .program-hero h1 { font-size: 1.2rem; font-weight: 800; margin-bottom: .2rem; }
+  .program-hero p  { font-size: .88rem; opacity: .85; margin: 0; }
+
+  .day-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    margin-bottom: 1.1rem;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .day-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    user-select: none;
+    gap: .5rem;
+  }
+  .day-header:hover { background: #f8fafc; }
+  .day-title { font-weight: 700; font-size: .98rem; }
+  .day-meta  { font-size: .78rem; color: var(--text-muted); margin-top: .12rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 240px; }
+  .day-chevron { font-size: .9rem; color: var(--text-muted); transition: transform .2s; flex-shrink: 0; }
+  .day-chevron.open { transform: rotate(180deg); }
+
+  .day-body { display: none; padding: .75rem; border-top: 1px solid var(--border); }
+  .day-body.open { display: block; }
+
+  .ex-card {
+    display: flex;
+    gap: .85rem;
+    align-items: flex-start;
+    padding: .85rem;
+    border-radius: 12px;
+    margin-bottom: .6rem;
+    background: #f8fafc;
+    border: 1px solid #e9eef5;
+  }
+  .ex-photo {
+    width: 68px; height: 68px;
+    border-radius: 10px;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+  .ex-photo-placeholder {
+    width: 68px; height: 68px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #e0e7ff, #ede9fe);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+  }
+  .ex-name   { font-weight: 700; font-size: .93rem; margin-bottom: .2rem; }
+  .ex-target { font-size: .82rem; color: var(--text-muted); margin-bottom: .25rem; }
+  .ex-last   {
+    display: inline-flex; align-items: center; gap: .25rem;
+    font-size: .76rem; font-weight: 600;
+    background: #dcfce7; color: #15803d;
+    padding: .18rem .5rem; border-radius: 999px;
+  }
+
+  .start-btn {
+    display: flex; align-items: center; justify-content: center; gap: .5rem;
+    width: 100%; padding: .85rem;
+    margin-top: .25rem;
+    background: linear-gradient(135deg, var(--primary), #7c3aed);
+    color: #fff; border: none; border-radius: 12px;
+    font-size: .98rem; font-weight: 700;
+    text-decoration: none; cursor: pointer;
+    transition: opacity .15s;
+  }
+  .start-btn:hover { opacity: .9; color: #fff; }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="page-header">
-  <div>
-    <a href="{% url 'students:portal_dashboard' %}" style="color:var(--text-muted);font-size:.9rem;text-decoration:none;">← {% trans "Dashboard" %}</a>
-    <h1 class="page-title" style="margin-top:.25rem;">
-      {% if program %}{{ program.name }}{% else %}{% trans "My Program" %}{% endif %}
-    </h1>
-  </div>
-</div>
+<div style="max-width:640px;margin:0 auto;">
 
 {% if program %}
-  {% if program.description %}
-  <div class="card" style="margin-bottom:1.25rem;">
-    <p style="color:var(--text-muted);font-size:.92rem;">{{ program.description }}</p>
+
+  <div class="program-hero">
+    <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;opacity:.7;margin-bottom:.3rem;">{% trans "Active Program" %}</div>
+    <h1>{{ program.name }}</h1>
+    {% if program.description %}<p style="margin-top:.3rem;">{{ program.description }}</p>{% endif %}
+    {% if program.start_date %}
+    <p style="margin-top:.5rem;font-size:.8rem;opacity:.7;">
+      {% trans "Started" %} {{ program.start_date|date:"d M Y" }}{% if program.duration_weeks %} · {{ program.duration_weeks }} {% trans "weeks" %}{% endif %}
+    </p>
+    {% endif %}
   </div>
-  {% endif %}
 
   {% for day in program.days.all %}
-  <div class="card" style="margin-bottom:1.25rem;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
-      <h2 style="font-size:1rem;font-weight:700;">{{ day.name }}</h2>
-      <a href="{% url 'students:portal_log_workout' day.pk %}" class="btn btn-primary btn-sm">
-        + {% trans "Log this workout" %}
-      </a>
+  <div class="day-card">
+    <div class="day-header" onclick="toggleDay({{ day.pk }})">
+      <div style="min-width:0;">
+        <div class="day-title">{{ day.name }}</div>
+        <div class="day-meta">
+          {% for ex in day.exercises.all %}{% if ex.confirmed %}{% if not forloop.first %} · {% endif %}{% if ex.name_ru %}{{ ex.name_ru }}{% else %}{{ ex.exercise.name }}{% endif %}{% endif %}{% endfor %}
+        </div>
+      </div>
+      <span class="day-chevron" id="chevron-{{ day.pk }}">▼</span>
     </div>
 
-    {% for ex in day.exercises.all %}
-    {% if ex.confirmed %}
-    <div style="display:flex;gap:1rem;padding:.75rem;border:1px solid var(--border);border-radius:8px;margin-bottom:.5rem;align-items:flex-start;">
-      {% if ex.exercise.photo_url %}
-      <img src="{{ ex.exercise.photo_url }}" alt="{{ ex.exercise.name }}"
-           style="width:64px;height:64px;object-fit:cover;border-radius:8px;flex-shrink:0;">
-      {% endif %}
-      <div style="flex:1;min-width:0;">
-        <div style="font-weight:600;font-size:.95rem;">
-          {% if ex.name_ru %}{{ ex.name_ru }}{% else %}{{ ex.exercise.name }}{% endif %}
-        </div>
-        <div style="font-size:.82rem;color:var(--text-muted);margin-top:.2rem;">
-          {{ ex.sets }} sets × {{ ex.reps }} reps
-          {% if ex.weight_kg %}&ensp;·&ensp;{{ ex.weight_kg }} kg{% endif %}
-        </div>
-        {% if ex.reason_ru %}
-        <div style="font-size:.8rem;color:var(--text-muted);margin-top:.3rem;font-style:italic;">{{ ex.reason_ru }}</div>
+    <div class="day-body" id="day-body-{{ day.pk }}">
+
+      {% for ex in day.exercises.all %}
+      {% if ex.confirmed %}
+      {% with lw=last_weights|get_item:ex.pk %}
+      <div class="ex-card">
+        {% if ex.exercise.photo_url %}
+          <img src="{{ ex.exercise.photo_url }}" alt="{{ ex.exercise.name }}" class="ex-photo">
+        {% else %}
+          <div class="ex-photo-placeholder">💪</div>
         {% endif %}
-        {% if ex.exercise.posture_tips %}
-        <details style="margin-top:.5rem;">
-          <summary style="font-size:.8rem;color:var(--primary);cursor:pointer;">{% trans "Technique tips" %}</summary>
-          <div style="font-size:.82rem;color:var(--text-muted);margin-top:.35rem;padding-left:.5rem;">{{ ex.exercise.posture_tips }}</div>
-        </details>
-        {% endif %}
+        <div style="flex:1;min-width:0;">
+          <div class="ex-name">{% if ex.name_ru %}{{ ex.name_ru }}{% else %}{{ ex.exercise.name }}{% endif %}</div>
+          <div class="ex-target">
+            🎯 {{ ex.sets }} {% trans "sets" %} × {{ ex.reps }} {% trans "reps" %}
+            {% if ex.weight_kg %} · {{ ex.weight_kg }} kg {% trans "target" %}{% endif %}
+          </div>
+          {% if lw %}
+          <span class="ex-last">
+            ✓ {% trans "Last" %}:
+            {% if lw.weight %}{{ lw.weight }} kg{% endif %}
+            {% if lw.reps %} · {{ lw.reps }}{% endif %}
+            · {{ lw.date|date:"d M" }}
+          </span>
+          {% endif %}
+          {% if ex.exercise.posture_tips %}
+          <details style="margin-top:.45rem;">
+            <summary style="font-size:.78rem;color:var(--primary);cursor:pointer;font-weight:600;">{% trans "Technique" %} ›</summary>
+            <div style="font-size:.8rem;color:var(--text-muted);margin-top:.3rem;line-height:1.5;padding-left:.25rem;">{{ ex.exercise.posture_tips }}</div>
+          </details>
+          {% endif %}
+        </div>
       </div>
+      {% endwith %}
+      {% endif %}
+      {% endfor %}
+
+      <a href="{% url 'students:portal_log_workout' day.pk %}" class="start-btn">
+        🏋️ {% trans "Start Workout" %}
+      </a>
+
     </div>
-    {% endif %}
-    {% endfor %}
   </div>
   {% endfor %}
 
 {% else %}
-  <div class="empty-state">
-    <p style="font-size:2rem;">📋</p>
-    <p>{% trans "Your trainer hasn't set up your program yet. Check back soon!" %}</p>
+  <div style="text-align:center;padding:4rem 1rem;">
+    <p style="font-size:3rem;margin-bottom:.75rem;">💪</p>
+    <p style="font-size:1.1rem;font-weight:700;margin-bottom:.4rem;">{% trans "No active program yet" %}</p>
+    <p style="color:var(--text-muted);font-size:.9rem;">{% trans "Your trainer will set one up for you. Check back soon!" %}</p>
   </div>
 {% endif %}
 
+</div>
+
+<script>
+function toggleDay(pk) {
+  var body    = document.getElementById('day-body-' + pk);
+  var chevron = document.getElementById('chevron-' + pk);
+  body.classList.toggle('open');
+  chevron.classList.toggle('open');
+}
+document.addEventListener('DOMContentLoaded', function () {
+  var firstBody = document.querySelector('.day-body');
+  var firstChev = document.querySelector('.day-chevron');
+  if (firstBody) { firstBody.classList.add('open'); firstChev.classList.add('open'); }
+});
+</script>
 {% endblock %}

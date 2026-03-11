@@ -550,13 +550,32 @@ def portal_dashboard(request):
 
 @student_required
 def portal_program(request):
+    from progress.models import ExerciseLog
     student = request.user.student
     active_program = student.programs.filter(is_active=True).prefetch_related(
         'days__exercises__exercise'
     ).first()
+
+    # Last logged weight/reps per program exercise so we can show "last session" on the page
+    last_weights = {}
+    if active_program:
+        for day in active_program.days.all():
+            for ex in day.exercises.filter(confirmed=True):
+                last_log = ExerciseLog.objects.filter(
+                    workout_log__student=student,
+                    program_exercise=ex,
+                ).order_by('-workout_log__date').first()
+                if last_log:
+                    last_weights[ex.pk] = {
+                        'weight': last_log.weight_kg,
+                        'reps': last_log.reps_done,
+                        'date': last_log.workout_log.date,
+                    }
+
     return render(request, 'students/student_portal_program.html', {
         'student': student,
         'program': active_program,
+        'last_weights': last_weights,
     })
 
 
@@ -593,10 +612,28 @@ def portal_log_workout(request, program_day_id):
             )
         return redirect('students:portal_history')
 
+    # Last session data per exercise for pre-filling inputs
+    last_weights = {}
+    for ex in exercises:
+        last_log = ExerciseLog.objects.filter(
+            workout_log__student=student,
+            program_exercise=ex,
+        ).order_by('-workout_log__date').first()
+        if last_log:
+            last_weights[ex.pk] = {
+                'weight': last_log.weight_kg,
+                'reps': last_log.reps_done,
+                'date': last_log.workout_log.date,
+            }
+
+    confirmed_exercises = [ex for ex in exercises if ex.confirmed]
+
     return render(request, 'students/student_portal_log_workout.html', {
         'student': student,
         'program_day': program_day,
-        'exercises': exercises,
+        'exercises': confirmed_exercises,
+        'last_weights': last_weights,
+        'total': len(confirmed_exercises),
         'error': error,
     })
 
