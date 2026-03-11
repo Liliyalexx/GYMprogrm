@@ -31,26 +31,6 @@
         <label class="form-label" style="font-size:.82rem;">{% trans "Body Fat %" %}</label>
         <input class="form-control" type="number" name="body_fat_pct" step="0.1" min="0" max="100" placeholder="e.g. 22.0">
       </div>
-      <div class="form-group" style="margin-bottom:.5rem;">
-        <label class="form-label" style="font-size:.82rem;">{% trans "Waist (cm)" %}</label>
-        <input class="form-control" type="number" name="waist_cm" step="0.1" min="0" placeholder="cm">
-      </div>
-      <div class="form-group" style="margin-bottom:.5rem;">
-        <label class="form-label" style="font-size:.82rem;">{% trans "Hips (cm)" %}</label>
-        <input class="form-control" type="number" name="hips_cm" step="0.1" min="0" placeholder="cm">
-      </div>
-      <div class="form-group" style="margin-bottom:.5rem;">
-        <label class="form-label" style="font-size:.82rem;">{% trans "Chest (cm)" %}</label>
-        <input class="form-control" type="number" name="chest_cm" step="0.1" min="0" placeholder="cm">
-      </div>
-      <div class="form-group" style="margin-bottom:.5rem;">
-        <label class="form-label" style="font-size:.82rem;">{% trans "Arms (cm)" %}</label>
-        <input class="form-control" type="number" name="arms_cm" step="0.1" min="0" placeholder="cm">
-      </div>
-      <div class="form-group" style="margin-bottom:.5rem;">
-        <label class="form-label" style="font-size:.82rem;">{% trans "Legs (cm)" %}</label>
-        <input class="form-control" type="number" name="legs_cm" step="0.1" min="0" placeholder="cm">
-      </div>
     </div>
     <button type="submit" class="btn btn-primary" style="margin-top:.5rem;width:100%;justify-content:center;">{% trans "Save Measurements" %}</button>
   </form>
@@ -66,11 +46,6 @@
         <th style="padding:.5rem .75rem;font-size:.75rem;color:var(--text-muted);text-transform:uppercase;">{% trans "Date" %}</th>
         <th style="padding:.5rem .75rem;font-size:.75rem;color:var(--text-muted);text-transform:uppercase;">{% trans "Weight" %}</th>
         <th style="padding:.5rem .75rem;font-size:.75rem;color:var(--text-muted);text-transform:uppercase;">{% trans "BF%" %}</th>
-        <th style="padding:.5rem .75rem;font-size:.75rem;color:var(--text-muted);text-transform:uppercase;">{% trans "Waist" %}</th>
-        <th style="padding:.5rem .75rem;font-size:.75rem;color:var(--text-muted);text-transform:uppercase;">{% trans "Hips" %}</th>
-        <th style="padding:.5rem .75rem;font-size:.75rem;color:var(--text-muted);text-transform:uppercase;">{% trans "Chest" %}</th>
-        <th style="padding:.5rem .75rem;font-size:.75rem;color:var(--text-muted);text-transform:uppercase;">{% trans "Arms" %}</th>
-        <th style="padding:.5rem .75rem;font-size:.75rem;color:var(--text-muted);text-transform:uppercase;">{% trans "Legs" %}</th>
       </tr>
     </thead>
     <tbody>
@@ -79,11 +54,6 @@
         <td style="padding:.5rem .75rem;font-weight:600;">{{ m.date|date:"d M Y" }}</td>
         <td style="padding:.5rem .75rem;">{% if m.weight_kg %}{{ m.weight_kg }} kg{% else %}—{% endif %}</td>
         <td style="padding:.5rem .75rem;">{% if m.body_fat_pct %}{{ m.body_fat_pct }}%{% else %}—{% endif %}</td>
-        <td style="padding:.5rem .75rem;">{% if m.waist_cm %}{{ m.waist_cm }}{% else %}—{% endif %}</td>
-        <td style="padding:.5rem .75rem;">{% if m.hips_cm %}{{ m.hips_cm }}{% else %}—{% endif %}</td>
-        <td style="padding:.5rem .75rem;">{% if m.chest_cm %}{{ m.chest_cm }}{% else %}—{% endif %}</td>
-        <td style="padding:.5rem .75rem;">{% if m.arms_cm %}{{ m.arms_cm }}{% else %}—{% endif %}</td>
-        <td style="padding:.5rem .75rem;">{% if m.legs_cm %}{{ m.legs_cm }}{% else %}—{% endif %}</td>
       </tr>
       {% endfor %}
     </tbody>
