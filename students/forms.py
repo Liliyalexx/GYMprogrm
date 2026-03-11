@@ -1,5 +1,5 @@
 from django import forms
-from .models import Student
+from .models import Student, DoctorProfile
 
 
 class StudentForm(forms.ModelForm):
@@ -16,4 +16,14 @@ class StudentForm(forms.ModelForm):
             'health_issues': forms.Textarea(attrs={'rows': 4}),
             'goals': forms.Textarea(attrs={'rows': 4}),
             'notes': forms.Textarea(attrs={'rows': 3}),
+        }
+
+
+class DoctorProfileForm(forms.ModelForm):
+    class Meta:
+        model = DoctorProfile
+        fields = ['name', 'specialty', 'bio', 'photo_url', 'booking_link', 'compensation_note', 'is_active']
+        widgets = {
+            'bio': forms.Textarea(attrs={'rows': 4}),
+            'compensation_note': forms.Textarea(attrs={'rows': 3}),
         }

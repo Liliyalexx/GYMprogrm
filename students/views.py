@@ -523,28 +523,52 @@ def portal_intake(request):
 
 @student_required
 def portal_dashboard(request):
+    from datetime import date as _date
     student = request.user.student
     if student.intake_status == 'pending':
         return redirect('students:portal_intake')
     reminders = get_reminders(student)
-    active_program = student.programs.filter(is_active=True).first()
+    active_program = student.programs.filter(is_active=True).prefetch_related('days').first()
 
     days_remaining = None
     if active_program and active_program.start_date:
-        elapsed = (date.today() - active_program.start_date).days
+        elapsed = (_date.today() - active_program.start_date).days
         total = active_program.duration_weeks * 7
         days_remaining = max(0, total - elapsed)
+        progress_pct = min(100, int(elapsed / total * 100)) if total else 0
+    else:
+        progress_pct = 0
 
     recent_logs = student.workout_logs.select_related('program_day').order_by('-date')[:5]
     last_measurement = student.measurements.order_by('-date').first()
+
+    # Workouts this week
+    from datetime import timedelta
+    week_start = _date.today() - timedelta(days=_date.today().weekday())
+    workouts_this_week = student.workout_logs.filter(date__gte=week_start).count()
+
+    # Next workout day (first day of active program)
+    next_day = None
+    if active_program:
+        next_day = active_program.days.first()
+
+    # Active doctors
+    from .models import DoctorProfile
+    doctors = DoctorProfile.objects.filter(is_active=True)
 
     return render(request, 'students/student_portal_dashboard.html', {
         'student': student,
         'active_program': active_program,
         'days_remaining': days_remaining,
+        'progress_pct': progress_pct,
         'reminders': reminders,
         'recent_logs': recent_logs,
         'last_measurement': last_measurement,
+        'workouts_this_week': workouts_this_week,
+        'next_day': next_day,
+        'doctors': doctors,
+        'photo_url': _safe_file_url(student.photo),
+        'blood_test_url': _safe_file_url(student.blood_test_file),
     })
 
 
@@ -848,3 +872,153 @@ def check_photo_analysis(request, pk):
         Student.objects.filter(pk=pk).update(photo_analysis='')
         return JsonResponse({'status': 'error', 'error': err})
     return JsonResponse({'status': 'done', 'analysis': val})
+
+
+# ---------------------------------------------------------------------------
+# AI Recommendations (student portal)
+# ---------------------------------------------------------------------------
+
+@student_required
+@require_POST
+def portal_get_recommendations(request):
+    import threading
+    from django.db import connections
+    from django.utils.translation import get_language
+
+    student = request.user.student
+    Student.objects.filter(pk=student.pk).update(ai_recommendations={'_processing': True})
+
+    _lang = get_language() or 'ru'
+
+    def _run(student_pk, lang=_lang):
+        try:
+            from programs.ai import generate_student_recommendations
+            s = Student.objects.get(pk=student_pk)
+            result = generate_student_recommendations(s, language=lang)
+            Student.objects.filter(pk=student_pk).update(ai_recommendations=result)
+        except Exception as e:
+            Student.objects.filter(pk=student_pk).update(ai_recommendations={'_error': str(e)})
+        finally:
+            connections.close_all()
+
+    t = threading.Thread(target=_run, args=(student.pk,), daemon=True)
+    t.start()
+    return JsonResponse({'status': 'processing'})
+
+
+@student_required
+def portal_check_recommendations(request):
+    student = request.user.student
+    r = student.ai_recommendations
+    if not r:
+        return JsonResponse({'status': 'none'})
+    if r.get('_processing'):
+        return JsonResponse({'status': 'processing'})
+    if r.get('_error'):
+        Student.objects.filter(pk=student.pk).update(ai_recommendations=None)
+        return JsonResponse({'status': 'error', 'error': r['_error']})
+    return JsonResponse({'status': 'done'})
+
+
+@student_required
+def portal_recommendations(request):
+    student = request.user.student
+    return render(request, 'students/student_portal_recommendations.html', {
+        'student': student,
+        'recs': student.ai_recommendations,
+    })
+
+
+# ---------------------------------------------------------------------------
+# Request new program (student portal)
+# ---------------------------------------------------------------------------
+
+@student_required
+@require_POST
+def portal_request_program(request):
+    import httpx
+    from django.conf import settings as django_settings
+
+    student = request.user.student
+    message = request.POST.get('message', '').strip() or 'I would like a new 2-week program.'
+
+    try:
+        api_key = getattr(django_settings, 'RESEND_API_KEY', '') or os.environ.get('RESEND_API_KEY', '')
+        trainer_emails = list(
+            User.objects.filter(is_staff=True).exclude(email='').values_list('email', flat=True)
+        )
+        if api_key and trainer_emails:
+            httpx.post(
+                'https://api.resend.com/emails',
+                headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
+                json={
+                    'from': 'GYMprogrm <noreply@gymprogrm.org>',
+                    'to': trainer_emails,
+                    'subject': f'New program request: {student.name}',
+                    'text': (
+                        f'{student.name} has requested a new 2-week program.\n\n'
+                        f'Message: {message}\n\n'
+                        f'Create their program: https://gymprogrm.org/students/{student.pk}/'
+                    ),
+                },
+                timeout=10,
+            )
+    except Exception:
+        pass
+
+    return JsonResponse({'ok': True})
+
+
+# ---------------------------------------------------------------------------
+# Doctor profiles (trainer admin)
+# ---------------------------------------------------------------------------
+
+@login_required
+def doctor_list(request):
+    if hasattr(request.user, 'student'):
+        return redirect('students:portal_dashboard')
+    from .models import DoctorProfile
+    doctors = DoctorProfile.objects.all()
+    return render(request, 'students/doctor_list.html', {'doctors': doctors})
+
+
+@login_required
+def doctor_create(request):
+    if hasattr(request.user, 'student'):
+        return redirect('students:portal_dashboard')
+    from .forms import DoctorProfileForm
+    if request.method == 'POST':
+        form = DoctorProfileForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('students:doctor_list')
+    else:
+        form = DoctorProfileForm()
+    return render(request, 'students/doctor_form.html', {'form': form, 'title': 'Add Doctor'})
+
+
+@login_required
+def doctor_edit(request, pk):
+    if hasattr(request.user, 'student'):
+        return redirect('students:portal_dashboard')
+    from .models import DoctorProfile
+    from .forms import DoctorProfileForm
+    doctor = get_object_or_404(DoctorProfile, pk=pk)
+    if request.method == 'POST':
+        form = DoctorProfileForm(request.POST, instance=doctor)
+        if form.is_valid():
+            form.save()
+            return redirect('students:doctor_list')
+    else:
+        form = DoctorProfileForm(instance=doctor)
+    return render(request, 'students/doctor_form.html', {'form': form, 'title': 'Edit Doctor', 'doctor': doctor})
+
+
+@login_required
+@require_POST
+def doctor_delete(request, pk):
+    if hasattr(request.user, 'student'):
+        return redirect('students:portal_dashboard')
+    from .models import DoctorProfile
+    get_object_or_404(DoctorProfile, pk=pk).delete()
+    return redirect('students:doctor_list')

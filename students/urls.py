@@ -24,4 +24,16 @@ urlpatterns = [
     path('portal/log/<int:program_day_id>/', views.portal_log_workout, name='portal_log_workout'),
     path('portal/measurements/', views.portal_measurements, name='portal_measurements'),
     path('portal/history/', views.portal_history, name='portal_history'),
+
+    # Portal AI recommendations
+    path('portal/recommendations/', views.portal_recommendations, name='portal_recommendations'),
+    path('portal/get-recommendations/', views.portal_get_recommendations, name='portal_get_recommendations'),
+    path('portal/check-recommendations/', views.portal_check_recommendations, name='portal_check_recommendations'),
+    path('portal/request-program/', views.portal_request_program, name='portal_request_program'),
+
+    # Doctor profiles (trainer)
+    path('doctors/', views.doctor_list, name='doctor_list'),
+    path('doctors/new/', views.doctor_create, name='doctor_create'),
+    path('doctors/<int:pk>/edit/', views.doctor_edit, name='doctor_edit'),
+    path('doctors/<int:pk>/delete/', views.doctor_delete, name='doctor_delete'),
 ]

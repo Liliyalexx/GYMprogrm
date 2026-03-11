@@ -658,6 +658,83 @@ def suggest_program(student, training_days=3, training_location='gym', language=
     return result
 
 
+def generate_student_recommendations(student, language='ru'):
+    """Generate personalized food, exercise, and lifestyle recommendations."""
+    client = anthropic.Anthropic()
+
+    age = student.age or 'unknown'
+    gender = student.get_gender_display() if student.gender else 'not specified'
+    goals = student.goals or 'not specified'
+    health_issues = student.health_issues or 'none'
+    height = str(student.height_cm) if student.height_cm else 'unknown'
+    weight = str(student.weight_kg) if student.weight_kg else 'unknown'
+
+    blood_info = ''
+    if student.blood_analysis and not student.blood_analysis.get('_processing') and not student.blood_analysis.get('_error'):
+        deficiencies = student.blood_analysis.get('deficiencies', [])
+        markers = [m for m in student.blood_analysis.get('markers', [])
+                   if m.get('status') in ('low', 'high', 'critical_low', 'critical_high')]
+        if deficiencies:
+            blood_info += 'Deficiencies: ' + ', '.join(
+                [f"{d['nutrient']} ({d.get('severity', '')})" for d in deficiencies])
+        if markers:
+            blood_info += '\nAbnormal markers: ' + ', '.join(
+                [f"{m['name']} ({m['status']})" for m in markers[:6]])
+
+    photo_info = (student.photo_analysis or '').strip()
+    if photo_info.startswith('_'):
+        photo_info = ''
+
+    lang_note = _lang_suffix(language)
+
+    prompt = (
+        f'You are an expert personal trainer and sports nutritionist. '
+        f'Analyze this client and provide detailed personalized recommendations.\n\n'
+        f'CLIENT DATA:\n'
+        f'- Age: {age}, Gender: {gender}\n'
+        f'- Height: {height} cm, Weight: {weight} kg\n'
+        f'- Goals: {goals}\n'
+        f'- Health issues: {health_issues}\n'
+        + (f'- Blood test: {blood_info}\n' if blood_info else '')
+        + (f'- Body assessment: {photo_info}\n' if photo_info else '')
+        + '\nReturn ONLY valid JSON in this exact structure:\n'
+        '{\n'
+        '  "nutrition": {\n'
+        '    "summary": "2-3 sentence overview tailored to goals and blood work",\n'
+        '    "recommendations": ["tip 1", "tip 2", "tip 3", "tip 4", "tip 5"],\n'
+        '    "focus_foods": ["🥩 food 1", "🥦 food 2", "🐟 food 3", "🥚 food 4", "🫐 food 5"],\n'
+        '    "limit_foods": ["🍞 food 1", "🍭 food 2", "🧂 food 3"]\n'
+        '  },\n'
+        '  "exercise": {\n'
+        '    "summary": "2-3 sentence exercise strategy",\n'
+        '    "priority_areas": ["💪 area 1", "🦵 area 2", "🏋️ area 3"],\n'
+        '    "recommendations": ["tip 1", "tip 2", "tip 3", "tip 4"]\n'
+        '  },\n'
+        '  "lifestyle": {\n'
+        '    "fasting": "specific fasting protocol recommendation",\n'
+        '    "hydration": "daily water intake recommendation",\n'
+        '    "sleep": "sleep recommendation",\n'
+        '    "supplements": ["💊 supplement + reason 1", "supplement 2", "supplement 3"]\n'
+        '  }\n'
+        '}'
+        + lang_note
+    )
+
+    msg = client.messages.create(
+        model='claude-sonnet-4-6',
+        max_tokens=2000,
+        messages=[{'role': 'user', 'content': prompt}],
+    )
+
+    text = msg.content[0].text.strip()
+    if '```' in text:
+        text = text.split('```')[1]
+        if text.startswith('json'):
+            text = text[4:]
+        text = text.strip()
+    return json.loads(text)
+
+
 def analyze_blood_test(student, language='ru'):
     """
     Deep standalone analysis of a blood test file.

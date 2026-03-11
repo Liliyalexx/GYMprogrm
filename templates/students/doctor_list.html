@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}Doctor Profiles — GYMprogrm{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <a href="{% url 'students:list' %}" style="color:var(--text-muted);font-size:.9rem;text-decoration:none;">← Students</a>
+    <h1 class="page-title" style="margin-top:.25rem;">🩺 Doctor Profiles</h1>
+  </div>
+  <a href="{% url 'students:doctor_create' %}" class="btn btn-primary">+ Add Doctor</a>
+</div>
+{% for doc in doctors %}
+<div class="card" style="margin-bottom:1rem;display:flex;gap:1rem;align-items:flex-start;">
+  <div style="flex:1;">
+    <div style="font-weight:700;">{{ doc.name }}</div>
+    <div style="font-size:.85rem;color:var(--primary);font-weight:600;">{{ doc.specialty }}</div>
+    {% if doc.bio %}<div style="font-size:.85rem;color:var(--text-muted);margin-top:.3rem;">{{ doc.bio|truncatewords:20 }}</div>{% endif %}
+    {% if doc.booking_link %}<div style="font-size:.82rem;margin-top:.3rem;">🔗 <a href="{{ doc.booking_link }}" target="_blank">{{ doc.booking_link|truncatechars:50 }}</a></div>{% endif %}
+    {% if doc.compensation_note %}<div style="font-size:.8rem;color:var(--text-muted);margin-top:.3rem;background:#f0fdf4;padding:.4rem .6rem;border-radius:6px;">💰 {{ doc.compensation_note }}</div>{% endif %}
+    <span style="font-size:.75rem;padding:.15rem .5rem;border-radius:999px;background:{% if doc.is_active %}#dcfce7;color:#15803d{% else %}#fee2e2;color:#dc2626{% endif %};">{% if doc.is_active %}Active{% else %}Inactive{% endif %}</span>
+  </div>
+  <div style="display:flex;gap:.5rem;flex-shrink:0;">
+    <a href="{% url 'students:doctor_edit' doc.pk %}" class="btn btn-outline btn-sm">✏️ Edit</a>
+    <form method="post" action="{% url 'students:doctor_delete' doc.pk %}">{% csrf_token %}<button class="btn btn-danger btn-sm" onclick="return confirm('Delete?')">Delete</button></form>
+  </div>
+</div>
+{% empty %}
+<div class="card" style="text-align:center;padding:2rem;color:var(--text-muted);">
+  <p>No doctor profiles yet. <a href="{% url 'students:doctor_create' %}">Add one →</a></p>
+</div>
+{% endfor %}
+{% endblock %}

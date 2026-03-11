@@ -51,6 +51,7 @@ class Student(models.Model):
     notes = models.TextField(blank=True)
     blood_analysis = models.JSONField(null=True, blank=True, help_text='Cached AI blood test analysis')
     photo_analysis = models.TextField(blank=True, help_text='Cached AI photo analysis')
+    ai_recommendations = models.JSONField(null=True, blank=True)
     intake_status = models.CharField(max_length=20, choices=INTAKE_STATUS_CHOICES, default='active')
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
@@ -69,3 +70,20 @@ class Student(models.Model):
         return today.year - self.date_of_birth.year - (
             (today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day)
         )
+
+
+class DoctorProfile(models.Model):
+    name = models.CharField(max_length=200)
+    specialty = models.CharField(max_length=200, help_text='E.g. Endocrinologist, Hormone Specialist')
+    bio = models.TextField(blank=True)
+    photo_url = models.URLField(blank=True, max_length=500)
+    booking_link = models.URLField(max_length=500, help_text='Your affiliate/referral booking link')
+    compensation_note = models.TextField(blank=True, help_text='Private note about referral compensation (only visible to trainer)')
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return f'{self.name} — {self.specialty}'

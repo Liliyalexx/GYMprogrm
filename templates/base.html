@@ -69,6 +69,7 @@
       <!-- Trainer nav -->
       <a href="{% url 'students:list' %}"><span>{% trans "Students" %}</span></a>
       <a href="{% url 'programs:exercise_library' %}"><span>{% trans "Exercises" %}</span></a>
+      <a href="{% url 'students:doctor_list' %}"><span>{% trans "Doctors" %}</span></a>
     {% else %}
       <!-- Student nav -->
       <a href="{% url 'students:portal_dashboard' %}"><span>{% trans "Dashboard" %}</span></a>

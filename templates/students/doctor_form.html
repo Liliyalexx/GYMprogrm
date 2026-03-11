@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{{ title }} — GYMprogrm{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <a href="{% url 'students:doctor_list' %}" style="color:var(--text-muted);font-size:.9rem;text-decoration:none;">← Doctor Profiles</a>
+    <h1 class="page-title" style="margin-top:.25rem;">{{ title }}</h1>
+  </div>
+</div>
+<div class="card" style="max-width:580px;">
+  <form method="post">
+    {% csrf_token %}
+    {% if form.errors %}<div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:.75rem;color:#b91c1c;font-size:.9rem;margin-bottom:1rem;">Please fix: {% for f,e in form.errors.items %}{{ f }}: {{ e|join:", " }} {% endfor %}</div>{% endif %}
+
+    <div class="form-group">
+      <label class="form-label">Name *</label>
+      <input type="text" name="name" class="form-control" value="{{ form.name.value|default:'' }}" required>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Specialty *</label>
+      <input type="text" name="specialty" class="form-control" value="{{ form.specialty.value|default:'' }}" placeholder="e.g. Endocrinologist, Hormone Specialist" required>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Bio / Description</label>
+      <textarea name="bio" class="form-control" rows="4" placeholder="Brief description for students...">{{ form.bio.value|default:'' }}</textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Photo URL (optional)</label>
+      <input type="url" name="photo_url" class="form-control" value="{{ form.photo_url.value|default:'' }}" placeholder="https://...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Booking / Referral Link *</label>
+      <input type="url" name="booking_link" class="form-control" value="{{ form.booking_link.value|default:'' }}" placeholder="https://...">
+      <div class="form-hint">Your affiliate or referral link for students to book with this doctor.</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">💰 Compensation Note (private — only you see this)</label>
+      <textarea name="compensation_note" class="form-control" rows="3" placeholder="e.g. 15% commission per booking via my link...">{{ form.compensation_note.value|default:'' }}</textarea>
+    </div>
+    <div class="form-group">
+      <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;">
+        <input type="checkbox" name="is_active" {% if form.is_active.value %}checked{% endif %}>
+        <span class="form-label" style="margin:0;">Show to students</span>
+      </label>
+    </div>
+    <div style="display:flex;gap:.75rem;margin-top:1.25rem;">
+      <button type="submit" class="btn btn-primary">Save</button>
+      <a href="{% url 'students:doctor_list' %}" class="btn btn-outline">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,77 +1,399 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n student_extras %}
 {% block title %}{% trans "My Portal" %} — GYMprogrm{% endblock %}
 
-{% block content %}
+{% block extra_css %}
+<style>
+  /* ── FITQUEEN-inspired student portal ── */
+  .portal-wrap { max-width: 640px; margin: 0 auto; padding-bottom: 2.5rem; }
 
-<!-- Reminder banners -->
+  /* Hero */
+  .portal-hero {
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #7c3aed 100%);
+    border-radius: 20px;
+    padding: 1.5rem;
+    color: #fff;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .portal-avatar {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid rgba(255,255,255,.4);
+    flex-shrink: 0;
+  }
+  .portal-avatar-initials {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.2);
+    border: 3px solid rgba(255,255,255,.4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem; font-weight: 800; color: #fff;
+    flex-shrink: 0;
+  }
+  .portal-hero-text h1 { font-size: 1.2rem; font-weight: 800; }
+  .portal-hero-text p  { font-size: .85rem; opacity: .8; margin-top: .2rem; }
+
+  /* Progress bar */
+  .prog-bar-wrap { margin-top: .85rem; }
+  .prog-bar-label { font-size: .75rem; opacity: .75; margin-bottom: .3rem; display: flex; justify-content: space-between; }
+  .prog-bar-bg { background: rgba(255,255,255,.2); border-radius: 999px; height: 7px; }
+  .prog-bar-fill { background: #fff; border-radius: 999px; height: 7px; transition: width .4s; }
+
+  /* Stats row */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .75rem;
+    margin-bottom: 1.25rem;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: .85rem .75rem;
+    text-align: center;
+    box-shadow: var(--shadow);
+  }
+  .stat-number { font-size: 1.5rem; font-weight: 800; color: var(--primary); }
+  .stat-label  { font-size: .72rem; color: var(--text-muted); margin-top: .15rem; text-transform: uppercase; letter-spacing: .04em; }
+
+  /* Today's workout */
+  .today-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+    box-shadow: var(--shadow);
+  }
+  .today-badge {
+    display: inline-block;
+    font-size: .72rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .06em;
+    color: var(--primary);
+    background: #eff6ff;
+    padding: .2rem .6rem;
+    border-radius: 999px;
+    margin-bottom: .6rem;
+  }
+  .today-title { font-size: 1.05rem; font-weight: 800; margin-bottom: .3rem; }
+  .today-meta  { font-size: .83rem; color: var(--text-muted); margin-bottom: .85rem; }
+  .today-start-btn {
+    display: flex; align-items: center; justify-content: center; gap: .5rem;
+    background: linear-gradient(135deg, var(--primary), #7c3aed);
+    color: #fff; text-decoration: none; border-radius: 12px;
+    padding: .85rem; font-weight: 700; font-size: .95rem;
+    transition: opacity .15s;
+  }
+  .today-start-btn:hover { opacity: .9; color: #fff; }
+
+  /* Tile grid */
+  .tile-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .85rem;
+    margin-bottom: 1.25rem;
+  }
+  .tile {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.1rem 1rem;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: var(--shadow);
+    transition: transform .15s, box-shadow .15s;
+    display: block;
+  }
+  .tile:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.1); }
+  .tile-icon  { font-size: 1.6rem; margin-bottom: .5rem; }
+  .tile-name  { font-weight: 700; font-size: .9rem; }
+  .tile-desc  { font-size: .78rem; color: var(--text-muted); margin-top: .15rem; }
+
+  /* AI insights card */
+  .insights-card {
+    background: linear-gradient(135deg, #0f172a, #1e3a8a);
+    border-radius: 16px;
+    padding: 1.25rem;
+    color: #fff;
+    margin-bottom: 1.25rem;
+  }
+  .insights-card h2 { font-size: 1rem; font-weight: 800; margin-bottom: .3rem; }
+  .insights-card p  { font-size: .83rem; opacity: .75; margin-bottom: 1rem; }
+  .insight-pill {
+    display: inline-flex; align-items: center; gap: .35rem;
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 999px;
+    padding: .3rem .75rem;
+    font-size: .8rem;
+    color: #fff;
+    margin: .2rem .2rem .2rem 0;
+  }
+  .insight-action {
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,.15);
+    border: 1px solid rgba(255,255,255,.3);
+    border-radius: 10px;
+    padding: .75rem;
+    color: #fff; font-weight: 700; font-size: .88rem;
+    text-decoration: none; cursor: pointer; border: none;
+    width: 100%; margin-top: .75rem;
+    transition: background .15s;
+  }
+  .insight-action:hover { background: rgba(255,255,255,.25); }
+
+  /* Doctor card */
+  .doctor-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.25rem;
+    margin-bottom: .85rem;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    box-shadow: var(--shadow);
+  }
+  .doctor-photo {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 2px solid var(--border);
+  }
+  .doctor-initials {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e0e7ff, #ede9fe);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; flex-shrink: 0;
+  }
+  .doctor-name     { font-weight: 700; font-size: .95rem; }
+  .doctor-spec     { font-size: .8rem; color: var(--primary); font-weight: 600; margin-bottom: .3rem; }
+  .doctor-bio      { font-size: .82rem; color: var(--text-muted); margin-bottom: .65rem; }
+  .book-btn {
+    display: inline-flex; align-items: center; gap: .35rem;
+    background: var(--primary); color: #fff;
+    padding: .45rem .95rem; border-radius: 8px;
+    font-size: .84rem; font-weight: 700; text-decoration: none;
+    transition: background .15s;
+  }
+  .book-btn:hover { background: var(--primary-dark); color: #fff; }
+
+  /* Recent workouts */
+  .workout-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: .65rem .75rem;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: .4rem;
+    background: #f8fafc;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="portal-wrap">
+
 {% for r in reminders %}
   {% if r.type == 'change_program' %}
-  <div class="banner banner-warning">
+  <div class="banner banner-warning" style="margin-bottom:1rem;">
     💪 {% trans "Your trainer will be updating your program soon — keep up the great work!" %}
   </div>
   {% elif r.type == 'payment_due' %}
-  <div class="banner banner-danger">
+  <div class="banner banner-danger" style="margin-bottom:1rem;">
     💳 {% blocktrans with plan=r.plan %}Your subscription ({{ plan }}) is coming up for renewal — contact your trainer.{% endblocktrans %}
   </div>
   {% endif %}
 {% endfor %}
 
-<div class="page-header">
-  <h1 class="page-title">{% blocktrans with name=student.name %}Hi, {{ name }}!{% endblocktrans %}</h1>
-</div>
-
-<!-- Current program card -->
-<div class="card" style="margin-bottom:1.25rem;">
-  <h2 style="font-size:1rem;font-weight:700;margin-bottom:.75rem;">📋 {% trans "Current Program" %}</h2>
-  {% if active_program %}
-    <div style="font-weight:600;font-size:1.05rem;margin-bottom:.35rem;">{{ active_program.name }}</div>
-    {% if days_remaining is not None %}
-      <div style="font-size:.88rem;color:var(--text-muted);margin-bottom:1rem;">
-        {% if days_remaining > 0 %}
-          {% blocktrans count n=days_remaining %}{{ n }} day remaining in this 2-week block{% plural %}{{ n }} days remaining in this 2-week block{% endblocktrans %}
-        {% else %}
-          {% trans "Program period complete — new program coming soon!" %}
-        {% endif %}
-      </div>
-    {% endif %}
-    <a href="{% url 'students:portal_program' %}" class="btn btn-primary">{% trans "View Full Program" %}</a>
+<!-- ── Hero ── -->
+<div class="portal-hero">
+  {% if student.photo and photo_url %}
+    <img src="{{ photo_url }}" alt="{{ student.name }}" class="portal-avatar">
   {% else %}
-    <p style="color:var(--text-muted);font-size:.9rem;">{% trans "No active program yet. Your trainer will set one up for you." %}</p>
+    <div class="portal-avatar-initials">{{ student.name|slice:":1"|upper }}</div>
   {% endif %}
-</div>
-
-<!-- Quick actions -->
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.25rem;">
-  <a href="{% url 'students:portal_measurements' %}" class="card" style="text-decoration:none;color:inherit;display:block;">
-    <div style="font-size:1.5rem;margin-bottom:.4rem;">📏</div>
-    <div style="font-weight:600;">{% trans "Log Measurements" %}</div>
-    <div style="font-size:.82rem;color:var(--text-muted);">
-      {% if last_measurement %}{% blocktrans with d=last_measurement.date|date:"d M" %}Last: {{ d }}{% endblocktrans %}{% else %}{% trans "No logs yet" %}{% endif %}
+  <div class="portal-hero-text" style="flex:1;">
+    <h1>{% blocktrans with name=student.name|split:" "|first %}Hi, {{ name }}! 👑{% endblocktrans %}</h1>
+    <p>
+      {% if active_program %}{% trans "Keep crushing it — your trainer is with you!" %}
+      {% else %}{% trans "Your fitness journey starts here." %}{% endif %}
+    </p>
+    {% if active_program %}
+    <div class="prog-bar-wrap">
+      <div class="prog-bar-label">
+        <span>{{ active_program.name }}</span>
+        <span>{{ progress_pct }}%</span>
+      </div>
+      <div class="prog-bar-bg"><div class="prog-bar-fill" style="width:{{ progress_pct }}%;"></div></div>
     </div>
-  </a>
-  <a href="{% url 'students:portal_history' %}" class="card" style="text-decoration:none;color:inherit;display:block;">
-    <div style="font-size:1.5rem;margin-bottom:.4rem;">📈</div>
-    <div style="font-weight:600;">{% trans "My History" %}</div>
-    <div style="font-size:.82rem;color:var(--text-muted);">{% trans "Past workouts & progress" %}</div>
-  </a>
-</div>
-
-<!-- Recent workouts -->
-{% if recent_logs %}
-<div class="card">
-  <h2 style="font-size:1rem;font-weight:700;margin-bottom:.75rem;">{% trans "Recent Workouts" %}</h2>
-  {% for log in recent_logs %}
-  <div style="padding:.6rem .75rem;border:1px solid var(--border);border-radius:8px;margin-bottom:.4rem;display:flex;align-items:center;justify-content:space-between;">
-    <div>
-      <div style="font-weight:600;font-size:.9rem;">{{ log.program_day.name|default:_("Workout") }}</div>
-      <div style="font-size:.8rem;color:var(--text-muted);">{{ log.date|date:"d M Y" }}</div>
-    </div>
-    {% if log.completed %}<span style="color:var(--success);font-size:.85rem;font-weight:600;">✓ {% trans "Done" %}</span>{% endif %}
+    {% endif %}
   </div>
-  {% endfor %}
-  <a href="{% url 'students:portal_history' %}" style="font-size:.85rem;color:var(--primary);text-decoration:none;">{% trans "View all history →" %}</a>
+</div>
+
+<!-- ── Stats ── -->
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="stat-number">{{ workouts_this_week }}</div>
+    <div class="stat-label">{% trans "This week" %}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number">{% if days_remaining is not None %}{{ days_remaining }}{% else %}—{% endif %}</div>
+    <div class="stat-label">{% trans "Days left" %}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number">{% if last_measurement %}{{ last_measurement.date|date:"d M" }}{% else %}—{% endif %}</div>
+    <div class="stat-label">{% trans "Last check-in" %}</div>
+  </div>
+</div>
+
+<!-- ── Today's Workout ── -->
+{% if next_day %}
+<div class="today-card">
+  <span class="today-badge">💪 {% trans "Today's Workout" %}</span>
+  <div class="today-title">{{ next_day.name }}</div>
+  <div class="today-meta">
+    {% with exs=next_day.exercises.all %}
+    {{ exs|length }} {% trans "exercises" %}
+    {% if active_program %} · {{ active_program.name }}{% endif %}
+    {% endwith %}
+  </div>
+  <a href="{% url 'students:portal_log_workout' next_day.pk %}" class="today-start-btn">
+    🏋️ {% trans "Start Workout" %}
+  </a>
+</div>
+{% elif not active_program %}
+<div class="today-card" style="text-align:center;padding:2rem;">
+  <div style="font-size:2.5rem;margin-bottom:.75rem;">💪</div>
+  <div class="today-title">{% trans "No active program yet" %}</div>
+  <div class="today-meta">{% trans "Your trainer will set one up for you soon!" %}</div>
+  <button onclick="requestProgram()" class="today-start-btn" style="cursor:pointer;border:none;" id="req-prog-btn">
+    📋 {% trans "Request New Program" %}
+  </button>
+  <div id="req-prog-result" style="margin-top:.65rem;font-size:.85rem;color:var(--success);display:none;">✓ {% trans "Request sent to your trainer!" %}</div>
 </div>
 {% endif %}
 
+<!-- ── Quick Tiles ── -->
+<div class="tile-grid">
+  <a href="{% url 'students:portal_program' %}" class="tile">
+    <div class="tile-icon">📋</div>
+    <div class="tile-name">{% trans "My Program" %}</div>
+    <div class="tile-desc">{% if active_program %}{{ active_program.name }}{% else %}{% trans "View exercises" %}{% endif %}</div>
+  </a>
+  <a href="{% url 'students:portal_measurements' %}" class="tile">
+    <div class="tile-icon">📏</div>
+    <div class="tile-name">{% trans "Measurements" %}</div>
+    <div class="tile-desc">{% if last_measurement %}{{ last_measurement.weight_kg }} kg · {{ last_measurement.date|date:"d M" }}{% else %}{% trans "Log weight & body fat" %}{% endif %}</div>
+  </a>
+  <a href="{% url 'students:portal_history' %}" class="tile">
+    <div class="tile-icon">📈</div>
+    <div class="tile-name">{% trans "History" %}</div>
+    <div class="tile-desc">{% trans "Past workouts & progress" %}</div>
+  </a>
+  <a href="{% url 'students:portal_recommendations' %}" class="tile">
+    <div class="tile-icon">🤖</div>
+    <div class="tile-name">{% trans "AI Insights" %}</div>
+    <div class="tile-desc">{% if student.ai_recommendations %}{% trans "View your recommendations" %}{% else %}{% trans "Food, exercise & fasting tips" %}{% endif %}</div>
+  </a>
+</div>
+
+<!-- ── AI Insights card ── -->
+<div class="insights-card">
+  <h2>🤖 {% trans "AI Insights" %}</h2>
+  <p>{% trans "Personalised recommendations based on your blood test, photo analysis & goals." %}</p>
+
+  {% if student.blood_analysis %}
+    {% if student.blood_analysis.deficiencies %}
+    <div>
+      <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;opacity:.6;margin-bottom:.35rem;">🩸 {% trans "Blood Test Findings" %}</div>
+      {% for d in student.blood_analysis.deficiencies|slice:":3" %}
+        <span class="insight-pill">⚠ {{ d.nutrient }}{% if d.severity %} ({{ d.severity }}){% endif %}</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+  {% endif %}
+
+  {% if student.photo_analysis %}
+  <div style="margin-top:.75rem;">
+    <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;opacity:.6;margin-bottom:.35rem;">📸 {% trans "Body Assessment" %}</div>
+    <div style="font-size:.83rem;opacity:.85;line-height:1.55;">{{ student.photo_analysis|truncatewords:30 }}</div>
+  </div>
+  {% endif %}
+
+  <a href="{% url 'students:portal_recommendations' %}" class="insight-action" style="text-decoration:none;display:flex;">
+    ✨ {% trans "View Full Recommendations" %} →
+  </a>
+</div>
+
+<!-- ── Doctor Connect ── -->
+{% if doctors %}
+<div style="margin-bottom:1.25rem;">
+  <h2 style="font-size:1rem;font-weight:800;margin-bottom:.85rem;">🩺 {% trans "Specialist Consultation" %}</h2>
+  {% for doc in doctors %}
+  <div class="doctor-card">
+    {% if doc.photo_url %}
+      <img src="{{ doc.photo_url }}" alt="{{ doc.name }}" class="doctor-photo">
+    {% else %}
+      <div class="doctor-initials">👩‍⚕️</div>
+    {% endif %}
+    <div style="flex:1;min-width:0;">
+      <div class="doctor-name">{{ doc.name }}</div>
+      <div class="doctor-spec">{{ doc.specialty }}</div>
+      {% if doc.bio %}<div class="doctor-bio">{{ doc.bio|truncatewords:20 }}</div>{% endif %}
+      {% if doc.booking_link %}
+        <a href="{{ doc.booking_link }}" target="_blank" rel="noopener" class="book-btn">
+          📅 {% trans "Book Consultation" %}
+        </a>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- ── Recent Workouts ── -->
+{% if recent_logs %}
+<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.25rem;box-shadow:var(--shadow);">
+  <h2 style="font-size:1rem;font-weight:800;margin-bottom:.85rem;">🏆 {% trans "Recent Workouts" %}</h2>
+  {% for log in recent_logs %}
+  <div class="workout-row">
+    <div>
+      <div style="font-weight:600;font-size:.88rem;">{{ log.program_day.name|default:_("Workout") }}</div>
+      <div style="font-size:.78rem;color:var(--text-muted);">{{ log.date|date:"d M Y" }}</div>
+    </div>
+    {% if log.completed %}<span style="color:var(--success);font-size:.82rem;font-weight:700;">✓ {% trans "Done" %}</span>{% endif %}
+  </div>
+  {% endfor %}
+  <a href="{% url 'students:portal_history' %}" style="font-size:.83rem;color:var(--primary);text-decoration:none;display:block;margin-top:.65rem;">{% trans "View all →" %}</a>
+</div>
+{% endif %}
+
+</div>
+
+<script>
+function requestProgram() {
+  var btn = document.getElementById('req-prog-btn');
+  var result = document.getElementById('req-prog-result');
+  if (!btn) return;
+  btn.disabled = true;
+  btn.textContent = '⏳ {% trans "Sending…"|escapejs %}';
+  fetch('{% url "students:portal_request_program" %}', {
+    method: 'POST',
+    headers: {'X-CSRFToken': '{{ csrf_token }}'},
+  }).then(function() {
+    btn.style.display = 'none';
+    result.style.display = 'block';
+  }).catch(function() {
+    btn.disabled = false;
+    btn.textContent = '📋 {% trans "Request New Program"|escapejs %}';
+  });
+}
+</script>
 {% endblock %}
