@@ -2,7 +2,74 @@
 {% load i18n %}
 {% block title %}{{ title }} — GYMprogrm{% endblock %}
 
+{% block extra_css %}
+<style>
+  .edit-wrap { max-width: 680px; margin: 0 auto; padding-bottom: 3rem; }
+  .edit-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.4rem 1.5rem;
+    margin-bottom: 1.25rem;
+    box-shadow: var(--shadow);
+  }
+  .edit-section-title {
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--primary);
+    margin-bottom: 1.1rem;
+  }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: .85rem; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .75rem; }
+  @media (max-width: 560px) { .two-col, .three-col { grid-template-columns: 1fr; } }
+
+  /* Payment method pills */
+  .pay-pills { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .3rem; }
+  .pay-pills input[type=radio] { display: none; }
+  .pay-pills label {
+    padding: .45rem 1rem;
+    border: 2px solid var(--border);
+    border-radius: 999px;
+    font-size: .85rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: all .15s;
+    margin: 0;
+  }
+  .pay-pills input[type=radio]:checked + label {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: #fff;
+  }
+
+  /* Payment status pills */
+  .status-pills { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .3rem; }
+  .status-pills input[type=radio] { display: none; }
+  .status-pills label {
+    padding: .4rem .9rem;
+    border: 2px solid var(--border);
+    border-radius: 999px;
+    font-size: .82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .15s;
+    margin: 0;
+  }
+  .status-pills label.paid   { color: #15803d; border-color: #86efac; background: #f0fdf4; }
+  .status-pills label.pending{ color: #b45309; border-color: #fcd34d; background: #fffbeb; }
+  .status-pills label.overdue{ color: #b91c1c; border-color: #fca5a5; background: #fef2f2; }
+  .status-pills input[type=radio]:checked + label.paid   { background: #16a34a; color: #fff; border-color: #16a34a; }
+  .status-pills input[type=radio]:checked + label.pending{ background: #d97706; color: #fff; border-color: #d97706; }
+  .status-pills input[type=radio]:checked + label.overdue{ background: #dc2626; color: #fff; border-color: #dc2626; }
+</style>
+{% endblock %}
+
 {% block content %}
+<div class="edit-wrap">
+
 <div class="page-header">
   <div>
     <a href="{% url 'students:list' %}" style="color:var(--text-muted);font-size:.9rem;text-decoration:none;">← {% trans "Students" %}</a>
@@ -10,307 +77,287 @@
   </div>
 </div>
 
-<div class="card" style="max-width:640px;">
-  {% if error %}
-  <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:.75rem 1rem;color:#b91c1c;font-size:.9rem;margin-bottom:1rem;">⚠ {{ error }}</div>
-  {% endif %}
-  {% if form.errors %}
-  <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:.75rem 1rem;color:#b91c1c;font-size:.9rem;margin-bottom:1rem;">
-    {% trans "Please fix the following:" %}
-    <ul style="margin:.4rem 0 0 1rem;padding:0;">
-      {% for field, errs in form.errors.items %}<li><strong>{{ field }}</strong>: {% for e in errs %}{{ e }}{% endfor %}</li>{% endfor %}
-    </ul>
-  </div>
-  {% endif %}
-
-  <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-
-    <div class="form-group">
-      <label class="form-label">{% trans "Full Name" %} *</label>
-      <input type="text" name="name" class="form-control" value="{{ form.name.value|default:'' }}" required>
-      {% if form.name.errors %}<ul class="errorlist">{% for e in form.name.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
-    </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;">
-      <div class="form-group">
-        <label class="form-label">{% trans "Gender" %}</label>
-        <select name="gender" class="form-control">
-          <option value="">—</option>
-          {% for val, label in form.fields.gender.choices %}
-            {% if val %}<option value="{{ val }}" {% if form.gender.value == val %}selected{% endif %}>{{ label }}</option>{% endif %}
-          {% endfor %}
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">{% trans "Email" %}</label>
-        <input type="email" name="email" class="form-control" value="{{ form.email.value|default:'' }}">
-      </div>
-      <div class="form-group">
-        <label class="form-label">{% trans "Phone" %}</label>
-        <input type="text" name="phone" class="form-control" value="{{ form.phone.value|default:'' }}">
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">{% trans "Date of Birth" %}</label>
-      <input type="date" name="date_of_birth" class="form-control"
-        value="{% if student and student.date_of_birth %}{{ student.date_of_birth|date:'Y-m-d' }}{% endif %}">
-    </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-      <div class="form-group">
-        <label class="form-label">📏 {% trans "Height (cm)" %}</label>
-        <input type="number" name="height_cm" id="id_height_cm" class="form-control" step="0.1" min="50" max="250" value="{{ form.height_cm.value|default:'' }}" placeholder="e.g. 168">
-      </div>
-      <div class="form-group">
-        <label class="form-label">⚖️ {% trans "Weight (kg)" %}</label>
-        <input type="number" name="weight_kg" id="id_weight_kg" class="form-control" step="0.1" min="20" max="300" value="{{ form.weight_kg.value|default:'' }}" placeholder="e.g. 62.5">
-      </div>
-    </div>
-
-    <div id="desirable-weight-box" style="display:none;margin-bottom:1.25rem;padding:.75rem 1rem;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;font-size:.88rem;">
-      <span style="color:#15803d;font-weight:600;">🎯 {% trans "Desirable weight:" %} </span>
-      <span id="desirable-weight-value" style="color:#15803d;font-weight:700;"></span>
-      <span id="desirable-weight-formula" style="color:var(--text-muted);margin-left:.5rem;"></span>
-    </div>
-
-    <script>
-    (function () {
-      // Teen BMI 50th-percentile targets (WHO)
-      var girlBMI = {13:18.1, 14:18.7, 15:19.2, 16:19.7, 17:20.2};
-      var boyBMI  = {13:17.8, 14:18.6, 15:19.5, 16:20.5, 17:21.0};
-
-      function calcAge(dob) {
-        if (!dob) return null;
-        var today = new Date(), b = new Date(dob);
-        var age = today.getFullYear() - b.getFullYear();
-        if (today.getMonth() < b.getMonth() ||
-            (today.getMonth() === b.getMonth() && today.getDate() < b.getDate())) age--;
-        return age;
-      }
-
-      function calcDesirable(height, age, gender) {
-        if (!height || height < 50) return null;
-        var h = parseFloat(height);
-        var label = '';
-        var kg;
-
-        if (age === null || age >= 18) {
-          if (gender === 'F') {
-            kg = (h - 100) * 0.85;
-            label = '{% trans "Broca formula (F, 18+)" %}';
-          } else if (gender === 'M') {
-            kg = (h - 100) * 0.90;
-            label = '{% trans "Broca formula (M, 18+)" %}';
-          } else {
-            kg = (h - 100) * 0.875;
-            label = '{% trans "Broca formula (18+)" %}';
-          }
-        } else if (age >= 13 && age <= 17) {
-          var bmiTable = (gender === 'M') ? boyBMI : girlBMI;
-          var bmi = bmiTable[age] || (gender === 'M' ? 19.5 : 19.2);
-          kg = bmi * Math.pow(h / 100, 2);
-          label = '{% blocktrans with age=age %}BMI 50th percentile (WHO, age {{ age }}){% endblocktrans %}';
-        } else {
-          return null;
-        }
-
-        return {kg: Math.round(kg * 10) / 10, label: label};
-      }
-
-      function update() {
-        var height  = document.getElementById('id_height_cm').value;
-        var dob     = document.querySelector('[name="date_of_birth"]').value;
-        var gender  = document.querySelector('[name="gender"]').value;
-        var age     = calcAge(dob);
-        var result  = calcDesirable(height, age, gender);
-        var box     = document.getElementById('desirable-weight-box');
-        var valEl   = document.getElementById('desirable-weight-value');
-        var fmlEl   = document.getElementById('desirable-weight-formula');
-
-        if (result) {
-          valEl.textContent = result.kg + ' kg';
-          fmlEl.textContent = '(' + result.label + ')';
-          box.style.display = 'block';
-        } else {
-          box.style.display = 'none';
-        }
-      }
-
-      ['id_height_cm', 'id_weight_kg'].forEach(function(id) {
-        document.getElementById(id).addEventListener('input', update);
-      });
-      document.querySelector('[name="date_of_birth"]').addEventListener('change', update);
-      document.querySelector('[name="gender"]').addEventListener('change', update);
-      update();
-    })();
-    </script>
-
-    <div class="form-group">
-      <label class="form-label">📷 {% trans "Photo" %}</label>
-      {% if student and student.photo %}
-        {% if photo_url %}
-          <div style="margin-bottom:.75rem;">
-            <img src="{{ photo_url }}" alt="{{ student.name }}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--border);">
-          </div>
-        {% else %}
-          <p style="font-size:.85rem;color:#dc2626;margin-bottom:.5rem;">⚠ {% trans "Photo was saved locally and is no longer accessible. Please re-upload." %}</p>
-        {% endif %}
-      {% endif %}
-      <input type="file" name="photo" class="form-control" accept="image/*">
-      <div class="form-hint">{% trans "JPG, PNG or WebP. Shown on the student profile." %}</div>
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">🩸 {% trans "Blood Test Result (PDF or image)" %}</label>
-      {% if student and student.blood_test_file %}
-        <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:.5rem;">
-          {% trans "Current file:" %}
-          {% if blood_test_url %}
-            <a href="{{ blood_test_url }}" target="_blank">{{ student.blood_test_file.name }}</a>
-          {% else %}
-            {{ student.blood_test_file.name }} ({% trans "re-upload to refresh link" %})
-          {% endif %}
-        </p>
-      {% endif %}
-      <input type="file" name="blood_test_file" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
-      <div class="form-hint">{% trans "Upload the lab results PDF or a photo." %}</div>
-    </div>
-
-    <div class="form-group">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem;">
-        <label class="form-label" style="margin:0;">⚠️ {% trans "Health Issues / Contraindications" %}</label>
-        <button type="button" class="ai-correct-btn" data-field="health_issues" data-target="id_health_issues"
-          style="font-size:.78rem;padding:.25rem .65rem;border-radius:6px;border:1px solid #6366f1;background:#eef2ff;color:#4f46e5;cursor:pointer;display:flex;align-items:center;gap:.35rem;">
-          ✦ {% trans "AI Correct" %}
-        </button>
-      </div>
-      <textarea name="health_issues" id="id_health_issues" class="form-control" rows="4" placeholder="{% trans "E.g. lower back pain, knee injury, hypertension..." %}">{{ form.health_issues.value|default:'' }}</textarea>
-      <div class="ai-feedback" id="fb_health_issues" style="display:none;font-size:.8rem;margin-top:.35rem;color:#4f46e5;"></div>
-    </div>
-
-    <div class="form-group">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem;">
-        <label class="form-label" style="margin:0;">🎯 {% trans "Goals & Wishes" %}</label>
-        <button type="button" class="ai-correct-btn" data-field="goals" data-target="id_goals"
-          style="font-size:.78rem;padding:.25rem .65rem;border-radius:6px;border:1px solid #6366f1;background:#eef2ff;color:#4f46e5;cursor:pointer;display:flex;align-items:center;gap:.35rem;">
-          ✦ {% trans "AI Correct" %}
-        </button>
-      </div>
-      <textarea name="goals" id="id_goals" class="form-control" rows="4" placeholder="{% trans "E.g. make glutes bigger, reduce body fat, improve stamina..." %}">{{ form.goals.value|default:'' }}</textarea>
-      <div class="ai-feedback" id="fb_goals" style="display:none;font-size:.8rem;margin-top:.35rem;color:#4f46e5;"></div>
-    </div>
-
-    <script>
-    {% trans "Correcting…" as msg_correcting %}
-    {% trans "AI Correct" as msg_ai_correct %}
-    {% trans "✓ Rewritten in professional language" as msg_rewritten %}
-    {% trans "✗ Error — try again" as msg_error %}
-    document.querySelectorAll('.ai-correct-btn').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        var field  = btn.dataset.field;
-        var target = document.getElementById(btn.dataset.target);
-        var fb     = document.getElementById('fb_' + field);
-        var text   = target.value.trim();
-        if (!text) return;
-
-        btn.disabled = true;
-        btn.textContent = '⏳ {{ msg_correcting|escapejs }}';
-        fb.style.display = 'none';
-
-        fetch('{% url "programs:ai_correct_text" %}', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': '{{ csrf_token }}',
-          },
-          body: JSON.stringify({text: text, field: field}),
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-          if (data.corrected) {
-            target.value = data.corrected;
-            target.style.background = '#f5f3ff';
-            setTimeout(function() { target.style.background = ''; }, 1500);
-            fb.textContent = '{{ msg_rewritten|escapejs }}';
-            fb.style.display = 'block';
-          }
-        })
-        .catch(function() {
-          fb.textContent = '{{ msg_error|escapejs }}';
-          fb.style.color = '#dc2626';
-          fb.style.display = 'block';
-        })
-        .finally(function() {
-          btn.disabled = false;
-          btn.innerHTML = '✦ {{ msg_ai_correct|escapejs }}';
-        });
-      });
-    });
-    </script>
-
-    <div class="form-group">
-      <label class="form-label">📝 {% trans "Additional Notes" %}</label>
-      <textarea name="notes" class="form-control" rows="3" placeholder="{% trans "Any other relevant information..." %}">{{ form.notes.value|default:'' }}</textarea>
-    </div>
-
-    <hr style="border:none;border-top:1px solid var(--border);margin:1.5rem 0;">
-    <h3 style="font-size:.95rem;font-weight:700;margin-bottom:1rem;">💳 {% trans "Billing" %}</h3>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-      <div class="form-group">
-        <label class="form-label">{% trans "Plan" %}</label>
-        <select name="payment_plan" class="form-control">
-          {% for val, label in form.fields.payment_plan.choices %}
-            <option value="{{ val }}" {% if form.payment_plan.value == val %}selected{% endif %}>{{ label }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">{% trans "Started" %}</label>
-        <input type="date" name="payment_start_date" class="form-control"
-          value="{% if student and student.payment_start_date %}{{ student.payment_start_date|date:'Y-m-d' }}{% endif %}">
-      </div>
-    </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-      <div class="form-group">
-        <label class="form-label">{% trans "Payment Method" %}</label>
-        <select name="payment_method" class="form-control">
-          <option value="">— {% trans "Not set" %} —</option>
-          {% for val, label in form.fields.payment_method.choices %}
-            {% if val %}<option value="{{ val }}" {% if form.payment_method.value == val %}selected{% endif %}>{{ label }}</option>{% endif %}
-          {% endfor %}
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">{% trans "Payment Status" %}</label>
-        <select name="payment_status" class="form-control">
-          <option value="">— {% trans "Not set" %} —</option>
-          {% for val, label in form.fields.payment_status.choices %}
-            {% if val %}<option value="{{ val }}" {% if form.payment_status.value == val %}selected{% endif %}>{{ label }}</option>{% endif %}
-          {% endfor %}
-        </select>
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">{% trans "Payment Handle / Link" %}</label>
-      <input type="text" name="payment_handle" class="form-control"
-        value="{{ form.payment_handle.value|default:'' }}"
-        placeholder="{% trans "e.g. @username, paypal.me/name, or email" %}">
-      <div class="form-hint">{% trans "Venmo @handle, PayPal.me link, or bank details — used for the quick-pay button." %}</div>
-    </div>
-
-    <div style="display:flex;gap:.75rem;margin-top:1.5rem;">
-      <button type="submit" class="btn btn-primary">{% trans "Save Student" %}</button>
-      {% if student %}
-        <a href="{% url 'students:detail' student.pk %}" class="btn btn-outline">{% trans "Cancel" %}</a>
-      {% else %}
-        <a href="{% url 'students:list' %}" class="btn btn-outline">{% trans "Cancel" %}</a>
-      {% endif %}
-    </div>
-  </form>
+{% if error %}
+<div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:.75rem 1rem;color:#b91c1c;font-size:.9rem;margin-bottom:1rem;">⚠ {{ error }}</div>
+{% endif %}
+{% if form.errors %}
+<div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:.75rem 1rem;color:#b91c1c;font-size:.9rem;margin-bottom:1rem;">
+  {% trans "Please fix the following:" %}
+  <ul style="margin:.4rem 0 0 1rem;padding:0;">
+    {% for field, errs in form.errors.items %}<li><strong>{{ field }}</strong>: {% for e in errs %}{{ e }}{% endfor %}</li>{% endfor %}
+  </ul>
 </div>
+{% endif %}
+
+<form method="post" enctype="multipart/form-data">
+{% csrf_token %}
+
+<!-- ── Personal ── -->
+<div class="edit-section">
+  <div class="edit-section-title">👤 {% trans "Personal Information" %}</div>
+  <div class="form-group">
+    <label class="form-label">{% trans "Full Name" %} *</label>
+    <input type="text" name="name" class="form-control" value="{{ form.name.value|default:'' }}" required>
+  </div>
+  <div class="three-col">
+    <div class="form-group" style="margin-bottom:0;">
+      <label class="form-label">{% trans "Gender" %}</label>
+      <select name="gender" class="form-control">
+        <option value="">—</option>
+        {% for val, label in form.fields.gender.choices %}
+          {% if val %}<option value="{{ val }}" {% if form.gender.value == val %}selected{% endif %}>{{ label }}</option>{% endif %}
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group" style="margin-bottom:0;">
+      <label class="form-label">{% trans "Email" %}</label>
+      <input type="email" name="email" class="form-control" value="{{ form.email.value|default:'' }}">
+    </div>
+    <div class="form-group" style="margin-bottom:0;">
+      <label class="form-label">{% trans "Phone" %}</label>
+      <input type="text" name="phone" class="form-control" value="{{ form.phone.value|default:'' }}">
+    </div>
+  </div>
+  <div class="form-group" style="margin-top:.85rem;margin-bottom:0;">
+    <label class="form-label">{% trans "Date of Birth" %}</label>
+    <input type="date" name="date_of_birth" class="form-control"
+      value="{% if student and student.date_of_birth %}{{ student.date_of_birth|date:'Y-m-d' }}{% endif %}">
+  </div>
+</div>
+
+<!-- ── Body ── -->
+<div class="edit-section">
+  <div class="edit-section-title">📏 {% trans "Body" %}</div>
+  <div class="two-col">
+    <div class="form-group" style="margin-bottom:0;">
+      <label class="form-label">{% trans "Height (cm)" %}</label>
+      <input type="number" name="height_cm" id="id_height_cm" class="form-control" step="0.1" min="50" max="250" value="{{ form.height_cm.value|default:'' }}" placeholder="168">
+    </div>
+    <div class="form-group" style="margin-bottom:0;">
+      <label class="form-label">{% trans "Weight (kg)" %}</label>
+      <input type="number" name="weight_kg" id="id_weight_kg" class="form-control" step="0.1" min="20" max="300" value="{{ form.weight_kg.value|default:'' }}" placeholder="62.5">
+    </div>
+  </div>
+  <div id="desirable-weight-box" style="display:none;margin-top:.85rem;padding:.6rem 1rem;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;font-size:.88rem;">
+    <span style="color:#15803d;font-weight:600;">🎯 {% trans "Desirable weight:" %} </span>
+    <span id="desirable-weight-value" style="color:#15803d;font-weight:700;"></span>
+    <span id="desirable-weight-formula" style="color:var(--text-muted);margin-left:.5rem;"></span>
+  </div>
+</div>
+
+<!-- ── Files ── -->
+<div class="edit-section">
+  <div class="edit-section-title">📎 {% trans "Files" %}</div>
+  <div class="form-group">
+    <label class="form-label">🩸 {% trans "Blood Test (PDF or image)" %}</label>
+    {% if student and student.blood_test_file %}
+    <div style="font-size:.83rem;color:var(--text-muted);margin-bottom:.4rem;">
+      {% trans "Current:" %}
+      {% if blood_test_url %}<a href="{{ blood_test_url }}" target="_blank">{{ student.blood_test_file.name }}</a>
+      {% else %}{{ student.blood_test_file.name }} — <span style="color:#dc2626;">{% trans "re-upload to refresh" %}</span>{% endif %}
+    </div>
+    {% endif %}
+    <input type="file" name="blood_test_file" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+  </div>
+</div>
+
+<!-- ── Health & Goals ── -->
+<div class="edit-section">
+  <div class="edit-section-title">🩺 {% trans "Health & Goals" %}</div>
+  <div class="form-group">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem;">
+      <label class="form-label" style="margin:0;">⚠️ {% trans "Health Issues / Contraindications" %}</label>
+      <button type="button" class="ai-correct-btn" data-field="health_issues" data-target="id_health_issues"
+        style="font-size:.78rem;padding:.25rem .65rem;border-radius:6px;border:1px solid #6366f1;background:#eef2ff;color:#4f46e5;cursor:pointer;">
+        ✦ {% trans "AI Correct" %}
+      </button>
+    </div>
+    <textarea name="health_issues" id="id_health_issues" class="form-control" rows="3"
+      placeholder="{% trans "E.g. lower back pain, knee injury..." %}">{{ form.health_issues.value|default:'' }}</textarea>
+    <div class="ai-feedback" id="fb_health_issues" style="display:none;font-size:.8rem;margin-top:.35rem;color:#4f46e5;"></div>
+  </div>
+  <div class="form-group" style="margin-bottom:0;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem;">
+      <label class="form-label" style="margin:0;">🎯 {% trans "Goals & Wishes" %}</label>
+      <button type="button" class="ai-correct-btn" data-field="goals" data-target="id_goals"
+        style="font-size:.78rem;padding:.25rem .65rem;border-radius:6px;border:1px solid #6366f1;background:#eef2ff;color:#4f46e5;cursor:pointer;">
+        ✦ {% trans "AI Correct" %}
+      </button>
+    </div>
+    <textarea name="goals" id="id_goals" class="form-control" rows="3"
+      placeholder="{% trans "E.g. bigger glutes, lose fat, improve posture..." %}">{{ form.goals.value|default:'' }}</textarea>
+    <div class="ai-feedback" id="fb_goals" style="display:none;font-size:.8rem;margin-top:.35rem;color:#4f46e5;"></div>
+  </div>
+</div>
+
+<!-- ── Notes ── -->
+<div class="edit-section">
+  <div class="edit-section-title">📝 {% trans "Trainer Notes" %}</div>
+  <textarea name="notes" class="form-control" rows="3"
+    placeholder="{% trans "Any other relevant information..." %}">{{ form.notes.value|default:'' }}</textarea>
+</div>
+
+<!-- ── Billing ── -->
+<div class="edit-section" style="border-color:#e0e7ff;">
+  <div class="edit-section-title" style="color:#6366f1;">💳 {% trans "Billing" %}</div>
+
+  <div class="two-col" style="margin-bottom:1rem;">
+    <div class="form-group" style="margin-bottom:0;">
+      <label class="form-label">{% trans "Plan" %}</label>
+      <select name="payment_plan" class="form-control">
+        {% for val, label in form.fields.payment_plan.choices %}
+          <option value="{{ val }}" {% if form.payment_plan.value == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group" style="margin-bottom:0;">
+      <label class="form-label">{% trans "Start Date" %}</label>
+      <input type="date" name="payment_start_date" class="form-control"
+        value="{% if student and student.payment_start_date %}{{ student.payment_start_date|date:'Y-m-d' }}{% endif %}">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">{% trans "Payment Method" %}</label>
+    <div class="pay-pills">
+      {% for val, label in form.fields.payment_method.choices %}
+        {% if val %}
+        <input type="radio" name="payment_method" id="pm_{{ val }}" value="{{ val }}"
+          {% if form.payment_method.value == val %}checked{% endif %}>
+        <label for="pm_{{ val }}">
+          {% if val == 'venmo' %}💜 Venmo
+          {% elif val == 'paypal' %}💛 PayPal
+          {% elif val == 'cash' %}💵 Cash
+          {% elif val == 'bank' %}🏦 Bank
+          {% else %}{{ label }}{% endif %}
+        </label>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">{% trans "Handle / Link" %}</label>
+    <input type="text" name="payment_handle" class="form-control"
+      value="{{ form.payment_handle.value|default:'' }}"
+      placeholder="{% trans "@venmo, paypal.me/name, or email" %}">
+  </div>
+
+  <div class="form-group" style="margin-bottom:0;">
+    <label class="form-label">{% trans "Payment Status" %}</label>
+    <div class="status-pills">
+      <input type="radio" name="payment_status" id="ps_none" value=""
+        {% if not form.payment_status.value %}checked{% endif %}>
+      <label for="ps_none" style="color:var(--text-muted);">—</label>
+
+      <input type="radio" name="payment_status" id="ps_paid" value="paid"
+        {% if form.payment_status.value == 'paid' %}checked{% endif %}>
+      <label for="ps_paid" class="paid">✓ {% trans "Paid" %}</label>
+
+      <input type="radio" name="payment_status" id="ps_pending" value="pending"
+        {% if form.payment_status.value == 'pending' %}checked{% endif %}>
+      <label for="ps_pending" class="pending">⏳ {% trans "Pending" %}</label>
+
+      <input type="radio" name="payment_status" id="ps_overdue" value="overdue"
+        {% if form.payment_status.value == 'overdue' %}checked{% endif %}>
+      <label for="ps_overdue" class="overdue">⚠ {% trans "Overdue" %}</label>
+    </div>
+  </div>
+</div>
+
+<!-- ── Actions ── -->
+<div style="display:flex;gap:.75rem;">
+  <button type="submit" class="btn btn-primary">{% trans "Save Student" %}</button>
+  {% if student %}
+    <a href="{% url 'students:detail' student.pk %}" class="btn btn-outline">{% trans "Cancel" %}</a>
+  {% else %}
+    <a href="{% url 'students:list' %}" class="btn btn-outline">{% trans "Cancel" %}</a>
+  {% endif %}
+</div>
+
+</form>
+</div>
+
+<script>
+(function () {
+  var girlBMI = {13:18.1, 14:18.7, 15:19.2, 16:19.7, 17:20.2};
+  var boyBMI  = {13:17.8, 14:18.6, 15:19.5, 16:20.5, 17:21.0};
+  function calcAge(dob) {
+    if (!dob) return null;
+    var today = new Date(), b = new Date(dob);
+    var age = today.getFullYear() - b.getFullYear();
+    if (today.getMonth() < b.getMonth() || (today.getMonth() === b.getMonth() && today.getDate() < b.getDate())) age--;
+    return age;
+  }
+  function calcDesirable(height, age, gender) {
+    if (!height || height < 50) return null;
+    var h = parseFloat(height), kg, label;
+    if (age === null || age >= 18) {
+      if (gender === 'F') { kg = (h-100)*0.85; label = '{% trans "Broca formula (F, 18+)" %}'; }
+      else if (gender === 'M') { kg = (h-100)*0.90; label = '{% trans "Broca formula (M, 18+)" %}'; }
+      else { kg = (h-100)*0.875; label = '{% trans "Broca formula (18+)" %}'; }
+    } else if (age >= 13 && age <= 17) {
+      var bmiTable = (gender === 'M') ? boyBMI : girlBMI;
+      var bmi = bmiTable[age] || 19.2;
+      kg = bmi * Math.pow(h/100, 2);
+      label = 'BMI 50th percentile (WHO, age ' + age + ')';
+    } else { return null; }
+    return {kg: Math.round(kg*10)/10, label: label};
+  }
+  function update() {
+    var height = document.getElementById('id_height_cm').value;
+    var dob    = document.querySelector('[name="date_of_birth"]').value;
+    var gender = document.querySelector('[name="gender"]').value;
+    var result = calcDesirable(height, calcAge(dob), gender);
+    var box    = document.getElementById('desirable-weight-box');
+    if (result) {
+      document.getElementById('desirable-weight-value').textContent = result.kg + ' kg';
+      document.getElementById('desirable-weight-formula').textContent = '(' + result.label + ')';
+      box.style.display = 'block';
+    } else { box.style.display = 'none'; }
+  }
+  ['id_height_cm','id_weight_kg'].forEach(function(id){ document.getElementById(id).addEventListener('input', update); });
+  document.querySelector('[name="date_of_birth"]').addEventListener('change', update);
+  document.querySelector('[name="gender"]').addEventListener('change', update);
+  update();
+})();
+
+{% trans "Correcting…" as msg_correcting %}
+{% trans "AI Correct" as msg_ai_correct %}
+document.querySelectorAll('.ai-correct-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    var field  = btn.dataset.field;
+    var target = document.getElementById(btn.dataset.target);
+    var fb     = document.getElementById('fb_' + field);
+    if (!target.value.trim()) return;
+    btn.disabled = true;
+    btn.textContent = '⏳ {{ msg_correcting|escapejs }}';
+    fb.style.display = 'none';
+    fetch('{% url "programs:ai_correct_text" %}', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}'},
+      body: JSON.stringify({text: target.value.trim(), field: field}),
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if (data.corrected) {
+        target.value = data.corrected;
+        target.style.background = '#f5f3ff';
+        setTimeout(function(){ target.style.background = ''; }, 1500);
+        fb.textContent = '✓ {% trans "Rewritten" %}';
+        fb.style.display = 'block';
+      }
+    })
+    .catch(function(){
+      fb.textContent = '✗ {% trans "Error — try again" %}';
+      fb.style.color = '#dc2626';
+      fb.style.display = 'block';
+    })
+    .finally(function(){
+      btn.disabled = false;
+      btn.innerHTML = '✦ {{ msg_ai_correct|escapejs }}';
+    });
+  });
+});
+</script>
 {% endblock %}
