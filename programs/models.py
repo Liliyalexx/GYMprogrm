@@ -37,6 +37,7 @@ class ExerciseLibrary(models.Model):
 class WorkoutProgram(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='programs')
     name = models.CharField(max_length=200)
+    name_en = models.CharField(max_length=200, blank=True)
     description = models.TextField(blank=True)
     training_days = models.PositiveSmallIntegerField(default=3)
     nutrition_plan = models.JSONField(null=True, blank=True)
@@ -56,6 +57,7 @@ class ProgramDay(models.Model):
     program = models.ForeignKey(WorkoutProgram, on_delete=models.CASCADE, related_name='days')
     day_number = models.PositiveSmallIntegerField()
     name = models.CharField(max_length=200, help_text='E.g. "Day 1 — Glutes & Legs"')
+    name_en = models.CharField(max_length=200, blank=True)
 
     class Meta:
         ordering = ['day_number']

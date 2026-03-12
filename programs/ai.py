@@ -557,6 +557,7 @@ def suggest_program(student, training_days=3, training_location='gym', language=
 Отвечай ТОЛЬКО валидным JSON (без markdown, без пояснений):
 {{
   "program_name": "Название программы на русском",
+  "program_name_en": "Program name in English",
   "key_findings": [
     "Одно предложение — главная цель клиента и фокус программы",
     "Одно предложение — почему выбрано такое распределение дней под цели клиента",
@@ -569,6 +570,7 @@ def suggest_program(student, training_days=3, training_location='gym', language=
     {{
       "day_number": 1,
       "day_name": "День 1 — Ягодицы и ноги",
+      "day_name_en": "Day 1 — Glutes & Legs",
       "exercises": [
         {{
           "name": "Barbell Hip Thrust",
@@ -587,6 +589,8 @@ def suggest_program(student, training_days=3, training_location='gym', language=
 - 4–6 упражнений в день
 - "name" — английское название из списка доступных упражнений
 - "name_ru" — русское название
+- "program_name_en" — английское название программы (ALWAYS in English)
+- "day_name_en" — английское название дня (ALWAYS in English, e.g. "Day 1 — Glutes & Legs")
 - key_findings — каждый элемент это ОДНО предложение
 - Если анализ крови загружен — включи реальные числовые значения в findings
 {_lang_suffix(language)}"""

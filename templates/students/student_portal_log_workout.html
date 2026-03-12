@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n student_extras %}
+{% get_current_language as CURRENT_LANG %}
 {% block title %}{{ program_day.name }} — GYMprogrm{% endblock %}
 
 {% block extra_css %}
@@ -131,7 +132,7 @@
 
   <div class="workout-header">
     <a href="{% url 'students:portal_program' %}" style="font-size:.8rem;opacity:.75;text-decoration:none;color:#fff;display:inline-block;margin-bottom:.5rem;">← {% trans "Back to program" %}</a>
-    <h1>{{ program_day.name }}</h1>
+    <h1>{% if CURRENT_LANG == 'ru' or not program_day.name_en %}{{ program_day.name }}{% else %}{{ program_day.name_en }}{% endif %}</h1>
     <p>{{ total }} {% trans "exercises" %} · {% trans "Log your weights and reps below" %}</p>
   </div>
 
@@ -152,7 +153,7 @@
           <div class="ex-log-placeholder">💪</div>
         {% endif %}
         <div style="flex:1;min-width:0;">
-          <div class="ex-log-name">{% if ex.name_ru %}{{ ex.name_ru }}{% else %}{{ ex.exercise.name }}{% endif %}</div>
+          <div class="ex-log-name">{% if ex.name_ru and CURRENT_LANG == 'ru' %}{{ ex.name_ru }}{% else %}{{ ex.exercise.name }}{% endif %}</div>
           <div class="ex-log-target">🎯 {% trans "Target" %}: {{ ex.sets }} {% trans "sets" %} × {{ ex.reps }} {% trans "reps" %}{% if ex.weight_kg %} · {{ ex.weight_kg }} kg{% endif %}</div>
           {% if lw %}
           <span class="ex-log-prev">

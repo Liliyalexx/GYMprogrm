@@ -51,6 +51,7 @@ def program_generate(request, student_pk):
             program = WorkoutProgram.objects.create(
                 student=student,
                 name=ai_result.get('program_name', 'Программа тренировок'),
+                name_en=ai_result.get('program_name_en', ''),
                 description='\n'.join(key_findings) if key_findings else ai_result.get('description', ''),
                 training_days=training_days,
                 nutrition_plan=ai_result.get('nutrition'),
@@ -83,6 +84,7 @@ def program_generate(request, student_pk):
                     program=program,
                     day_number=day_data.get('day_number', 1),
                     name=day_data.get('day_name', 'День'),
+                    name_en=day_data.get('day_name_en', ''),
                 )
                 for order, ex_data in enumerate(day_data.get('exercises', [])):
                     name_key = ex_data.get('name', '').lower()

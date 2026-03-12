@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n student_extras %}
+{% get_current_language as CURRENT_LANG %}
 {% block title %}{% trans "My Program" %} — GYMprogrm{% endblock %}
 
 {% block extra_css %}
@@ -96,7 +97,7 @@
 
   <div class="program-hero">
     <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;opacity:.7;margin-bottom:.3rem;">{% trans "Active Program" %}</div>
-    <h1>{{ program.name }}</h1>
+    <h1>{% if CURRENT_LANG == 'ru' or not program.name_en %}{{ program.name }}{% else %}{{ program.name_en }}{% endif %}</h1>
     {% if program.description %}<p style="margin-top:.3rem;">{{ program.description }}</p>{% endif %}
     {% if program.start_date %}
     <p style="margin-top:.5rem;font-size:.8rem;opacity:.7;">
@@ -109,9 +110,9 @@
   <div class="day-card">
     <div class="day-header" onclick="toggleDay({{ day.pk }})">
       <div style="min-width:0;">
-        <div class="day-title">{{ day.name }}</div>
+        <div class="day-title">{% if CURRENT_LANG == 'ru' or not day.name_en %}{{ day.name }}{% else %}{{ day.name_en }}{% endif %}</div>
         <div class="day-meta">
-          {% for ex in day.exercises.all %}{% if ex.confirmed %}{% if not forloop.first %} · {% endif %}{% if ex.name_ru %}{{ ex.name_ru }}{% else %}{{ ex.exercise.name }}{% endif %}{% endif %}{% endfor %}
+          {% for ex in day.exercises.all %}{% if ex.confirmed %}{% if not forloop.first %} · {% endif %}{% if ex.name_ru and CURRENT_LANG == 'ru' %}{{ ex.name_ru }}{% else %}{{ ex.exercise.name }}{% endif %}{% endif %}{% endfor %}
         </div>
       </div>
       <span class="day-chevron" id="chevron-{{ day.pk }}">▼</span>
@@ -129,7 +130,7 @@
           <div class="ex-photo-placeholder">💪</div>
         {% endif %}
         <div style="flex:1;min-width:0;">
-          <div class="ex-name">{% if ex.name_ru %}{{ ex.name_ru }}{% else %}{{ ex.exercise.name }}{% endif %}</div>
+          <div class="ex-name">{% if ex.name_ru and CURRENT_LANG == 'ru' %}{{ ex.name_ru }}{% else %}{{ ex.exercise.name }}{% endif %}</div>
           <div class="ex-target">
             🎯 {{ ex.sets }} {% trans "sets" %} × {{ ex.reps }} {% trans "reps" %}
             {% if ex.weight_kg %} · {{ ex.weight_kg }} kg {% trans "target" %}{% endif %}
