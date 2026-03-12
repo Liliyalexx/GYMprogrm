@@ -249,8 +249,8 @@
     <div class="stat-label">{% trans "Days left" %}</div>
   </div>
   <div class="stat-card">
-    <div class="stat-number">{% if last_measurement %}{{ last_measurement.date|date:"d M" }}{% else %}—{% endif %}</div>
-    <div class="stat-label">{% trans "Last check-in" %}</div>
+    <div class="stat-number">{% if recent_logs %}{{ recent_logs.0.date|date:"d M" }}{% else %}—{% endif %}</div>
+    <div class="stat-label">{% trans "Last workout" %}</div>
   </div>
 </div>
 
@@ -287,11 +287,6 @@
     <div class="tile-icon">📋</div>
     <div class="tile-name">{% trans "My Program" %}</div>
     <div class="tile-desc">{% if active_program %}{% if CURRENT_LANG == 'ru' or not active_program.name_en %}{{ active_program.name }}{% else %}{{ active_program.name_en }}{% endif %}{% else %}{% trans "View exercises" %}{% endif %}</div>
-  </a>
-  <a href="{% url 'students:portal_measurements' %}" class="tile">
-    <div class="tile-icon">📏</div>
-    <div class="tile-name">{% trans "Measurements" %}</div>
-    <div class="tile-desc">{% if last_measurement %}{{ last_measurement.weight_kg }} kg · {{ last_measurement.date|date:"d M" }}{% else %}{% trans "Log weight & body fat" %}{% endif %}</div>
   </a>
   <a href="{% url 'students:portal_history' %}" class="tile">
     <div class="tile-icon">📈</div>
