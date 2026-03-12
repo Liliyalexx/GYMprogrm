@@ -923,9 +923,18 @@ def portal_check_recommendations(request):
 @student_required
 def portal_recommendations(request):
     student = request.user.student
+    raw = student.ai_recommendations
+    recs = None
+    recs_processing = False
+    if raw:
+        if raw.get('_processing'):
+            recs_processing = True
+        elif not raw.get('_error'):
+            recs = raw
     return render(request, 'students/student_portal_recommendations.html', {
         'student': student,
-        'recs': student.ai_recommendations,
+        'recs': recs,
+        'recs_processing': recs_processing,
     })
 
 

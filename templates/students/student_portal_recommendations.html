@@ -63,12 +63,19 @@
   </div>
 
   <button id="gen-btn" class="gen-btn" onclick="generateRecs()">
-    ✨ {% if recs and not recs._processing and not recs._error %}{% trans "Refresh Recommendations" %}{% else %}{% trans "Generate Recommendations" %}{% endif %}
+    ✨ {% if recs %}{% trans "Refresh Recommendations" %}{% else %}{% trans "Generate Recommendations" %}{% endif %}
   </button>
   <div id="gen-status" style="text-align:center;color:var(--text-muted);font-size:.88rem;margin-bottom:1rem;display:none;"></div>
 
+  {% if recs_processing %}
+  <div style="text-align:center;padding:1.5rem;color:var(--text-muted);">
+    <p style="font-size:1.5rem;margin-bottom:.5rem;">⏳</p>
+    <p>{% trans "Analysis in progress — refresh in a moment." %}</p>
+  </div>
+  {% endif %}
+
   <div id="recs-area">
-  {% if recs and not recs._processing and not recs._error %}
+  {% if recs %}
 
     {% if recs.nutrition %}
     <div class="rec-section">

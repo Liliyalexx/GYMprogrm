@@ -220,7 +220,7 @@
     <div class="portal-avatar-initials">{{ student.name|slice:":1"|upper }}</div>
   {% endif %}
   <div class="portal-hero-text" style="flex:1;">
-    <h1>{% blocktrans with name=student.name|split:" "|first %}Hi, {{ name }}! 👑{% endblocktrans %}</h1>
+    <h1>{% blocktrans with name=student.name %}Hi, {{ name }}! 👑{% endblocktrans %}</h1>
     <p>
       {% if active_program %}{% trans "Keep crushing it — your trainer is with you!" %}
       {% else %}{% trans "Your fitness journey starts here." %}{% endif %}
