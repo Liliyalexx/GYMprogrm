@@ -20,7 +20,7 @@
       <div>
         <div style="font-weight:700;font-size:1.1rem;">{{ program.name }}</div>
         <div style="font-size:.82rem;color:var(--text-muted);margin-top:.25rem;">
-          {% blocktrans count n=program.days.count with days=program.days.count weeks=program.training_days %}{{ days }} day · {{ weeks }} workouts per week · {% endblocktrans %}{% trans "Created" %} {{ program.created_at|date:"d M Y" }}
+          {{ program.days.count }} {% trans "days" %} · {{ program.training_days }} {% trans "workouts/week" %} · {% trans "Created" %} {{ program.created_at|date:"d M Y" }}
         </div>
       </div>
       <a href="{% url 'programs:detail' program.pk %}" class="btn btn-outline btn-sm">{% trans "Open program →" %}</a>
