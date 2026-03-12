@@ -669,6 +669,19 @@ def portal_measurements(request):
     student = request.user.student
     error = None
 
+    def _calc_body_fat(weight_kg, height_cm, dob, gender):
+        """Deurenberg formula: BF% = 1.2*BMI + 0.23*age - 10.8*sex - 5.4"""
+        try:
+            h = float(height_cm) / 100.0
+            w = float(weight_kg)
+            bmi = w / (h * h)
+            age = (date.today() - dob).days // 365
+            sex = 1 if gender == 'M' else 0
+            bf = (1.2 * bmi) + (0.23 * age) - (10.8 * sex) - 5.4
+            return round(max(1.0, min(bf, 60.0)), 1)
+        except Exception:
+            return None
+
     if request.method == 'POST':
         date_raw = request.POST.get('date', '').strip() or str(date.today())
         try:
@@ -676,15 +689,28 @@ def portal_measurements(request):
         except ValueError:
             mdate = date.today()
 
-        def _dec(key):
-            v = request.POST.get(key, '').strip()
-            return v if v else None
+        weight_raw = request.POST.get('weight_kg', '').strip()
+        weight_kg = weight_raw if weight_raw else None
+
+        # Update height on student profile if provided
+        height_raw = request.POST.get('height_cm', '').strip()
+        if height_raw:
+            try:
+                student.height_cm = float(height_raw)
+                student.save(update_fields=['height_cm'])
+            except ValueError:
+                pass
+
+        # Auto-calculate body fat
+        body_fat_pct = None
+        if weight_kg and student.height_cm and student.date_of_birth:
+            body_fat_pct = _calc_body_fat(weight_kg, student.height_cm, student.date_of_birth, student.gender)
 
         BodyMeasurement.objects.create(
             student=student,
             date=mdate,
-            weight_kg=_dec('weight_kg'),
-            body_fat_pct=_dec('body_fat_pct'),
+            weight_kg=weight_kg,
+            body_fat_pct=body_fat_pct,
         )
         return redirect('students:portal_measurements')
 

@@ -15,7 +15,7 @@
 {% endif %}
 
 <div class="card" style="margin-bottom:1.5rem;">
-  <h2 style="font-size:1rem;font-weight:700;margin-bottom:1rem;">{% trans "Log Today's Measurements" %}</h2>
+  <h2 style="font-size:1rem;font-weight:700;margin-bottom:1rem;">{% trans "Log Today's Weight" %}</h2>
   <form method="post">
     {% csrf_token %}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
@@ -25,14 +25,25 @@
       </div>
       <div class="form-group" style="margin-bottom:.5rem;">
         <label class="form-label" style="font-size:.82rem;">{% trans "Weight (kg)" %}</label>
-        <input class="form-control" type="number" name="weight_kg" step="0.1" min="0" placeholder="e.g. 62.5">
+        <input class="form-control" type="number" name="weight_kg" step="0.1" min="0" placeholder="e.g. 62.5" required>
       </div>
-      <div class="form-group" style="margin-bottom:.5rem;">
-        <label class="form-label" style="font-size:.82rem;">{% trans "Body Fat %" %}</label>
-        <input class="form-control" type="number" name="body_fat_pct" step="0.1" min="0" max="100" placeholder="e.g. 22.0">
+      {% if not student.height_cm %}
+      <div class="form-group" style="margin-bottom:.5rem;grid-column:1/-1;">
+        <label class="form-label" style="font-size:.82rem;">{% trans "Your Height (cm)" %} <span style="color:var(--text-muted);font-weight:400;">— {% trans "needed to calculate body fat" %}</span></label>
+        <input class="form-control" type="number" name="height_cm" step="0.1" min="100" max="250" placeholder="e.g. 165">
       </div>
+      {% endif %}
     </div>
-    <button type="submit" class="btn btn-primary" style="margin-top:.5rem;width:100%;justify-content:center;">{% trans "Save Measurements" %}</button>
+    {% if student.height_cm and student.date_of_birth %}
+    <div style="font-size:.82rem;color:var(--text-muted);margin-top:.4rem;">
+      📐 {% trans "Body fat % will be calculated automatically from your weight, height" %} ({{ student.height_cm }} cm) {% trans "and age" %}.
+    </div>
+    {% elif not student.height_cm %}
+    <div style="font-size:.82rem;color:#f59e0b;margin-top:.4rem;">
+      ⚠️ {% trans "Enter your height once to enable automatic body fat calculation." %}
+    </div>
+    {% endif %}
+    <button type="submit" class="btn btn-primary" style="margin-top:.75rem;width:100%;justify-content:center;">{% trans "Save" %}</button>
   </form>
 </div>
 
@@ -45,7 +56,7 @@
       <tr style="border-bottom:2px solid var(--border);text-align:left;">
         <th style="padding:.5rem .75rem;font-size:.75rem;color:var(--text-muted);text-transform:uppercase;">{% trans "Date" %}</th>
         <th style="padding:.5rem .75rem;font-size:.75rem;color:var(--text-muted);text-transform:uppercase;">{% trans "Weight" %}</th>
-        <th style="padding:.5rem .75rem;font-size:.75rem;color:var(--text-muted);text-transform:uppercase;">{% trans "BF%" %}</th>
+        <th style="padding:.5rem .75rem;font-size:.75rem;color:var(--text-muted);text-transform:uppercase;">{% trans "Body Fat %" %}</th>
       </tr>
     </thead>
     <tbody>
@@ -53,7 +64,7 @@
       <tr style="border-bottom:1px solid var(--border);">
         <td style="padding:.5rem .75rem;font-weight:600;">{{ m.date|date:"d M Y" }}</td>
         <td style="padding:.5rem .75rem;">{% if m.weight_kg %}{{ m.weight_kg }} kg{% else %}—{% endif %}</td>
-        <td style="padding:.5rem .75rem;">{% if m.body_fat_pct %}{{ m.body_fat_pct }}%{% else %}—{% endif %}</td>
+        <td style="padding:.5rem .75rem;">{% if m.body_fat_pct %}<span style="color:var(--primary);font-weight:600;">{{ m.body_fat_pct }}%</span>{% else %}—{% endif %}</td>
       </tr>
       {% endfor %}
     </tbody>
