@@ -149,7 +149,7 @@
 {% for day in program.days.all %}
 <div class="card" style="margin-bottom:1.5rem;">
   <h2 style="font-size:1.05rem;font-weight:700;margin-bottom:1.25rem;padding-bottom:.75rem;border-bottom:1px solid var(--border);">
-    {{ day.name }}
+    {% if day.name_en %}{{ day.name_en }}{% if day.name %} <span style="font-size:.82rem;font-weight:400;color:var(--text-muted);">({{ day.name }})</span>{% endif %}{% else %}{{ day.name }}{% endif %}
   </h2>
 
   {% for pe in day.exercises.all %}
@@ -174,7 +174,8 @@
     <!-- Details -->
     <div>
       <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem;">
-        <strong style="font-size:.98rem;">{{ pe.name_ru|default:pe.exercise.name }}</strong>
+        <strong style="font-size:.98rem;">{{ pe.exercise.name }}</strong>
+        {% if pe.name_ru %}<span style="font-size:.82rem;color:var(--text-muted);font-weight:400;">{{ pe.name_ru }}</span>{% endif %}
         <span class="badge badge-{{ pe.exercise.muscle_group }}">{{ pe.exercise.get_muscle_group_display }}</span>
         {% if pe.confirmed %}
           <span style="font-size:.75rem;color:var(--success);font-weight:600;">✓ {% trans "Confirmed" %}</span>
