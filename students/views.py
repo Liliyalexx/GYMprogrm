@@ -473,12 +473,30 @@ def portal_intake(request):
                     file_error = f'Could not save blood test file: {e}'
 
             if request.FILES.get('photo'):
-                try:
-                    student.photo = request.FILES['photo']
-                    student.save(update_fields=['photo'])
-                except Exception as e:
-                    if not file_error:
-                        file_error = f'Could not save photo: {e}'
+                photo_file = request.FILES['photo']
+                photo_bytes = photo_file.read()
+                content_type = photo_file.content_type or 'image/jpeg'
+                student_id = student.pk
+
+                def _run_photo_analysis(sid, img_bytes, mime):
+                    import base64
+                    from programs.ai import _analyze_photo
+                    import anthropic
+                    try:
+                        s = Student.objects.get(pk=sid)
+                        s.photo_analysis = ''
+                        s.save(update_fields=['photo_analysis'])
+                        client = anthropic.Anthropic(api_key=os.environ.get('ANTHROPIC_API_KEY', ''))
+                        data = base64.standard_b64encode(img_bytes).decode('utf-8')
+                        blocks = [{'type': 'image', 'source': {'type': 'base64', 'media_type': mime, 'data': data}}]
+                        result = _analyze_photo(client, s, blocks)
+                        s.photo_analysis = result
+                        s.save(update_fields=['photo_analysis'])
+                    except Exception:
+                        pass
+
+                import threading
+                threading.Thread(target=_run_photo_analysis, args=(student_id, photo_bytes, content_type), daemon=True).start()
 
             if file_error:
                 return render(request, 'students/portal_intake.html', {'student': student, 'error': file_error})
