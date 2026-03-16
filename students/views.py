@@ -308,9 +308,9 @@ def send_intake_email(request):
     except Exception as exc:
         print(f'[invite email] FAILED: {exc}', flush=True)
         try:
-            print(f'[invite email] response body: {resp.text}', flush=True)
-        except Exception:
-            pass
+            print(f'[invite email] response body: {exc.response.text}', flush=True)
+        except Exception as e2:
+            print(f'[invite email] could not get response body: {e2}', flush=True)
         # Return invite URL so trainer can copy and send manually
         return JsonResponse({'error': str(exc), 'invite_url': invite_url}, status=500)
 
