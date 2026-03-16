@@ -354,6 +354,44 @@
 </div>
 {% endif %}
 
+<!-- ── Payment Info ── -->
+{% if student.payment_plan or student.payment_status %}
+<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.25rem;box-shadow:var(--shadow);margin-bottom:1.25rem;">
+  <h2 style="font-size:1rem;font-weight:800;margin-bottom:.85rem;">💳 {% trans "Subscription" %}</h2>
+  <div style="display:flex;flex-direction:column;gap:.5rem;">
+    {% if student.payment_plan %}
+    <div style="display:flex;justify-content:space-between;font-size:.88rem;">
+      <span style="color:var(--text-muted);">{% trans "Plan" %}</span>
+      <span style="font-weight:600;">{{ student.get_payment_plan_display }}</span>
+    </div>
+    {% endif %}
+    {% if student.payment_status %}
+    <div style="display:flex;justify-content:space-between;font-size:.88rem;">
+      <span style="color:var(--text-muted);">{% trans "Status" %}</span>
+      <span style="font-weight:700;{% if student.payment_status == 'paid' %}color:#15803d;{% elif student.payment_status == 'overdue' %}color:#dc2626;{% else %}color:#a16207;{% endif %}">
+        {% if student.payment_status == 'paid' %}✓ {% trans "Paid" %}
+        {% elif student.payment_status == 'overdue' %}⚠ {% trans "Overdue" %}
+        {% else %}⏳ {% trans "Pending" %}
+        {% endif %}
+      </span>
+    </div>
+    {% endif %}
+    {% if student.payment_method %}
+    <div style="display:flex;justify-content:space-between;font-size:.88rem;">
+      <span style="color:var(--text-muted);">{% trans "Pay via" %}</span>
+      <span style="font-weight:600;">{{ student.get_payment_method_display }}{% if student.payment_handle %} · {{ student.payment_handle }}{% endif %}</span>
+    </div>
+    {% endif %}
+    {% if student.payment_start_date %}
+    <div style="display:flex;justify-content:space-between;font-size:.88rem;">
+      <span style="color:var(--text-muted);">{% trans "Since" %}</span>
+      <span style="font-weight:600;">{{ student.payment_start_date|date:"d M Y" }}</span>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
 <!-- ── Recent Workouts ── -->
 {% if recent_logs %}
 <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.25rem;box-shadow:var(--shadow);">
