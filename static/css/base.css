@@ -26,17 +26,17 @@ body {
 
 /* ===== NAV ===== */
 .nav {
-  background: var(--primary);
+  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 45%, #db2777 100%);
   color: #fff;
   padding: 0 1.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 56px;
+  height: 80px;
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 2px 8px rgba(0,0,0,.15);
+  box-shadow: 0 3px 12px rgba(37,99,235,.35);
 }
 .nav-brand { font-size: 1.2rem; font-weight: 700; color: #fff; text-decoration: none; letter-spacing: .5px; }
 .nav-links { display: flex; gap: 1rem; align-items: center; }
@@ -187,4 +187,68 @@ textarea.form-control { resize: vertical; min-height: 90px; }
 
 @media (max-width: 640px) {
   .detail-grid { grid-template-columns: 1fr; }
+}
+
+/* ===== SMALL PHONES (≤ 480px) ===== */
+@media (max-width: 480px) {
+  .nav { height: 64px; padding: 0 1rem; }
+  .nav-links { top: 64px; }
+  .container { padding: 1rem .75rem; }
+  .page-title { font-size: 1.2rem; }
+  .card { padding: 1.1rem; }
+  .btn { font-size: .85rem; padding: .45rem .9rem; }
+}
+
+/* ===== STUDENT BOTTOM NAV ===== */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 62px;
+  background: var(--card);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: stretch;
+  z-index: 200;
+  box-shadow: 0 -2px 12px rgba(0,0,0,.08);
+  /* iOS safe area */
+  padding-bottom: env(safe-area-inset-bottom);
+  height: calc(62px + env(safe-area-inset-bottom));
+}
+
+.bnav-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  text-decoration: none;
+  color: var(--text-muted);
+  font-size: .65rem;
+  font-weight: 600;
+  letter-spacing: .02em;
+  padding: .5rem .25rem;
+  transition: color .15s;
+  -webkit-tap-highlight-color: transparent;
+  min-width: 44px;
+}
+.bnav-tab:hover { color: var(--primary); }
+.bnav-tab.active { color: var(--primary); }
+
+.bnav-icon {
+  width: 22px;
+  height: 22px;
+  stroke: currentColor;
+  flex-shrink: 0;
+}
+
+.bnav-label {
+  line-height: 1;
+}
+
+/* Push page content above the bottom nav for students */
+body.student-portal .container {
+  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
 }

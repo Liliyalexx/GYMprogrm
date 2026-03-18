@@ -5,16 +5,47 @@
 
 {% block extra_css %}
 <style>
+  /* Day tabs */
+  .day-tabs {
+    display: flex;
+    gap: .5rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: .25rem;
+    margin-bottom: 1.25rem;
+  }
+  .day-tabs::-webkit-scrollbar { display: none; }
+  .day-tab {
+    flex-shrink: 0;
+    padding: .45rem .95rem;
+    border-radius: 999px;
+    font-size: .82rem;
+    font-weight: 700;
+    text-decoration: none;
+    border: 1.5px solid var(--border);
+    color: var(--text-muted);
+    background: var(--card);
+    white-space: nowrap;
+    transition: all .15s;
+  }
+  .day-tab.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+  }
+  .day-tab:hover:not(.active) { border-color: var(--primary); color: var(--primary); }
+
   .workout-header {
     background: linear-gradient(135deg, var(--primary), #7c3aed);
     border-radius: 16px;
     padding: 1.25rem 1.5rem;
     color: #fff;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
   }
   .workout-header h1 { font-size: 1.1rem; font-weight: 800; }
   .workout-header p  { font-size: .83rem; opacity: .8; margin-top: .2rem; }
 
+  /* Exercise card */
   .ex-log-card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -22,7 +53,12 @@
     margin-bottom: 1rem;
     overflow: hidden;
     box-shadow: var(--shadow);
+    transition: opacity .2s;
   }
+  .ex-log-card.done { opacity: .55; }
+  .ex-log-card.done .ex-log-inputs { display: none; }
+  .ex-log-card.done .tech-section { display: none; }
+
   .ex-log-top {
     display: flex;
     gap: .85rem;
@@ -52,11 +88,38 @@
     margin-top: .3rem;
   }
 
+  /* Done checkbox */
+  .done-toggle {
+    margin-left: auto;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .2rem;
+    cursor: pointer;
+    font-size: .72rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    user-select: none;
+    min-width: 44px;
+    min-height: 44px;
+    justify-content: center;
+  }
+  .done-toggle input[type=checkbox] {
+    width: 22px; height: 22px;
+    accent-color: var(--success);
+    cursor: pointer;
+  }
+
   .ex-log-inputs {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: .6rem;
-    padding: 0 1rem 1rem;
+    gap: .5rem;
+    padding: 0 .85rem .85rem;
+  }
+  @media (max-width: 360px) {
+    .ex-log-inputs { gap: .35rem; padding: 0 .65rem .75rem; }
+    .log-input { padding: .55rem .4rem; font-size: .88rem; }
   }
   .log-input-group label {
     display: block;
@@ -81,12 +144,27 @@
     box-sizing: border-box;
     transition: border-color .15s;
   }
-  .log-input:focus {
-    outline: none;
-    border-color: var(--primary);
-    background: #fff;
-    box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+  .log-input:focus { outline: none; border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+
+  /* Rest timer */
+  .rest-timer-btn {
+    display: flex; align-items: center; justify-content: center; gap: .4rem;
+    margin: 0 1rem .85rem;
+    padding: .55rem;
+    background: #eff6ff;
+    border: 1.5px solid #bfdbfe;
+    border-radius: 10px;
+    font-size: .82rem; font-weight: 700;
+    color: var(--primary);
+    cursor: pointer;
+    transition: background .15s;
+    width: calc(100% - 2rem);
   }
+  .rest-timer-btn:hover { background: #dbeafe; }
+  .rest-timer-btn.running { background: #fef9c3; border-color: #fde68a; color: #a16207; }
+  .rest-timer-btn.done-rest { background: #dcfce7; border-color: #bbf7d0; color: #15803d; }
+
+  .tech-section { padding: 0 1rem .85rem; }
 
   .save-bar {
     position: sticky;
@@ -99,16 +177,10 @@
     gap: .75rem;
   }
   .save-btn {
-    flex: 1;
-    padding: .9rem;
+    flex: 1; padding: .9rem;
     background: linear-gradient(135deg, var(--primary), #7c3aed);
-    color: #fff;
-    border: none;
-    border-radius: 12px;
-    font-size: 1rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: opacity .15s;
+    color: #fff; border: none; border-radius: 12px;
+    font-size: 1rem; font-weight: 700; cursor: pointer; transition: opacity .15s;
   }
   .save-btn:hover { opacity: .9; }
   .cancel-btn {
@@ -116,12 +188,9 @@
     background: transparent;
     border: 1.5px solid var(--border);
     border-radius: 12px;
-    font-size: .95rem;
-    font-weight: 600;
-    color: var(--text-muted);
-    cursor: pointer;
-    text-decoration: none;
-    display: flex; align-items: center;
+    font-size: .95rem; font-weight: 600;
+    color: var(--text-muted); cursor: pointer;
+    text-decoration: none; display: flex; align-items: center;
   }
   .cancel-btn:hover { border-color: var(--primary); color: var(--primary); }
 </style>
@@ -130,9 +199,21 @@
 {% block content %}
 <div style="max-width:620px;margin:0 auto;padding-bottom:6rem;">
 
+  <!-- Day tabs -->
+  {% if all_days %}
+  <div class="day-tabs">
+    {% for d in all_days %}
+    <a href="{% url 'students:portal_log_workout' d.pk %}"
+       class="day-tab {% if d.pk == program_day.pk %}active{% endif %}">
+      {% if CURRENT_LANG == 'ru' and d.name_ru %}{{ d.name_ru }}{% elif d.name_en %}{{ d.name_en }}{% else %}{{ d.name }}{% endif %}
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
   <div class="workout-header">
     <a href="{% url 'students:portal_program' %}" style="font-size:.8rem;opacity:.75;text-decoration:none;color:#fff;display:inline-block;margin-bottom:.5rem;">← {% trans "Back to program" %}</a>
-    <h1>{% if CURRENT_LANG == 'ru' or not program_day.name_en %}{{ program_day.name }}{% else %}{{ program_day.name_en }}{% endif %}</h1>
+    <h1>{% if CURRENT_LANG == 'ru' and program_day.name_ru %}{{ program_day.name_ru }}{% elif program_day.name_en %}{{ program_day.name_en }}{% else %}{{ program_day.name }}{% endif %}</h1>
     <p>{{ total }} {% trans "exercises" %} · {% trans "Log your weights and reps below" %}</p>
   </div>
 
@@ -145,7 +226,7 @@
 
     {% for ex in exercises %}
     {% with lw=last_weights|get_item:ex.pk %}
-    <div class="ex-log-card">
+    <div class="ex-log-card" id="card-{{ ex.pk }}">
       <div class="ex-log-top">
         {% if ex.exercise.photo_url %}
           <img src="{{ ex.exercise.photo_url }}" alt="{{ ex.exercise.name }}" class="ex-log-photo">
@@ -164,6 +245,10 @@
           </span>
           {% endif %}
         </div>
+        <label class="done-toggle" title="{% trans 'Mark done' %}">
+          <input type="checkbox" onchange="toggleDone({{ ex.pk }}, this)">
+          <span>{% trans "Done" %}</span>
+        </label>
       </div>
 
       <div class="ex-log-inputs">
@@ -186,8 +271,13 @@
         </div>
       </div>
 
+      <button type="button" class="rest-timer-btn" id="timer-{{ ex.pk }}"
+              onclick="startTimer({{ ex.pk }})">
+        ⏱ {% trans "Rest 1 min" %}
+      </button>
+
       {% if ex.exercise.posture_tips %}
-      <div style="padding: 0 1rem .85rem;">
+      <div class="tech-section">
         <details>
           <summary style="font-size:.78rem;color:var(--primary);cursor:pointer;font-weight:600;">{% trans "Technique tips" %} ›</summary>
           <div style="font-size:.8rem;color:var(--text-muted);margin-top:.3rem;line-height:1.5;">{{ ex.exercise.posture_tips }}</div>
@@ -211,4 +301,56 @@
   </form>
 
 </div>
+
+<script>
+// ── Done toggle ──
+function toggleDone(pk, cb) {
+  var card = document.getElementById('card-' + pk);
+  if (cb.checked) {
+    card.classList.add('done');
+  } else {
+    card.classList.remove('done');
+  }
+}
+
+// ── Rest timer ──
+var _activeTimer = null;
+
+function startTimer(pk) {
+  var btn = document.getElementById('timer-' + pk);
+
+  // Cancel any running timer first
+  if (_activeTimer) {
+    clearInterval(_activeTimer.interval);
+    var old = document.getElementById('timer-' + _activeTimer.pk);
+    if (old) { old.textContent = '⏱ {% trans "Rest 1 min"|escapejs %}'; old.className = 'rest-timer-btn'; }
+    if (_activeTimer.pk === pk) { _activeTimer = null; return; }
+  }
+
+  var seconds = 60;
+  btn.className = 'rest-timer-btn running';
+
+  function tick() {
+    seconds--;
+    if (seconds <= 0) {
+      clearInterval(_activeTimer.interval);
+      _activeTimer = null;
+      btn.textContent = '✓ {% trans "Rest done!"|escapejs %}';
+      btn.className = 'rest-timer-btn done-rest';
+      // Reset after 3s
+      setTimeout(function() {
+        btn.textContent = '⏱ {% trans "Rest 1 min"|escapejs %}';
+        btn.className = 'rest-timer-btn';
+      }, 3000);
+    } else {
+      var m = Math.floor(seconds / 60);
+      var s = seconds % 60;
+      btn.textContent = '⏱ ' + m + ':' + (s < 10 ? '0' : '') + s;
+    }
+  }
+
+  tick(); // immediate first tick to show 0:59
+  _activeTimer = { pk: pk, interval: setInterval(tick, 1000) };
+}
+</script>
 {% endblock %}

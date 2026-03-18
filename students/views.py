@@ -3,11 +3,13 @@ import uuid
 from datetime import date, datetime
 from functools import wraps
 
+from django.conf import settings as django_settings
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
+from django.utils import translation
 from django.views.decorators.http import require_POST
 
 from .models import Student
@@ -44,6 +46,9 @@ def student_required(view_func):
             return redirect('/login/')
         if not hasattr(request.user, 'student'):
             return redirect('/')
+        # Default student portal to English unless student explicitly set a language
+        if django_settings.LANGUAGE_COOKIE_NAME not in request.COOKIES:
+            translation.activate('en')
         return view_func(request, *args, **kwargs)
     return _wrapped
 
@@ -179,6 +184,94 @@ def student_edit(request, pk):
 
 
 @login_required
+def student_billing(request, pk):
+    from datetime import timedelta
+    if hasattr(request.user, 'student'):
+        return redirect('students:portal_dashboard')
+    student = get_object_or_404(Student, pk=pk)
+
+    if request.method == 'POST':
+        student.payment_plan = request.POST.get('payment_plan', student.payment_plan)
+        student.payment_method = request.POST.get('payment_method', '')
+        student.payment_handle = request.POST.get('payment_handle', '').strip()
+        student.payment_status = request.POST.get('payment_status', '')
+        start_raw = request.POST.get('payment_start_date', '').strip()
+        if start_raw:
+            from datetime import datetime as _dt
+            try:
+                student.payment_start_date = _dt.strptime(start_raw, '%Y-%m-%d').date()
+            except ValueError:
+                pass
+        else:
+            student.payment_start_date = None
+        student.save(update_fields=[
+            'payment_plan', 'payment_method', 'payment_handle',
+            'payment_status', 'payment_start_date',
+        ])
+        return redirect('students:billing', pk=pk)
+
+    today = date.today()
+    days_since = None
+    days_until = None
+    next_payment_date = None
+    if student.payment_start_date:
+        days_since = (today - student.payment_start_date).days
+        threshold = 84 if student.payment_plan == '3months' else 28
+        periods_done = days_since // threshold
+        next_payment_date = student.payment_start_date + timedelta(days=(periods_done + 1) * threshold)
+        days_until = (next_payment_date - today).days
+
+    return render(request, 'students/student_billing.html', {
+        'student': student,
+        'days_since': days_since,
+        'days_until': days_until,
+        'next_payment_date': next_payment_date,
+    })
+
+
+@login_required
+def trainer_payment_settings(request):
+    if hasattr(request.user, 'student'):
+        return redirect('students:portal_dashboard')
+    from .models import TrainerPaymentSettings
+    settings = TrainerPaymentSettings.get()
+    if request.method == 'POST':
+        settings.venmo_handle = request.POST.get('venmo_handle', '').strip()
+        settings.paypal_handle = request.POST.get('paypal_handle', '').strip()
+        settings.zelle_handle = request.POST.get('zelle_handle', '').strip()
+        settings.save()
+        from django.contrib import messages as _msg
+        _msg.success(request, 'Payment settings saved.')
+        return redirect('students:trainer_payment_settings')
+    return render(request, 'students/trainer_payment_settings.html', {'settings': settings})
+
+
+@login_required
+@require_POST
+def save_trainer_recommendation(request, pk):
+    if hasattr(request.user, 'student'):
+        return JsonResponse({'error': 'Not authorized'}, status=403)
+    student = get_object_or_404(Student, pk=pk)
+    text = request.POST.get('text', '').strip()
+    student.trainer_recommendation = text
+    student.save(update_fields=['trainer_recommendation'])
+    return JsonResponse({'ok': True})
+
+
+@login_required
+@require_POST
+def confirm_trainer_recommendation(request, pk):
+    if hasattr(request.user, 'student'):
+        return JsonResponse({'error': 'Not authorized'}, status=403)
+    student = get_object_or_404(Student, pk=pk)
+    text = request.POST.get('text', '').strip()
+    student.trainer_recommendation = text
+    student.trainer_recommendation_confirmed = True
+    student.save(update_fields=['trainer_recommendation', 'trainer_recommendation_confirmed'])
+    return JsonResponse({'ok': True})
+
+
+@login_required
 def student_delete(request, pk):
     if hasattr(request.user, 'student'):
         return redirect('students:portal_dashboard')
@@ -267,10 +360,6 @@ def send_intake_email(request):
     if not email:
         return JsonResponse({'error': 'Email is required.'}, status=400)
 
-    api_key = getattr(django_settings, 'RESEND_API_KEY', '') or os.environ.get('RESEND_API_KEY', '')
-    if not api_key:
-        return JsonResponse({'error': 'Email service not configured.'}, status=500)
-
     # Find or create student by email
     student = Student.objects.filter(email=email).first()
     if not student:
@@ -282,6 +371,10 @@ def send_intake_email(request):
     student.save(update_fields=['invite_token'])
 
     invite_url = request.build_absolute_uri(f'/invite/{token}/')
+
+    api_key = getattr(django_settings, 'RESEND_API_KEY', '') or os.environ.get('RESEND_API_KEY', '')
+    if not api_key:
+        return JsonResponse({'invite_url': invite_url, 'no_email': True})
     body = (
         f'Hi!\n\n'
         f'Your personal trainer has invited you to create your account on GYMprogrm.\n\n'
@@ -544,6 +637,31 @@ def portal_intake(request):
 # ---------------------------------------------------------------------------
 
 @student_required
+def portal_billing(request):
+    from datetime import timedelta
+    student = request.user.student
+    today = date.today()
+    days_since = None
+    days_until = None
+    next_payment_date = None
+    if student.payment_start_date:
+        days_since = (today - student.payment_start_date).days
+        threshold = 84 if student.payment_plan == '3months' else 28
+        periods_done = days_since // threshold
+        next_payment_date = student.payment_start_date + timedelta(days=(periods_done + 1) * threshold)
+        days_until = (next_payment_date - today).days
+    from .models import TrainerPaymentSettings
+    trainer_payment = TrainerPaymentSettings.get()
+    return render(request, 'students/student_portal_billing.html', {
+        'student': student,
+        'days_since': days_since,
+        'days_until': days_until,
+        'next_payment_date': next_payment_date,
+        'trainer_payment': trainer_payment,
+    })
+
+
+@student_required
 def portal_dashboard(request):
     from datetime import date as _date
     student = request.user.student
@@ -551,6 +669,15 @@ def portal_dashboard(request):
         return redirect('students:portal_intake')
     reminders = get_reminders(student)
     active_program = student.programs.filter(is_active=True).prefetch_related('days').first()
+
+    # Auto-fill English names for existing programs the first time a student visits
+    if active_program and (not active_program.name_en or active_program.days.filter(name_en='').exists()):
+        try:
+            from programs.ai import backfill_english_names
+            backfill_english_names(active_program)
+            active_program = student.programs.filter(is_active=True).prefetch_related('days').first()
+        except Exception:
+            pass
 
     days_remaining = None
     if active_program and active_program.start_date:
@@ -600,6 +727,17 @@ def portal_program(request):
         'days__exercises__exercise'
     ).first()
 
+    # Auto-fill English names for existing programs
+    if active_program and (not active_program.name_en or active_program.days.filter(name_en='').exists()):
+        try:
+            from programs.ai import backfill_english_names
+            backfill_english_names(active_program)
+            active_program = student.programs.filter(is_active=True).prefetch_related(
+                'days__exercises__exercise'
+            ).first()
+        except Exception:
+            pass
+
     # Last logged weight/reps per program exercise so we can show "last session" on the page
     last_weights = {}
     if active_program:
@@ -630,6 +768,35 @@ def portal_log_workout(request, program_day_id):
 
     student = request.user.student
     program_day = get_object_or_404(ProgramDay, pk=program_day_id, program__student=student)
+
+    # Auto-fill English names if missing
+    if not program_day.name_en:
+        try:
+            from programs.ai import backfill_english_names
+            backfill_english_names(program_day.program)
+            program_day.refresh_from_db()
+        except Exception:
+            pass
+
+    # Clean Russian text from reps in this day's exercises
+    import re as _re2
+    _RU = {
+        r'на каждую ногу': 'each leg', r'на каждую сторону': 'each side',
+        r'на каждую руку': 'each arm', r'на сторону': 'each side',
+        r'на ногу': 'each leg', r'на руку': 'each arm',
+        r'каждая сторона': 'each side', r'каждая нога': 'each leg',
+        r'секунд': 'sec', r'сек': 'sec', r'минут': 'min', r'мин': 'min',
+    }
+    for pe in program_day.exercises.all():
+        if pe.reps and _re2.search(r'[а-яёА-ЯЁ]', pe.reps):
+            cleaned = pe.reps
+            for ru, en in _RU.items():
+                cleaned = _re2.sub(ru, en, cleaned, flags=_re2.IGNORECASE)
+            cleaned = _re2.sub(r'\s*[а-яёА-ЯЁ][а-яёА-ЯЁ\s]*', '', cleaned).strip()
+            if cleaned != pe.reps:
+                pe.reps = cleaned
+                pe.save(update_fields=['reps'])
+
     exercises = program_day.exercises.select_related('exercise').order_by('order')
 
     error = None
@@ -670,24 +837,47 @@ def portal_log_workout(request, program_day_id):
                 'date': last_log.workout_log.date,
             }
 
-    confirmed_exercises = [ex for ex in exercises if ex.confirmed]
+    all_days = program_day.program.days.all()
 
     return render(request, 'students/student_portal_log_workout.html', {
         'student': student,
         'program_day': program_day,
-        'exercises': confirmed_exercises,
+        'exercises': list(exercises),
         'last_weights': last_weights,
-        'total': len(confirmed_exercises),
+        'total': exercises.count(),
+        'all_days': all_days,
         'error': error,
     })
 
 
 @student_required
-@student_required
 def portal_history(request):
-    from progress.models import WorkoutLog
+    import re as _re
+    from progress.models import WorkoutLog, ExerciseLog
 
     student = request.user.student
+
+    # One-time cleanup: fix Russian text in reps_done for this student's logs
+    _RU_REPS = {
+        r'на каждую ногу': 'each leg', r'на каждую сторону': 'each side',
+        r'на каждую руку': 'each arm', r'на сторону': 'each side',
+        r'на ногу': 'each leg', r'на руку': 'each arm',
+        r'каждая сторона': 'each side', r'каждая нога': 'each leg',
+        r'секунд': 'sec', r'сек': 'sec', r'минут': 'min', r'мин': 'min',
+    }
+    dirty = ExerciseLog.objects.filter(
+        workout_log__student=student,
+        reps_done__regex=r'[а-яёА-ЯЁ]',
+    )
+    for elog in dirty:
+        cleaned = elog.reps_done
+        for ru, en in _RU_REPS.items():
+            cleaned = _re.sub(ru, en, cleaned, flags=_re.IGNORECASE)
+        cleaned = _re.sub(r'\s*[а-яёА-ЯЁ][а-яёА-ЯЁ\s]*', '', cleaned).strip()
+        if cleaned != elog.reps_done:
+            elog.reps_done = cleaned
+            elog.save(update_fields=['reps_done'])
+
     logs = student.workout_logs.prefetch_related(
         'exercise_logs'
     ).select_related('program_day').order_by('-date')
@@ -860,6 +1050,52 @@ def check_photo_analysis(request, pk):
     return JsonResponse({'status': 'done', 'analysis': val})
 
 
+@login_required
+@require_POST
+def suggest_exercises_from_photo(request, pk):
+    """AJAX: use photo analysis to suggest exercises from the library."""
+    if hasattr(request.user, 'student'):
+        return JsonResponse({'error': 'Not authorized'}, status=403)
+    student = get_object_or_404(Student, pk=pk)
+    if not student.photo_analysis or student.photo_analysis.startswith('_'):
+        return JsonResponse({'error': 'No photo analysis available. Analyze the photo first.'}, status=400)
+
+    from programs.models import ExerciseLibrary
+    from programs.ai import suggest_exercises_from_photo as _suggest
+
+    exercise_names = list(ExerciseLibrary.objects.values_list('name', flat=True))
+    if not exercise_names:
+        return JsonResponse({'error': 'Exercise library is empty.'}, status=400)
+
+    try:
+        suggestions = _suggest(student, exercise_names)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+    # Enrich with PKs from the library so frontend can add them directly
+    lib_map = {ex.name.lower(): ex for ex in ExerciseLibrary.objects.all()}
+    enriched = []
+    for s in suggestions:
+        name = s.get('name', '')
+        ex = lib_map.get(name.lower())
+        enriched.append({
+            'name': name,
+            'exercise_pk': ex.pk if ex else None,
+            'muscle_group': ex.get_muscle_group_display() if ex else '',
+            'sets': s.get('sets', 3),
+            'reps': str(s.get('reps', '10-12')),
+            'reason': s.get('reason', ''),
+        })
+
+    # Return program days so trainer can pick which day to add to
+    days = []
+    for prog in student.programs.filter(is_active=True).prefetch_related('days'):
+        for day in prog.days.all():
+            days.append({'pk': day.pk, 'label': f'{prog.name} — {day.name_en or day.name}'})
+
+    return JsonResponse({'suggestions': enriched, 'days': days})
+
+
 # ---------------------------------------------------------------------------
 # AI Recommendations (student portal)
 # ---------------------------------------------------------------------------
@@ -909,18 +1145,49 @@ def portal_check_recommendations(request):
 @student_required
 def portal_recommendations(request):
     student = request.user.student
-    raw = student.ai_recommendations
-    recs = None
-    recs_processing = False
-    if raw:
-        if raw.get('_processing'):
-            recs_processing = True
-        elif not raw.get('_error'):
-            recs = raw
+    active_program = student.programs.filter(is_active=True).first()
+    shared = active_program.shared_sections if active_program else {}
+
+    # Auto-translate shared sections to English if not yet done or still contains Russian
+    import re as _re
+    if active_program:
+        _needs_analysis = (
+            shared.get('analysis') and active_program.description and
+            (not active_program.description_en or
+             _re.search(r'[а-яёА-ЯЁ]', active_program.description_en))
+        )
+        if _needs_analysis:
+            try:
+                from programs.ai import translate_program_section
+                active_program.description_en = ''  # force re-translate
+                active_program.save(update_fields=['description_en'])
+                translate_program_section(active_program, 'analysis')
+                active_program.refresh_from_db()
+            except Exception:
+                pass
+
+        _needs_nutrition = (
+            shared.get('nutrition') and active_program.nutrition_plan and
+            not active_program.nutrition_plan_en
+        )
+        if _needs_nutrition:
+            try:
+                from programs.ai import translate_program_section
+                translate_program_section(active_program, 'nutrition')
+                active_program.refresh_from_db()
+            except Exception:
+                pass
+
+    has_any_shared = (
+        bool(shared.get('goals') and student.goals) or
+        bool(shared.get('analysis') and active_program and (active_program.description_en or active_program.description)) or
+        bool(shared.get('nutrition') and active_program and active_program.nutrition_plan) or
+        bool(student.trainer_recommendation_confirmed and student.trainer_recommendation)
+    )
     return render(request, 'students/student_portal_recommendations.html', {
         'student': student,
-        'recs': recs,
-        'recs_processing': recs_processing,
+        'active_program': active_program,
+        'has_any_shared': has_any_shared,
     })
 
 

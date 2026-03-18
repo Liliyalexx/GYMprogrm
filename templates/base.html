@@ -5,8 +5,16 @@
 <html lang="{{ CURRENT_LANG }}">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>{% block title %}GYMprogrm{% endblock %}</title>
+  <!-- PWA -->
+  <link rel="manifest" href="{% static 'manifest.json' %}">
+  <meta name="theme-color" content="#2563eb">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GYMprogrm">
+  <link rel="apple-touch-icon" href="{% static 'images/logo.png' %}">
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
   {% block extra_css %}{% endblock %}
   <style>
@@ -44,7 +52,7 @@
     .lang-select option { color: #111; background: #fff; }
   </style>
 </head>
-<body>
+<body{% if user.is_authenticated and user.student and not user.is_staff %} class="student-portal"{% endif %}>
 
 {% if user.is_authenticated %}
 <nav class="nav">
@@ -53,30 +61,18 @@
   {% else %}
   <a href="{% url 'students:portal_dashboard' %}" class="nav-brand" style="padding:0;">
   {% endif %}
-    <div style="height:46px;overflow:hidden;display:flex;align-items:flex-start;">
-      <img src="{% static 'images/logo.png' %}" alt="GymProgram"
-        style="height:108px;width:auto;display:block;margin-top:-2px;">
-    </div>
+    <img src="{% static 'images/logo.png' %}" alt="GymProgram" style="height:62px;width:auto;display:block;">
   </a>
 
-  <!-- Hamburger button (mobile only) -->
+  {% if user.is_staff or not user.student %}
+  <!-- Trainer: hamburger + full nav links -->
   <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu">
     <span></span><span></span><span></span>
   </button>
-
   <div class="nav-links" id="nav-links">
-    {% if user.is_staff or not user.student %}
-      <!-- Trainer nav -->
-      <a href="{% url 'students:list' %}"><span>{% trans "Students" %}</span></a>
-      <a href="{% url 'programs:exercise_library' %}"><span>{% trans "Exercises" %}</span></a>
-      <a href="{% url 'students:doctor_list' %}"><span>{% trans "Doctors" %}</span></a>
-    {% else %}
-      <!-- Student nav -->
-      <a href="{% url 'students:portal_dashboard' %}"><span>{% trans "Dashboard" %}</span></a>
-      <a href="{% url 'students:portal_program' %}"><span>{% trans "My Program" %}</span></a>
-      <a href="{% url 'students:portal_history' %}"><span>{% trans "History" %}</span></a>
-    {% endif %}
-
+    <a href="{% url 'students:list' %}"><span>{% trans "Students" %}</span></a>
+    <a href="{% url 'programs:exercise_library' %}"><span>{% trans "Exercises" %}</span></a>
+    <a href="{% url 'students:doctor_list' %}"><span>{% trans "Doctors" %}</span></a>
     <!-- Language switcher -->
     <div class="lang-switcher">
       <form method="post" action="{% url 'set_language' %}" style="margin:0;">
@@ -112,7 +108,6 @@
         </select>
       </form>
     </div>
-
     <form method="post" action="{% url 'logout' %}" style="margin:0;">
       {% csrf_token %}
       <button type="submit" style="background:none;border:none;cursor:pointer;color:inherit;font:inherit;padding:.3rem .6rem;">
@@ -120,6 +115,38 @@
       </button>
     </form>
   </div>
+
+  {% else %}
+  <!-- Student: compact top bar — only language switcher + logout -->
+  <div class="nav-links" style="gap:.35rem;">
+    <div class="lang-switcher">
+      <form method="post" action="{% url 'set_language' %}" style="margin:0;">
+        {% csrf_token %}
+        <input type="hidden" name="language" value="en">
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <button type="submit" class="lang-pill {% if CURRENT_LANG == 'en' %}lang-active{% endif %}">EN</button>
+      </form>
+      <form method="post" action="{% url 'set_language' %}" style="margin:0;">
+        {% csrf_token %}
+        <input type="hidden" name="language" value="ru">
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <button type="submit" class="lang-pill {% if CURRENT_LANG == 'ru' %}lang-active{% endif %}">RU</button>
+      </form>
+      <form method="post" action="{% url 'set_language' %}" style="margin:0;">
+        {% csrf_token %}
+        <input type="hidden" name="language" value="es">
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <button type="submit" class="lang-pill {% if CURRENT_LANG == 'es' %}lang-active{% endif %}">ES</button>
+      </form>
+    </div>
+    <form method="post" action="{% url 'logout' %}" style="margin:0;">
+      {% csrf_token %}
+      <button type="submit" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.75);font:inherit;font-size:.8rem;padding:.3rem .5rem;">
+        {% trans "Logout" %}
+      </button>
+    </form>
+  </div>
+  {% endif %}
 </nav>
 {% endif %}
 
@@ -147,5 +174,49 @@
 </script>
 
 {% block extra_js %}{% endblock %}
+
+{% if user.is_authenticated and user.student and not user.is_staff %}
+<!-- Student bottom tab bar -->
+{% with cur=request.resolver_match.url_name %}
+<nav class="bottom-nav" role="navigation" aria-label="Main navigation">
+  <a href="{% url 'students:portal_dashboard' %}" class="bnav-tab {% if cur == 'portal_dashboard' %}active{% endif %}">
+    <svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+    </svg>
+    <span class="bnav-label">{% trans "Home" %}</span>
+  </a>
+  <a href="{% url 'students:portal_program' %}" class="bnav-tab {% if cur == 'portal_program' or cur == 'portal_log_workout' %}active{% endif %}">
+    <svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/>
+    </svg>
+    <span class="bnav-label">{% trans "Program" %}</span>
+  </a>
+  <a href="{% url 'students:portal_history' %}" class="bnav-tab {% if cur == 'portal_history' %}active{% endif %}">
+    <svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+    </svg>
+    <span class="bnav-label">{% trans "History" %}</span>
+  </a>
+  <a href="{% url 'students:portal_recommendations' %}" class="bnav-tab {% if cur == 'portal_recommendations' %}active{% endif %}">
+    <svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    <span class="bnav-label">{% trans "Tips" %}</span>
+  </a>
+  <a href="{% url 'students:portal_billing' %}" class="bnav-tab {% if cur == 'portal_billing' %}active{% endif %}">
+    <svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>
+    </svg>
+    <span class="bnav-label">{% trans "Billing" %}</span>
+  </a>
+</nav>
+{% endwith %}
+{% endif %}
+
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(function() {});
+}
+</script>
 </body>
 </html>

@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% trans "Billing" %} — GYMprogrm{% endblock %}
+
+{% block extra_css %}
+<style>
+  .portal-wrap { max-width: 640px; margin: 0 auto; padding-bottom: 2.5rem; }
+
+  /* Countdown hero */
+  .billing-hero {
+    background: linear-gradient(135deg, #1e3a8a 0%, #4f46e5 50%, #7c3aed 100%);
+    border-radius: 20px;
+    padding: 1.5rem;
+    color: #fff;
+    margin-bottom: 1.25rem;
+  }
+  .billing-hero-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .75rem;
+    margin-bottom: 1.25rem;
+  }
+  .billing-big { font-size: 3rem; font-weight: 800; line-height: 1; }
+  .billing-big-label { font-size: .8rem; opacity: .8; margin-top: .2rem; }
+  .billing-hero-title { font-size: .78rem; opacity: .75; margin-bottom: .2rem; }
+
+  .billing-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    background: rgba(255,255,255,.08);
+    border-radius: 14px;
+    padding: 1rem;
+  }
+  @media (max-width: 480px) { .billing-stats { grid-template-columns: 1fr 1fr; } }
+  .billing-stat-val { font-size: 1.1rem; font-weight: 700; }
+  .billing-stat-lbl { font-size: .72rem; opacity: .7; margin-top: .1rem; }
+
+  /* Info card */
+  .info-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+    box-shadow: var(--shadow);
+  }
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: .88rem;
+    padding: .5rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-label { color: var(--text-muted); }
+  .info-value { font-weight: 600; }
+
+  /* Payment button */
+  .pay-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    padding: .85rem;
+    border-radius: 12px;
+    font-size: .95rem;
+    font-weight: 700;
+    text-decoration: none;
+    width: 100%;
+    transition: opacity .15s;
+  }
+  .pay-action-btn:hover { opacity: .85; color: #fff; }
+  .pay-btn-venmo  { background: #008CFF; color: #fff; }
+  .pay-btn-paypal { background: #003087; color: #fff; }
+  .pay-btn-zelle  { background: #6D1ED4; color: #fff; }
+  .pay-btn-cash   { background: #16a34a; color: #fff; }
+  .pay-btn-bank   { background: #0f172a; color: #fff; }
+
+  /* Status badge */
+  .status-badge {
+    padding: .3rem .85rem;
+    border-radius: 999px;
+    font-size: .8rem;
+    font-weight: 700;
+  }
+  .badge-paid    { background: rgba(255,255,255,.18); }
+  .badge-overdue { background: rgba(239,68,68,.35); }
+  .badge-pending { background: rgba(234,179,8,.25); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="portal-wrap">
+
+<!-- Hero countdown -->
+{% if student.payment_start_date and days_until is not None %}
+<div class="billing-hero">
+  <div class="billing-hero-top">
+    <div>
+      <div class="billing-hero-title">{% trans "Next payment in" %}</div>
+      <div class="billing-big">{{ days_until }}</div>
+      <div class="billing-big-label">{% trans "days" %}</div>
+    </div>
+    {% if student.payment_status %}
+    <div>
+      {% if student.payment_status == 'paid' %}
+        <span class="status-badge badge-paid">✓ {% trans "Paid" %}</span>
+      {% elif student.payment_status == 'overdue' %}
+        <span class="status-badge badge-overdue">⚠ {% trans "Overdue" %}</span>
+      {% elif student.payment_status == 'pending' %}
+        <span class="status-badge badge-pending">⏳ {% trans "Pending" %}</span>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="billing-stats">
+    <div>
+      <div class="billing-stat-val">{{ student.get_payment_plan_display|truncatewords:1 }}</div>
+      <div class="billing-stat-lbl">{% trans "Plan" %}</div>
+    </div>
+    <div>
+      <div class="billing-stat-val">{{ days_since }}</div>
+      <div class="billing-stat-lbl">{% trans "Days since last" %}</div>
+    </div>
+    <div>
+      <div class="billing-stat-val">{{ next_payment_date|date:"d M" }}</div>
+      <div class="billing-stat-lbl">{% trans "Due date" %}</div>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="billing-hero" style="text-align:center;padding:2rem;">
+  <div style="font-size:2.5rem;margin-bottom:.75rem;">💳</div>
+  <div style="font-size:1rem;font-weight:700;margin-bottom:.3rem;">{% trans "Subscription" %}</div>
+  <div style="font-size:.85rem;opacity:.8;">{% trans "Contact your trainer for billing details." %}</div>
+</div>
+{% endif %}
+
+<!-- Subscription details -->
+<div class="info-card">
+  <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:.5rem;">{% trans "Subscription Details" %}</div>
+  <div class="info-row">
+    <span class="info-label">{% trans "Plan" %}</span>
+    <span class="info-value">{{ student.get_payment_plan_display }}</span>
+  </div>
+  {% if student.payment_start_date %}
+  <div class="info-row">
+    <span class="info-label">{% trans "Since" %}</span>
+    <span class="info-value">{{ student.payment_start_date|date:"d M Y" }}</span>
+  </div>
+  {% endif %}
+  {% if student.payment_method %}
+  <div class="info-row">
+    <span class="info-label">{% trans "Payment method" %}</span>
+    <span class="info-value">{{ student.get_payment_method_display }}</span>
+  </div>
+  {% endif %}
+  {% if student.payment_status %}
+  <div class="info-row">
+    <span class="info-label">{% trans "Status" %}</span>
+    <span class="info-value" style="{% if student.payment_status == 'paid' %}color:#15803d;{% elif student.payment_status == 'overdue' %}color:#dc2626;{% else %}color:#a16207;{% endif %}">
+      {% if student.payment_status == 'paid' %}✓ {% trans "Paid" %}
+      {% elif student.payment_status == 'overdue' %}⚠ {% trans "Overdue" %}
+      {% else %}⏳ {% trans "Pending" %}
+      {% endif %}
+    </span>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Pay now button — uses per-student handle if set, else trainer's global handles -->
+{% with venmo_h=student.payment_handle|default:trainer_payment.venmo_handle paypal_h=student.payment_handle|default:trainer_payment.paypal_handle zelle_h=student.payment_handle|default:trainer_payment.zelle_handle %}
+{% if student.payment_method %}
+<div style="margin-bottom:1.25rem;">
+  {% if student.payment_method == 'venmo' %}
+    {% with h=student.payment_handle|default:trainer_payment.venmo_handle %}
+    {% if h %}
+      {% if h|slice:":1" == '@' %}
+        <a href="https://venmo.com/{{ h|slice:'1:' }}" target="_blank" class="pay-action-btn pay-btn-venmo">💜 {% trans "Pay via Venmo" %}</a>
+      {% else %}
+        <a href="https://venmo.com/{{ h }}" target="_blank" class="pay-action-btn pay-btn-venmo">💜 {% trans "Pay via Venmo" %}</a>
+      {% endif %}
+    {% else %}
+      <div class="pay-action-btn pay-btn-venmo" style="cursor:default;opacity:.6;">💜 {% trans "Venmo — contact your trainer for handle" %}</div>
+    {% endif %}
+    {% endwith %}
+  {% elif student.payment_method == 'paypal' %}
+    {% with h=student.payment_handle|default:trainer_payment.paypal_handle %}
+    {% if h %}
+      {% if 'paypal.me' in h or 'paypal.com' in h %}
+        <a href="{% if h|slice:':4' != 'http' %}https://{% endif %}{{ h }}" target="_blank" class="pay-action-btn pay-btn-paypal">💛 {% trans "Pay via PayPal" %}</a>
+      {% else %}
+        <a href="https://paypal.me/{{ h }}" target="_blank" class="pay-action-btn pay-btn-paypal">💛 {% trans "Pay via PayPal" %}</a>
+      {% endif %}
+    {% else %}
+      <div class="pay-action-btn pay-btn-paypal" style="cursor:default;opacity:.6;">💛 {% trans "PayPal — contact your trainer for link" %}</div>
+    {% endif %}
+    {% endwith %}
+  {% elif student.payment_method == 'zelle' %}
+    {% with h=student.payment_handle|default:trainer_payment.zelle_handle %}
+    {% if h %}
+      <a href="https://enroll.zellepay.com/qr-codes?data={{ h|urlencode }}" target="_blank" class="pay-action-btn pay-btn-zelle">💜 {% trans "Pay via Zelle" %}</a>
+      <div style="text-align:center;font-size:.82rem;color:var(--text-muted);margin-top:.5rem;">{{ h }}</div>
+    {% else %}
+      <div class="pay-action-btn pay-btn-zelle" style="cursor:default;opacity:.6;">💜 {% trans "Zelle — contact your trainer" %}</div>
+    {% endif %}
+    {% endwith %}
+  {% elif student.payment_method == 'cash' %}
+    <div class="pay-action-btn pay-btn-cash" style="cursor:default;">💵 {% trans "Pay with Cash — contact your trainer" %}</div>
+  {% elif student.payment_method == 'bank' %}
+    <div class="pay-action-btn pay-btn-bank" style="cursor:default;">🏦 {% trans "Bank Transfer" %}{% if student.payment_handle %} · {{ student.payment_handle }}{% endif %}</div>
+  {% endif %}
+</div>
+{% endif %}
+{% endwith %}
+
+<!-- Need help -->
+<div style="text-align:center;font-size:.83rem;color:var(--text-muted);">
+  {% trans "Questions about your billing? Contact your trainer." %}
+</div>
+
+</div>
+{% endblock %}

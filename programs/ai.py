@@ -29,6 +29,153 @@ def _lang_suffix(language):
     return f'\n\nIMPORTANT: {instruction}'
 
 
+def translate_program_section(program, section):
+    """
+    Translate one section of a program to English and save it.
+    section: 'analysis' | 'nutrition'
+    Returns True on success.
+    """
+    client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+
+    if section == 'analysis' and program.description and not program.description_en:
+        msg = client.messages.create(
+            model='claude-haiku-4-5-20251001',
+            max_tokens=2000,
+            messages=[{
+                'role': 'user',
+                'content': (
+                    'Translate each bullet point of this gym training analysis from Russian to English. '
+                    'Keep the medical/fitness terminology precise. '
+                    'Return only the translated text, same structure, one bullet per line. No explanation.\n\n'
+                    + program.description
+                ),
+            }],
+        )
+        program.description_en = msg.content[0].text.strip()
+        program.save(update_fields=['description_en'])
+        return True
+
+    if section == 'nutrition' and program.nutrition_plan and not program.nutrition_plan_en:
+        plan_str = json.dumps(program.nutrition_plan, ensure_ascii=False)
+        msg = client.messages.create(
+            model='claude-sonnet-4-6',
+            max_tokens=8000,
+            messages=[{
+                'role': 'user',
+                'content': (
+                    'Translate this nutrition plan JSON from Russian to English. '
+                    'Keep ALL keys exactly the same. Only translate string values (meal names, food items, notes, recommendations). '
+                    'Keep all numbers, times, and units unchanged. '
+                    'Return ONLY valid JSON, no markdown, no explanation.\n\n'
+                    + plan_str
+                ),
+            }],
+        )
+        raw = msg.content[0].text.strip()
+        if raw.startswith('```'):
+            raw = raw.split('\n', 1)[1].rsplit('```', 1)[0].strip()
+        program.nutrition_plan_en = json.loads(raw)
+        program.save(update_fields=['nutrition_plan_en'])
+        return True
+
+    return False
+
+
+def backfill_english_names(program):
+    """
+    For an existing program: translate all empty name_en fields (program + days)
+    and clean Russian text out of exercise reps. Uses Claude Haiku (fast, cheap).
+    Returns (programs_fixed, days_fixed, reps_fixed) counts.
+    """
+    client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+
+    # Collect items that need translation
+    items_to_translate = []
+    if not program.name_en and program.name:
+        items_to_translate.append({'type': 'program', 'id': program.pk, 'text': program.name})
+
+    days = list(program.days.all())
+    for day in days:
+        if not day.name_en and day.name:
+            items_to_translate.append({'type': 'day', 'id': day.pk, 'text': day.name})
+
+    # Also collect reps that contain Cyrillic
+    import re as _re
+    exercises_with_ru_reps = []
+    for day in days:
+        for pe in day.exercises.all():
+            if pe.reps and _re.search(r'[а-яёА-ЯЁ]', pe.reps):
+                exercises_with_ru_reps.append(pe)
+
+    programs_fixed = 0
+    days_fixed = 0
+    reps_fixed = 0
+
+    # Translate names in one batch call
+    if items_to_translate:
+        texts_json = json.dumps([i['text'] for i in items_to_translate], ensure_ascii=False)
+        msg = client.messages.create(
+            model='claude-haiku-4-5-20251001',
+            max_tokens=1024,
+            messages=[{
+                'role': 'user',
+                'content': (
+                    f'Translate each gym workout name from Russian to English. '
+                    f'Keep the same structure (Day N — Muscle Group). '
+                    f'Return ONLY a JSON array of translated strings, same order, same count. '
+                    f'No explanation, no markdown.\n\nInput: {texts_json}'
+                ),
+            }],
+        )
+        raw = msg.content[0].text.strip()
+        # Strip markdown fences if present
+        if raw.startswith('```'):
+            raw = raw.split('\n', 1)[1].rsplit('```', 1)[0].strip()
+        try:
+            translations = json.loads(raw)
+        except Exception:
+            translations = []
+
+        if len(translations) == len(items_to_translate):
+            for item, eng in zip(items_to_translate, translations):
+                if item['type'] == 'program':
+                    from .models import WorkoutProgram
+                    WorkoutProgram.objects.filter(pk=item['id']).update(name_en=eng)
+                    programs_fixed += 1
+                else:
+                    from .models import ProgramDay
+                    ProgramDay.objects.filter(pk=item['id']).update(name_en=eng)
+                    days_fixed += 1
+
+    # Clean Russian text from reps (e.g. "10-12 на каждую ногу" → "10-12 each leg")
+    RU_REPS_MAP = {
+        r'на каждую ногу': 'each leg',
+        r'на каждую сторону': 'each side',
+        r'на каждую руку': 'each arm',
+        r'на сторону': 'each side',
+        r'на ногу': 'each leg',
+        r'на руку': 'each arm',
+        r'каждая сторона': 'each side',
+        r'каждая нога': 'each leg',
+        r'секунд': 'sec',
+        r'сек': 'sec',
+        r'минут': 'min',
+        r'мин': 'min',
+    }
+    for pe in exercises_with_ru_reps:
+        cleaned = pe.reps
+        for ru_pat, en_repl in RU_REPS_MAP.items():
+            cleaned = _re.sub(ru_pat, en_repl, cleaned, flags=_re.IGNORECASE)
+        # Remove any remaining Cyrillic words
+        cleaned = _re.sub(r'\s+[а-яёА-ЯЁ][а-яёА-ЯЁ\s]*', ' ', cleaned).strip()
+        if cleaned != pe.reps:
+            pe.reps = cleaned
+            pe.save(update_fields=['reps'])
+            reps_fixed += 1
+
+    return programs_fixed, days_fixed, reps_fixed
+
+
 def generate_exercise_illustration(exercise_name, muscle_group, description=''):
     """
     Generate a cartoon female exercise illustration using DALL-E 3.
@@ -542,9 +689,9 @@ def suggest_program(student, training_days=3, training_location='gym', language=
 
 2. СТРОГОЕ СООТВЕТСТВИЕ ДНЯ И УПРАЖНЕНИЙ:
    Каждый день имеет ОДНУ тему (мышечную группу или комбинацию).
-   ВСЕ упражнения дня должны тренировать ТОЛЬКО указанные в названии дня мышцы.
-   ЗАПРЕЩЕНО: добавлять упражнения на плечи в день ног, руки в день спины и т.д.
-   Допустимо: в конце дня 1–2 упражнения на пресс/кардио как финишёр.
+   Упражнения 1–5 должны тренировать ТОЛЬКО указанные в названии дня мышцы.
+   Упражнение 6 (финишёр) — ВСЕГДА упражнение на пресс/кор (планка, скручивания, подъём ног и т.д.).
+   ЗАПРЕЩЕНО: добавлять упражнения на плечи в день ног, руки в день спины и т.д. (кроме финишёра на пресс).
 
 3. ВОЗРАСТ И ЗДОРОВЬЕ:
    Возраст {age} лет — адаптируй нагрузку и выбор упражнений.
@@ -552,6 +699,15 @@ def suggest_program(student, training_days=3, training_location='gym', language=
 
 4. ТОЛЬКО УПРАЖНЕНИЯ ИЗ СПИСКА (для зала):
    Поле "name" должно совпадать с названиями из списка выше ТОЧНО.
+
+5. НЕТ ДУБЛИКАТОВ:
+   Одно упражнение может встречаться ТОЛЬКО ОДИН РАЗ во всей программе.
+   НЕЛЬЗЯ повторять одно и то же упражнение в разных днях.
+
+6. КОЛИЧЕСТВО УПРАЖНЕНИЙ:
+   В каждом дне РОВНО 6 упражнений. Не 5, не 4 — ровно 6.
+   Упражнения 1–5: основные мышечные группы дня.
+   Упражнение 6: финишёр на пресс/кор (Plank, Crunch, Leg Raise, Russian Twist и т.д.).
 ═══════════════════════════════════════════
 
 Отвечай ТОЛЬКО валидным JSON (без markdown, без пояснений):
@@ -586,8 +742,9 @@ def suggest_program(student, training_days=3, training_location='gym', language=
 
 Правила:
 - Ровно {training_days} дней в "days"
-- 4–6 упражнений в день
+- РОВНО 6 упражнений в каждом дне (5 основных + 1 финишёр на пресс/кор)
 - "name" — английское название из списка доступных упражнений
+- "reps" — ТОЛЬКО цифры/диапазон на английском: "10-12", "8", "30 sec", "12 each leg". НИКАКОГО русского текста в reps!
 - "name_ru" — русское название
 - "program_name_en" — английское название программы (ALWAYS in English)
 - "day_name_en" — английское название дня (ALWAYS in English, e.g. "Day 1 — Glutes & Legs")
@@ -823,3 +980,53 @@ def analyze_blood_test(student, language='ru'):
         messages=[{'role': 'user', 'content': content}],
     )
     return _parse_json(msg.content[0].text, msg)
+
+
+def suggest_exercises_from_photo(student, exercise_names: list) -> list:
+    """Given a student's photo analysis and the full exercise library names,
+    return a list of suggested exercises (matching library names) with sets/reps/reason.
+
+    Returns a list of dicts:
+      [{"name": "...", "sets": 3, "reps": "10-12", "reason": "..."}, ...]
+    """
+    client = anthropic.Anthropic()
+
+    analysis = student.photo_analysis or ''
+    goals = student.goals or 'not specified'
+    health = student.health_issues or 'none'
+    age = student.age or 0
+    gender = student.get_gender_display() if student.gender else 'unknown'
+
+    library_list = '\n'.join(f'- {n}' for n in sorted(exercise_names))
+
+    prompt = f"""You are an expert personal trainer. Based on the following body composition analysis and client profile, select 4–6 exercises from the exercise library below that would be most beneficial.
+
+CLIENT PROFILE:
+- Gender: {gender}, Age: {age}
+- Goals: {goals}
+- Health issues / contraindications: {health}
+
+BODY COMPOSITION ANALYSIS:
+{analysis}
+
+EXERCISE LIBRARY (you MUST only use exercises from this list, using the exact name):
+{library_list}
+
+Return a JSON array only — no extra text. Each item:
+{{"name": "<exact name from library>", "sets": <integer 3-5>, "reps": "<e.g. 10-12 or 30 sec>", "reason": "<1 sentence why this exercise for this client>"}}
+
+Rules:
+- Pick exercises that address the weak points or goals identified in the analysis
+- Use EXACT exercise names from the library list
+- No duplicates
+- Return only the JSON array"""
+
+    msg = client.messages.create(
+        model='claude-haiku-4-5-20251001',
+        max_tokens=1024,
+        messages=[{'role': 'user', 'content': prompt}],
+    )
+    result = _parse_json(msg.content[0].text, msg)
+    if isinstance(result, list):
+        return result
+    return []

@@ -5,88 +5,104 @@
 
 {% block extra_css %}
 <style>
-  .program-hero {
-    background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
+  .pw-hero {
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #7c3aed 100%);
     border-radius: 16px;
-    padding: 1.5rem;
-    color: #fff;
+    padding: 1.25rem 1.1rem;
     margin-bottom: 1.5rem;
-  }
-  .program-hero h1 { font-size: 1.2rem; font-weight: 800; margin-bottom: .2rem; }
-  .program-hero p  { font-size: .88rem; opacity: .85; margin: 0; }
-
-  .day-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    margin-bottom: 1.1rem;
-    overflow: hidden;
-    box-shadow: var(--shadow);
-  }
-  .day-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1rem 1.25rem;
-    cursor: pointer;
-    user-select: none;
-    gap: .5rem;
+    gap: .75rem;
+    color: #fff;
   }
-  .day-header:hover { background: #f8fafc; }
-  .day-title { font-weight: 700; font-size: .98rem; }
-  .day-meta  { font-size: .78rem; color: var(--text-muted); margin-top: .12rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 240px; }
-  .day-chevron { font-size: .9rem; color: var(--text-muted); transition: transform .2s; flex-shrink: 0; }
-  .day-chevron.open { transform: rotate(180deg); }
-
-  .day-body { display: none; padding: .75rem; border-top: 1px solid var(--border); }
-  .day-body.open { display: block; }
-
-  .ex-card {
-    display: flex;
-    gap: .85rem;
-    align-items: flex-start;
-    padding: .85rem;
-    border-radius: 12px;
-    margin-bottom: .6rem;
-    background: #f8fafc;
-    border: 1px solid #e9eef5;
-  }
-  .ex-photo {
-    width: 68px; height: 68px;
-    border-radius: 10px;
-    object-fit: cover;
+  .pw-hero-name { font-size: 1.15rem; font-weight: 800; line-height: 1.2; }
+  .pw-badge {
     flex-shrink: 0;
+    background: rgba(255,255,255,.2);
+    color: #fff;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    padding: .3rem .7rem;
+    border-radius: 999px;
+    white-space: nowrap;
   }
-  .ex-photo-placeholder {
-    width: 68px; height: 68px;
+
+  .pw-day { margin-bottom: 1.75rem; }
+  .pw-day-title { font-size: 1.05rem; font-weight: 800; color: var(--text); }
+  .pw-day-sub { font-size: .76rem; color: var(--text-muted); margin-top: .1rem; text-transform: uppercase; letter-spacing: .06em; }
+
+  .pw-ex-row {
+    display: flex;
+    overflow-x: auto;
+    gap: .75rem;
+    padding: .75rem 0 .5rem;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    margin-bottom: .75rem;
+  }
+  .pw-ex-row::-webkit-scrollbar { display: none; }
+
+  .pw-ex-card {
+    width: clamp(120px, 38vw, 150px);
+    flex-shrink: 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: .75rem .65rem;
+    box-shadow: var(--shadow);
+  }
+  .pw-ex-img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
     border-radius: 10px;
-    background: linear-gradient(135deg, #e0e7ff, #ede9fe);
+    margin-bottom: .5rem;
+    display: block;
+  }
+  .pw-ex-placeholder {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 10px;
+    margin-bottom: .5rem;
+    background: #eff6ff;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
-    flex-shrink: 0;
+    font-size: 2rem;
   }
-  .ex-name   { font-weight: 700; font-size: .93rem; margin-bottom: .2rem; }
-  .ex-target { font-size: .82rem; color: var(--text-muted); margin-bottom: .25rem; }
-  .ex-last   {
-    display: inline-flex; align-items: center; gap: .25rem;
-    font-size: .76rem; font-weight: 600;
-    background: #dcfce7; color: #15803d;
-    padding: .18rem .5rem; border-radius: 999px;
+  .pw-ex-name {
+    font-size: .85rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+    margin-bottom: .2rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
+  .pw-ex-sets { font-size: .76rem; color: var(--text-muted); }
 
-  .start-btn {
-    display: flex; align-items: center; justify-content: center; gap: .5rem;
-    width: 100%; padding: .85rem;
-    margin-top: .25rem;
+  .pw-start-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    width: 100%;
+    padding: .85rem;
     background: linear-gradient(135deg, var(--primary), #7c3aed);
-    color: #fff; border: none; border-radius: 12px;
-    font-size: .98rem; font-weight: 700;
-    text-decoration: none; cursor: pointer;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: .95rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
     transition: opacity .15s;
   }
-  .start-btn:hover { opacity: .9; color: #fff; }
+  .pw-start-btn:hover { opacity: .88; color: #fff; }
 </style>
 {% endblock %}
 
@@ -95,95 +111,51 @@
 
 {% if program %}
 
-  <div class="program-hero">
-    <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;opacity:.7;margin-bottom:.3rem;">{% trans "Active Program" %}</div>
-    <h1>{% if CURRENT_LANG == 'ru' or not program.name_en %}{{ program.name }}{% else %}{{ program.name_en }}{% endif %}</h1>
-    {% if program.description %}<p style="margin-top:.3rem;">{{ program.description }}</p>{% endif %}
-    {% if program.start_date %}
-    <p style="margin-top:.5rem;font-size:.8rem;opacity:.7;">
-      {% trans "Started" %} {{ program.start_date|date:"d M Y" }}{% if program.duration_weeks %} · {{ program.duration_weeks }} {% trans "weeks" %}{% endif %}
-    </p>
+  <div class="pw-hero">
+    <div class="pw-hero-name">
+      {% if CURRENT_LANG == 'ru' and program.name_ru %}{{ program.name_ru }}{% elif program.name_en %}{{ program.name_en }}{% else %}{{ program.name }}{% endif %}
+    </div>
+    {% if program.duration_weeks %}
+      <span class="pw-badge">{{ program.duration_weeks }} {% trans "weeks" %}</span>
+    {% elif program.start_date %}
+      <span class="pw-badge">{{ program.start_date|date:"d M Y" }}</span>
     {% endif %}
   </div>
 
   {% for day in program.days.all %}
-  <div class="day-card">
-    <div class="day-header" onclick="toggleDay({{ day.pk }})">
-      <div style="min-width:0;">
-        <div class="day-title">{% if CURRENT_LANG == 'ru' or not day.name_en %}{{ day.name }}{% else %}{{ day.name_en }}{% endif %}</div>
-        <div class="day-meta">
-          {% for ex in day.exercises.all %}{% if ex.confirmed %}{% if not forloop.first %} · {% endif %}{% if ex.name_ru and CURRENT_LANG == 'ru' %}{{ ex.name_ru }}{% else %}{{ ex.exercise.name }}{% endif %}{% endif %}{% endfor %}
-        </div>
-      </div>
-      <span class="day-chevron" id="chevron-{{ day.pk }}">▼</span>
-    </div>
+  <div class="pw-day">
+    <div class="pw-day-title">{% if CURRENT_LANG == 'ru' and day.name_ru %}{{ day.name_ru }}{% elif day.name_en %}{{ day.name_en }}{% else %}{{ day.name }}{% endif %}</div>
+    <div class="pw-day-sub">{% trans "Workouts" %}</div>
 
-    <div class="day-body" id="day-body-{{ day.pk }}">
-
+    <div class="pw-ex-row">
       {% for ex in day.exercises.all %}
-      {% if ex.confirmed %}
-      {% with lw=last_weights|get_item:ex.pk %}
-      <div class="ex-card">
+      <div class="pw-ex-card">
         {% if ex.exercise.photo_url %}
-          <img src="{{ ex.exercise.photo_url }}" alt="{{ ex.exercise.name }}" class="ex-photo">
+          <img src="{{ ex.exercise.photo_url }}" alt="{{ ex.exercise.name }}" class="pw-ex-img">
         {% else %}
-          <div class="ex-photo-placeholder">💪</div>
+          <div class="pw-ex-placeholder">💪</div>
         {% endif %}
-        <div style="flex:1;min-width:0;">
-          <div class="ex-name">{% if ex.name_ru and CURRENT_LANG == 'ru' %}{{ ex.name_ru }}{% else %}{{ ex.exercise.name }}{% endif %}</div>
-          <div class="ex-target">
-            🎯 {{ ex.sets }} {% trans "sets" %} × {{ ex.reps }} {% trans "reps" %}
-            {% if ex.weight_kg %} · {{ ex.weight_kg }} kg {% trans "target" %}{% endif %}
-          </div>
-          {% if lw %}
-          <span class="ex-last">
-            ✓ {% trans "Last" %}:
-            {% if lw.weight %}{{ lw.weight }} kg{% endif %}
-            {% if lw.reps %} · {{ lw.reps }}{% endif %}
-            · {{ lw.date|date:"d M" }}
-          </span>
-          {% endif %}
-          {% if ex.exercise.posture_tips %}
-          <details style="margin-top:.45rem;">
-            <summary style="font-size:.78rem;color:var(--primary);cursor:pointer;font-weight:600;">{% trans "Technique" %} ›</summary>
-            <div style="font-size:.8rem;color:var(--text-muted);margin-top:.3rem;line-height:1.5;padding-left:.25rem;">{{ ex.exercise.posture_tips }}</div>
-          </details>
-          {% endif %}
+        <div class="pw-ex-name">
+          {% if ex.name_ru and CURRENT_LANG == 'ru' %}{{ ex.name_ru }}{% else %}{{ ex.exercise.name }}{% endif %}
         </div>
+        <div class="pw-ex-sets">{{ ex.sets }} × {{ ex.reps }}</div>
       </div>
-      {% endwith %}
-      {% endif %}
       {% endfor %}
-
-      <a href="{% url 'students:portal_log_workout' day.pk %}" class="start-btn">
-        🏋️ {% trans "Start Workout" %}
-      </a>
-
     </div>
+
+    <a href="{% url 'students:portal_log_workout' day.pk %}" class="pw-start-btn">
+      🏋️ {% trans "Start Workout" %}
+    </a>
   </div>
   {% endfor %}
 
 {% else %}
   <div style="text-align:center;padding:4rem 1rem;">
-    <p style="font-size:3rem;margin-bottom:.75rem;">💪</p>
-    <p style="font-size:1.1rem;font-weight:700;margin-bottom:.4rem;">{% trans "No active program yet" %}</p>
-    <p style="color:var(--text-muted);font-size:.9rem;">{% trans "Your trainer will set one up for you. Check back soon!" %}</p>
+    <div style="font-size:3.5rem;margin-bottom:.75rem;">💪</div>
+    <div style="font-size:1.1rem;font-weight:800;margin-bottom:.4rem;">{% trans "No active program yet" %}</div>
+    <div style="color:var(--text-muted);font-size:.9rem;">{% trans "Your trainer will set one up for you. Check back soon!" %}</div>
   </div>
 {% endif %}
 
 </div>
-
-<script>
-function toggleDay(pk) {
-  var body    = document.getElementById('day-body-' + pk);
-  var chevron = document.getElementById('chevron-' + pk);
-  body.classList.toggle('open');
-  chevron.classList.toggle('open');
-}
-document.addEventListener('DOMContentLoaded', function () {
-  var firstBody = document.querySelector('.day-body');
-  var firstChev = document.querySelector('.day-chevron');
-  if (firstBody) { firstBody.classList.add('open'); firstChev.classList.add('open'); }
-});
-</script>
 {% endblock %}

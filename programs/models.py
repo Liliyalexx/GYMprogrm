@@ -38,13 +38,18 @@ class WorkoutProgram(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='programs')
     name = models.CharField(max_length=200)
     name_en = models.CharField(max_length=200, blank=True)
+    name_ru = models.CharField(max_length=200, blank=True)
     description = models.TextField(blank=True)
+    description_en = models.TextField(blank=True)
     training_days = models.PositiveSmallIntegerField(default=3)
     nutrition_plan = models.JSONField(null=True, blank=True)
+    nutrition_plan_en = models.JSONField(null=True, blank=True)
     start_date = models.DateField(null=True, blank=True)
     duration_weeks = models.PositiveSmallIntegerField(default=2)
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
+    # Keys: 'goals', 'analysis', 'nutrition' — True means confirmed to share with student
+    shared_sections = models.JSONField(default=dict, blank=True)
 
     class Meta:
         ordering = ['-created_at']
@@ -58,6 +63,7 @@ class ProgramDay(models.Model):
     day_number = models.PositiveSmallIntegerField()
     name = models.CharField(max_length=200, help_text='E.g. "Day 1 — Glutes & Legs"')
     name_en = models.CharField(max_length=200, blank=True)
+    name_ru = models.CharField(max_length=200, blank=True)
 
     class Meta:
         ordering = ['day_number']
@@ -76,7 +82,7 @@ class ProgramExercise(models.Model):
     name_ru = models.CharField(max_length=200, blank=True)
     reason_ru = models.TextField(blank=True)
     order = models.PositiveSmallIntegerField(default=0)
-    confirmed = models.BooleanField(default=False)
+    confirmed = models.BooleanField(default=True)
 
     class Meta:
         ordering = ['order']

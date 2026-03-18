@@ -4,16 +4,30 @@
 {% block title %}{{ program.name }}{% endblock %}
 
 {% block content %}
-<div class="page-header">
+<div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:.75rem;">
   <div>
     <a href="{% url 'programs:list' program.student.pk %}" style="color:var(--text-muted);font-size:.9rem;text-decoration:none;">← {% trans "Programs" %} {{ program.student.name }}</a>
     <h1 class="page-title" style="margin-top:.25rem;">{{ program.name }}</h1>
   </div>
+  <form method="post" action="{% url 'programs:backfill_english' program.pk %}" style="margin-top:.5rem;">
+    {% csrf_token %}
+    <button type="submit"
+      style="display:flex;align-items:center;gap:.4rem;padding:.45rem .95rem;border-radius:8px;border:1.5px solid var(--primary);background:#eff6ff;color:var(--primary);font-size:.82rem;font-weight:700;cursor:pointer;">
+      🌐 {% trans "Fill English Names" %}
+    </button>
+  </form>
 </div>
 
 {% if program.student.goals %}
 <div class="card" style="margin-bottom:1.5rem;">
-  <h2 style="font-size:1rem;font-weight:700;margin-bottom:1rem;">🎯 {% trans "Goals & Wishes" %}</h2>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
+    <h2 style="font-size:1rem;font-weight:700;margin:0;">🎯 {% trans "Goals & Wishes" %}</h2>
+    <button onclick="toggleShare('goals', this)"
+      data-section="goals" data-enabled="{{ program.shared_sections.goals|yesno:'true,false' }}"
+      class="share-toggle {% if program.shared_sections.goals %}share-on{% endif %}">
+      {% if program.shared_sections.goals %}✅ {% trans "Shared with student" %}{% else %}📤 {% trans "Share with student" %}{% endif %}
+    </button>
+  </div>
   <ol style="margin:0;padding-left:1.25rem;display:flex;flex-direction:column;gap:.65rem;">
     {% for goal in program.student.goals|split_goals %}
       <li style="font-size:.92rem;color:var(--text-muted);line-height:1.55;">{{ goal }}</li>
@@ -24,7 +38,20 @@
 
 {% if program.description %}
 <div class="card" style="margin-bottom:1.5rem;">
-  <h2 style="font-size:1rem;font-weight:700;margin-bottom:.75rem;">📋 {% trans "Analysis & findings" %}</h2>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:.5rem;">
+    <h2 style="font-size:1rem;font-weight:700;margin:0;">📋 {% trans "Analysis & findings" %}</h2>
+    <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+      <button onclick="toggleShare('analysis', this)"
+        data-section="analysis" data-enabled="{{ program.shared_sections.analysis|yesno:'true,false' }}"
+        class="share-toggle {% if program.shared_sections.analysis %}share-on{% endif %}">
+        {% if program.shared_sections.analysis %}✅ {% trans "Shared with student" %}{% else %}📤 {% trans "Share with student" %}{% endif %}
+      </button>
+      <button onclick="retranslateSection('analysis', this)"
+        style="font-size:.74rem;padding:.25rem .6rem;border-radius:6px;border:1px solid var(--border);background:#f8fafc;color:var(--text-muted);cursor:pointer;">
+        🌐 {% trans "Re-translate to EN" %}
+      </button>
+    </div>
+  </div>
   <ul style="margin:0;padding-left:1.25rem;">
     {% for line in program.description.splitlines %}
       {% if line %}<li style="margin-bottom:.5rem;font-size:.92rem;color:var(--text-muted);line-height:1.5;">{{ line }}</li>{% endif %}
@@ -37,12 +64,19 @@
 {% with n=program.nutrition_plan %}
 <!-- Nutrition Plan -->
 <div class="card" style="margin-bottom:1.5rem;">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:.5rem;">
     <h2 style="font-size:1.1rem;font-weight:700;margin:0;">🥗 {% trans "Daily nutrition plan" %}</h2>
-    <form method="post" action="{% url 'programs:regenerate_nutrition' program.pk %}">
-      {% csrf_token %}
-      <button type="submit" style="font-size:.78rem;padding:.3rem .75rem;border-radius:6px;border:1px solid var(--border);background:#f8fafc;cursor:pointer;color:var(--text-muted);">↻ {% trans "Update plan" %}</button>
-    </form>
+    <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+      <button onclick="toggleShare('nutrition', this)"
+        data-section="nutrition" data-enabled="{{ program.shared_sections.nutrition|yesno:'true,false' }}"
+        class="share-toggle {% if program.shared_sections.nutrition %}share-on{% endif %}">
+        {% if program.shared_sections.nutrition %}✅ {% trans "Shared with student" %}{% else %}📤 {% trans "Share with student" %}{% endif %}
+      </button>
+      <form method="post" action="{% url 'programs:regenerate_nutrition' program.pk %}" style="margin:0;">
+        {% csrf_token %}
+        <button type="submit" style="font-size:.78rem;padding:.3rem .75rem;border-radius:6px;border:1px solid var(--border);background:#f8fafc;cursor:pointer;color:var(--text-muted);">↻ {% trans "Update plan" %}</button>
+      </form>
+    </div>
   </div>
 
   <!-- Macros -->
@@ -147,13 +181,14 @@
 
 <!-- Workout Days -->
 {% for day in program.days.all %}
-<div class="card" style="margin-bottom:1.5rem;">
+<div class="card" style="margin-bottom:1.5rem;" data-day-pk="{{ day.pk }}">
   <h2 style="font-size:1.05rem;font-weight:700;margin-bottom:1.25rem;padding-bottom:.75rem;border-bottom:1px solid var(--border);">
     {% if day.name_en %}{{ day.name_en }}{% if day.name %} <span style="font-size:.82rem;font-weight:400;color:var(--text-muted);">({{ day.name }})</span>{% endif %}{% else %}{{ day.name }}{% endif %}
   </h2>
 
+  <div class="day-exercises" id="day-exercises-{{ day.pk }}">
   {% for pe in day.exercises.all %}
-  <div style="display:grid;grid-template-columns:120px 1fr;gap:1.25rem;padding:1rem 0;border-bottom:1px solid var(--border);align-items:start;{% if not pe.confirmed %}opacity:.6;{% endif %}">
+  <div class="exercise-row" data-pe-pk="{{ pe.pk }}" style="display:grid;grid-template-columns:120px 1fr;gap:1.25rem;padding:1rem 0;border-bottom:1px solid var(--border);align-items:start;{% if not pe.confirmed %}opacity:.6;{% endif %}">
 
     <!-- Video / Image -->
     <div style="border-radius:10px;overflow:hidden;background:#f1f5f9;aspect-ratio:1;display:flex;align-items:center;justify-content:center;">
@@ -184,9 +219,23 @@
         {% endif %}
       </div>
 
-      <div style="font-size:.85rem;color:var(--text-muted);margin-bottom:.4rem;">
-        {{ pe.sets }} {% trans "sets" %} × {{ pe.reps }} {% trans "reps" %}
-        {% if pe.weight_kg %} · {{ pe.weight_kg }} kg{% endif %}
+      <!-- Sets/Reps (view mode) -->
+      <div class="pe-view-mode" style="font-size:.85rem;color:var(--text-muted);margin-bottom:.4rem;">
+        <span class="pe-sets-display">{{ pe.sets }}</span> {% trans "sets" %} × <span class="pe-reps-display">{{ pe.reps }}</span> {% trans "reps" %}
+        {% if pe.weight_kg %} · <span class="pe-weight-display">{{ pe.weight_kg }}</span> kg{% endif %}
+      </div>
+
+      <!-- Sets/Reps (edit mode, hidden) -->
+      <div class="pe-edit-mode" style="display:none;margin-bottom:.5rem;display:none;">
+        <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+          <input type="number" class="pe-sets-input form-control" value="{{ pe.sets }}" min="1" max="20" style="width:60px;padding:.3rem .5rem;font-size:.85rem;">
+          <span style="font-size:.85rem;color:var(--text-muted);">sets ×</span>
+          <input type="text" class="pe-reps-input form-control" value="{{ pe.reps }}" style="width:80px;padding:.3rem .5rem;font-size:.85rem;" placeholder="10-12">
+          <span style="font-size:.85rem;color:var(--text-muted);">reps</span>
+          <input type="number" class="pe-weight-input form-control" value="{{ pe.weight_kg|default:'' }}" min="0" step="0.5" style="width:70px;padding:.3rem .5rem;font-size:.85rem;" placeholder="kg">
+          <button class="pe-save-btn" onclick="saveExercise({{ pe.pk }}, this)" style="font-size:.8rem;padding:.3rem .7rem;border-radius:6px;border:1px solid #16a34a;background:#f0fdf4;color:#15803d;cursor:pointer;font-weight:600;">✓ Save</button>
+          <button onclick="cancelEditExercise(this)" style="font-size:.8rem;padding:.3rem .7rem;border-radius:6px;border:1px solid var(--border);background:#f8fafc;color:var(--text-muted);cursor:pointer;">✕</button>
+        </div>
       </div>
 
       {% if pe.reason_ru %}
@@ -204,8 +253,8 @@
       <p style="font-size:.82rem;color:var(--text-muted);">📝 {{ pe.notes }}</p>
       {% endif %}
 
-      {% if not pe.confirmed %}
       <div style="display:flex;gap:.5rem;margin-top:.75rem;flex-wrap:wrap;">
+        {% if not pe.confirmed %}
         <button onclick="confirmExercise({{ pe.pk }}, this)"
           style="font-size:.8rem;padding:.35rem .8rem;border-radius:7px;border:1px solid #16a34a;background:#f0fdf4;color:#15803d;cursor:pointer;font-weight:600;">
           ✓ {% trans "Confirm" %}
@@ -214,22 +263,314 @@
           style="font-size:.8rem;padding:.35rem .8rem;border-radius:7px;border:1px solid var(--border);background:#f8fafc;color:var(--text-muted);cursor:pointer;">
           ✕ {% trans "Skip" %}
         </button>
+        {% endif %}
+        <button onclick="editExercise(this)" class="pe-edit-toggle"
+          style="font-size:.8rem;padding:.35rem .8rem;border-radius:7px;border:1px solid var(--border);background:#f8fafc;color:var(--text-muted);cursor:pointer;">
+          ✏ {% trans "Edit" %}
+        </button>
+        <button onclick="deleteExercise({{ pe.pk }}, this)"
+          style="font-size:.8rem;padding:.35rem .8rem;border-radius:7px;border:1px solid #fca5a5;background:#fee2e2;color:#dc2626;cursor:pointer;">
+          🗑 {% trans "Remove" %}
+        </button>
       </div>
-      {% endif %}
     </div>
   </div>
   {% empty %}
-  <p style="color:var(--text-muted);font-size:.9rem;">{% trans "Exercises not yet added." %}</p>
+  <p class="no-exercises-msg" style="color:var(--text-muted);font-size:.9rem;">{% trans "Exercises not yet added." %}</p>
   {% endfor %}
+  </div><!-- end day-exercises -->
+
+  <div style="margin-top:1rem;padding-top:.75rem;border-top:1px solid var(--border);">
+    <button onclick="openAddExercise({{ day.pk }}, this)"
+      style="font-size:.85rem;padding:.45rem 1rem;border-radius:8px;border:1.5px dashed var(--primary);background:#eff6ff;color:var(--primary);cursor:pointer;font-weight:600;width:100%;">
+      ＋ {% trans "Add Exercise" %}
+    </button>
+  </div>
 </div>
 {% empty %}
 <div class="empty-state">{% trans "Program days not yet created." %}</div>
 {% endfor %}
 
-<script>
-{% trans "Confirmed" as msg_confirmed %}
-const CSRF = '{{ csrf_token }}';
+<!-- Add Exercise Modal -->
+<div id="add-exercise-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:1.75rem;width:100%;max-width:480px;margin:1rem;box-shadow:0 8px 32px rgba(0,0,0,.2);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+      <h3 style="font-size:1.05rem;font-weight:700;margin:0;">＋ {% trans "Add Exercise" %}</h3>
+      <button onclick="closeAddExercise()" style="background:none;border:none;font-size:1.25rem;cursor:pointer;color:var(--text-muted);">✕</button>
+    </div>
 
+    <div class="form-group">
+      <label class="form-label">{% trans "Muscle Group" %}</label>
+      <select id="ae-muscle-filter" class="form-control" onchange="filterExercises()">
+        <option value="">— {% trans "All" %} —</option>
+        {% for val, label in muscle_choices %}
+        <option value="{{ val }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">{% trans "Exercise" %}</label>
+      <select id="ae-exercise-select" class="form-control">
+        <option value="">— {% trans "Select exercise" %} —</option>
+      </select>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;margin-bottom:1.25rem;">
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">{% trans "Sets" %}</label>
+        <input type="number" id="ae-sets" class="form-control" value="3" min="1" max="20">
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">{% trans "Reps" %}</label>
+        <input type="text" id="ae-reps" class="form-control" value="10-12" placeholder="10-12">
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">{% trans "Weight (kg)" %}</label>
+        <input type="number" id="ae-weight" class="form-control" placeholder="opt." min="0" step="0.5">
+      </div>
+    </div>
+
+    <button onclick="submitAddExercise()"
+      style="width:100%;padding:.65rem;border-radius:8px;border:none;background:var(--primary);color:#fff;font-size:.95rem;font-weight:700;cursor:pointer;">
+      ＋ {% trans "Add to Day" %}
+    </button>
+  </div>
+</div>
+
+<style>
+.share-toggle {
+  display: inline-flex; align-items: center; gap: .35rem;
+  font-size: .78rem; font-weight: 700; padding: .3rem .8rem;
+  border-radius: 999px; cursor: pointer; transition: all .15s;
+  border: 1.5px solid #d1d5db; background: #f9fafb; color: #6b7280;
+}
+.share-toggle.share-on { border-color: #16a34a; background: #f0fdf4; color: #15803d; }
+.share-toggle:disabled { opacity: .6; cursor: wait; }
+</style>
+
+<script>
+const CSRF = '{{ csrf_token }}';
+const TOGGLE_URL = '{% url "programs:toggle_share_section" program.pk %}';
+const RETRANSLATE_URL = '{% url "programs:retranslate_section" program.pk %}';
+const ADD_TO_DAY_URL = '{% url "programs:add_exercise_to_day" %}';
+const DELETE_EX_URL = '{% url "programs:delete_program_exercise" %}';
+const UPDATE_EX_URL = '{% url "programs:update_program_exercise" %}';
+const ALL_EXERCISES = {{ exercise_library|safe }};
+
+// ── Add Exercise Modal ──────────────────────────────────────────────
+let _addDayPk = null;
+
+function filterExercises() {
+  const mg = document.getElementById('ae-muscle-filter').value;
+  const sel = document.getElementById('ae-exercise-select');
+  sel.innerHTML = '<option value="">— Select exercise —</option>';
+  ALL_EXERCISES
+    .filter(e => !mg || e.muscle_group === mg)
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .forEach(e => {
+      const opt = document.createElement('option');
+      opt.value = e.pk;
+      opt.textContent = e.name;
+      sel.appendChild(opt);
+    });
+}
+
+function openAddExercise(dayPk) {
+  _addDayPk = dayPk;
+  filterExercises();
+  const modal = document.getElementById('add-exercise-modal');
+  modal.style.display = 'flex';
+  document.getElementById('ae-exercise-select').focus();
+}
+
+function closeAddExercise() {
+  document.getElementById('add-exercise-modal').style.display = 'none';
+  _addDayPk = null;
+}
+
+document.getElementById('add-exercise-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeAddExercise();
+});
+
+function submitAddExercise() {
+  const exPk = document.getElementById('ae-exercise-select').value;
+  if (!exPk) { alert('Please select an exercise.'); return; }
+  const sets = document.getElementById('ae-sets').value;
+  const reps = document.getElementById('ae-reps').value;
+  const weight = document.getElementById('ae-weight').value;
+  fetch(ADD_TO_DAY_URL, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF},
+    body: JSON.stringify({day_pk: _addDayPk, exercise_pk: exPk, sets: sets, reps: reps, weight_kg: weight || null}),
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.status !== 'ok') { alert('Error adding exercise.'); return; }
+    const dayPk = _addDayPk;
+    closeAddExercise();
+    const container = document.getElementById('day-exercises-' + dayPk) ||
+                      document.querySelector('[data-day-pk="' + dayPk + '"] .day-exercises');
+    // Remove "no exercises" message if present
+    const noMsg = container && container.querySelector('.no-exercises-msg');
+    if (noMsg) noMsg.remove();
+    // Build a simple row
+    const row = document.createElement('div');
+    row.className = 'exercise-row';
+    row.dataset.pePk = data.pk;
+    row.style.cssText = 'padding:.75rem 0;border-bottom:1px solid var(--border);';
+    row.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;">
+        <div>
+          <strong style="font-size:.95rem;">${data.name}</strong>
+          <span class="badge badge-${data.muscle_group}" style="margin-left:.5rem;">${data.muscle_group_display}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;">
+          <span class="pe-view-mode" style="font-size:.85rem;color:var(--text-muted);">
+            <span class="pe-sets-display">${data.sets}</span> sets × <span class="pe-reps-display">${data.reps}</span> reps
+          </span>
+          <button onclick="editExercise(this)" class="pe-edit-toggle"
+            style="font-size:.8rem;padding:.3rem .7rem;border-radius:7px;border:1px solid var(--border);background:#f8fafc;color:var(--text-muted);cursor:pointer;">
+            ✏ Edit
+          </button>
+          <button onclick="deleteExercise(${data.pk}, this)"
+            style="font-size:.8rem;padding:.3rem .7rem;border-radius:7px;border:1px solid #fca5a5;background:#fee2e2;color:#dc2626;cursor:pointer;">
+            🗑 Remove
+          </button>
+        </div>
+      </div>
+      <div class="pe-edit-mode" style="display:none;margin-top:.5rem;">
+        <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+          <input type="number" class="pe-sets-input form-control" value="${data.sets}" min="1" max="20" style="width:60px;padding:.3rem .5rem;font-size:.85rem;">
+          <span style="font-size:.85rem;color:var(--text-muted);">sets ×</span>
+          <input type="text" class="pe-reps-input form-control" value="${data.reps}" style="width:80px;padding:.3rem .5rem;font-size:.85rem;" placeholder="10-12">
+          <span style="font-size:.85rem;color:var(--text-muted);">reps</span>
+          <input type="number" class="pe-weight-input form-control" value="" min="0" step="0.5" style="width:70px;padding:.3rem .5rem;font-size:.85rem;" placeholder="kg">
+          <button class="pe-save-btn" onclick="saveExercise(${data.pk}, this)" style="font-size:.8rem;padding:.3rem .7rem;border-radius:6px;border:1px solid #16a34a;background:#f0fdf4;color:#15803d;cursor:pointer;font-weight:600;">✓ Save</button>
+          <button onclick="cancelEditExercise(this)" style="font-size:.8rem;padding:.3rem .7rem;border-radius:6px;border:1px solid var(--border);background:#f8fafc;color:var(--text-muted);cursor:pointer;">✕</button>
+        </div>
+      </div>`;
+    if (container) container.appendChild(row);
+  });
+}
+
+// ── Edit Exercise ──────────────────────────────────────────────────
+function editExercise(btn) {
+  const row = btn.closest('.exercise-row');
+  row.querySelector('.pe-view-mode').style.display = 'none';
+  row.querySelector('.pe-edit-mode').style.display = 'block';
+  btn.style.display = 'none';
+}
+
+function cancelEditExercise(btn) {
+  const row = btn.closest('.exercise-row');
+  row.querySelector('.pe-view-mode').style.display = '';
+  row.querySelector('.pe-edit-mode').style.display = 'none';
+  row.querySelector('.pe-edit-toggle').style.display = '';
+}
+
+function saveExercise(pePk, btn) {
+  const row = btn.closest('.exercise-row');
+  const sets = row.querySelector('.pe-sets-input').value;
+  const reps = row.querySelector('.pe-reps-input').value;
+  const weight = row.querySelector('.pe-weight-input').value;
+  btn.disabled = true;
+  btn.textContent = '…';
+  fetch(UPDATE_EX_URL, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF},
+    body: JSON.stringify({id: pePk, sets: sets, reps: reps, weight_kg: weight}),
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.status === 'ok') {
+      row.querySelector('.pe-sets-display').textContent = data.sets;
+      row.querySelector('.pe-reps-display').textContent = data.reps;
+      cancelEditExercise(btn);
+    }
+    btn.disabled = false;
+    btn.textContent = '✓ Save';
+  });
+}
+
+// ── Delete Exercise ────────────────────────────────────────────────
+function deleteExercise(pePk, btn) {
+  if (!confirm('Remove this exercise from the day?')) return;
+  const row = btn.closest('.exercise-row');
+  fetch(DELETE_EX_URL, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF},
+    body: JSON.stringify({id: pePk}),
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.status === 'ok') {
+      row.style.transition = 'opacity .3s';
+      row.style.opacity = '0';
+      setTimeout(() => row.remove(), 300);
+    }
+  });
+}
+
+
+function retranslateSection(section, btn) {
+  btn.disabled = true;
+  btn.textContent = '⏳ Translating…';
+  fetch(RETRANSLATE_URL, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF},
+    body: JSON.stringify({section: section}),
+  })
+  .then(r => r.json())
+  .then(data => {
+    btn.disabled = false;
+    if (data.status === 'ok') {
+      btn.textContent = '✓ Done — reload to see';
+      btn.style.color = 'var(--success)';
+    } else {
+      btn.textContent = '✗ Error';
+      alert(data.error || 'Translation failed');
+    }
+  })
+  .catch(() => {
+    btn.disabled = false;
+    btn.textContent = '✗ Error';
+  });
+}
+
+function toggleShare(section, btn) {
+  var currentlyOn = btn.classList.contains('share-on');
+  var newEnabled = !currentlyOn;
+  btn.disabled = true;
+  btn.textContent = newEnabled ? '⏳ {% trans "Sharing…"|escapejs %}' : '⏳ {% trans "Removing…"|escapejs %}';
+  fetch(TOGGLE_URL, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF},
+    body: JSON.stringify({section: section, enabled: newEnabled}),
+  })
+  .then(r => r.json())
+  .then(data => {
+    btn.disabled = false;
+    if (data.status === 'ok') {
+      if (newEnabled) {
+        btn.classList.add('share-on');
+        btn.textContent = '✅ {% trans "Shared with student"|escapejs %}';
+      } else {
+        btn.classList.remove('share-on');
+        btn.textContent = '📤 {% trans "Share with student"|escapejs %}';
+      }
+    } else {
+      btn.textContent = '✗ {% trans "Error — try again"|escapejs %}';
+    }
+  })
+  .catch(() => {
+    btn.disabled = false;
+    btn.textContent = '✗ {% trans "Error — try again"|escapejs %}';
+  });
+}
+</script>
+
+<script>
 function confirmExercise(id, btn) {
   const row = btn.closest('[style*="display:grid"]');
   btn.disabled = true;
@@ -245,7 +586,7 @@ function confirmExercise(id, btn) {
       if (badge) {
         badge.style.color = 'var(--success)';
         badge.style.fontWeight = '600';
-        badge.textContent = '✓ {{ msg_confirmed|escapejs }}';
+        badge.textContent = '✓ {% trans "Confirmed"|escapejs %}';
       }
       btn.closest('div[style*="display:flex;gap"]').remove();
     }

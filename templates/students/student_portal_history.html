@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% get_current_language as CURRENT_LANG %}
 {% block title %}{% trans "Workout History" %} — GYMprogrm{% endblock %}
 
 {% block content %}
@@ -15,7 +16,11 @@
   <div class="card" style="margin-bottom:1rem;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;">
       <div>
-        <div style="font-weight:700;">{{ log.program_day.name|default:_("Workout") }}</div>
+        <div style="font-weight:700;">
+          {% if log.program_day %}
+            {% if CURRENT_LANG == 'ru' and log.program_day.name_ru %}{{ log.program_day.name_ru }}{% elif log.program_day.name_en %}{{ log.program_day.name_en }}{% else %}{{ log.program_day.name }}{% endif %}
+          {% else %}{% trans "Workout" %}{% endif %}
+        </div>
         <div style="font-size:.82rem;color:var(--text-muted);">{{ log.date|date:"d M Y" }}</div>
       </div>
       {% if log.completed %}<span style="color:var(--success);font-weight:600;font-size:.85rem;">✓ {% trans "Completed" %}</span>{% endif %}

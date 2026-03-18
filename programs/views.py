@@ -1,4 +1,5 @@
 import json
+import re as _re
 from datetime import date
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
@@ -7,9 +8,35 @@ from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.translation import get_language
 
+
+_RU_REPS_MAP = {
+    r'на каждую ногу': 'each leg',
+    r'на каждую сторону': 'each side',
+    r'на каждую руку': 'each arm',
+    r'на сторону': 'each side',
+    r'на ногу': 'each leg',
+    r'на руку': 'each arm',
+    r'каждая сторона': 'each side',
+    r'каждая нога': 'each leg',
+    r'секунд': 'sec',
+    r'сек': 'sec',
+    r'минут': 'min',
+    r'мин': 'min',
+}
+
+
+def _clean_reps(reps_str):
+    """Strip Russian text from reps field, replacing known phrases with English."""
+    s = str(reps_str)
+    for ru, en in _RU_REPS_MAP.items():
+        s = _re.sub(ru, en, s, flags=_re.IGNORECASE)
+    # Remove any remaining Cyrillic
+    s = _re.sub(r'\s*[а-яёА-ЯЁ][а-яёА-ЯЁ\s]*', '', s).strip()
+    return s or reps_str
+
 from students.models import Student
 from .models import ExerciseLibrary, WorkoutProgram, ProgramDay, ProgramExercise
-from .ai import suggest_program, suggest_nutrition, correct_text, generate_exercise_illustration
+from .ai import suggest_program, suggest_nutrition, correct_text, generate_exercise_illustration, backfill_english_names, translate_program_section
 
 
 @login_required
@@ -22,7 +49,12 @@ def program_list(request, student_pk):
 @login_required
 def program_detail(request, pk):
     program = get_object_or_404(WorkoutProgram, pk=pk)
-    return render(request, 'programs/program_detail.html', {'program': program})
+    exercise_library_qs = ExerciseLibrary.objects.all().values('pk', 'name', 'muscle_group')
+    return render(request, 'programs/program_detail.html', {
+        'program': program,
+        'exercise_library': list(exercise_library_qs),
+        'muscle_choices': ExerciseLibrary.MUSCLE_GROUP_CHOICES,
+    })
 
 
 @login_required
@@ -79,6 +111,7 @@ def program_generate(request, student_pk):
                         return mg
                 return 'full_body'
 
+            used_globally = set()  # track exercise PKs across all days
             for day_data in ai_result.get('days', []):
                 day = ProgramDay.objects.create(
                     program=program,
@@ -86,6 +119,7 @@ def program_generate(request, student_pk):
                     name=day_data.get('day_name', 'День'),
                     name_en=day_data.get('day_name_en', ''),
                 )
+                used_in_day = set()  # track exercise PKs within this day
                 for order, ex_data in enumerate(day_data.get('exercises', [])):
                     name_key = ex_data.get('name', '').lower()
                     if not name_key:
@@ -114,11 +148,15 @@ def program_generate(request, student_pk):
                         exercise_library[ex_data['name'].lower()] = library_ex
 
                     if library_ex:
+                        if library_ex.pk in used_in_day or library_ex.pk in used_globally:
+                            continue  # skip duplicate
+                        used_in_day.add(library_ex.pk)
+                        used_globally.add(library_ex.pk)
                         pe = ProgramExercise.objects.create(
                             program_day=day,
                             exercise=library_ex,
                             sets=ex_data.get('sets', 3),
-                            reps=str(ex_data.get('reps', '10')),
+                            reps=_clean_reps(ex_data.get('reps', '10')),
                             name_ru=ex_data.get('name_ru', ''),
                             reason_ru=ex_data.get('reason_ru', ''),
                             order=order,
@@ -151,6 +189,76 @@ def program_generate(request, student_pk):
             })
 
     return render(request, 'programs/program_generate.html', {'student': student})
+
+
+@login_required
+@require_POST
+def retranslate_section(request, pk):
+    """AJAX: force re-translate a program section to English (clears existing EN translation first)."""
+    program = get_object_or_404(WorkoutProgram, pk=pk)
+    data = json.loads(request.body)
+    section = data.get('section', '')
+    if section not in ('analysis', 'nutrition'):
+        return JsonResponse({'error': 'Unknown section'}, status=400)
+    try:
+        if section == 'analysis':
+            program.description_en = ''
+            program.save(update_fields=['description_en'])
+        elif section == 'nutrition':
+            program.nutrition_plan_en = None
+            program.save(update_fields=['nutrition_plan_en'])
+        translate_program_section(program, section)
+        return JsonResponse({'status': 'ok'})
+    except Exception as exc:
+        return JsonResponse({'error': str(exc)}, status=500)
+
+
+@login_required
+@require_POST
+def toggle_share_section(request, pk):
+    """AJAX: toggle whether a program section is shared with the student.
+    Body: {'section': 'goals'|'analysis'|'nutrition', 'enabled': true|false}
+    On first enable of analysis/nutrition, triggers translation to English.
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    program = get_object_or_404(WorkoutProgram, pk=pk)
+    data = json.loads(request.body)
+    section = data.get('section', '')
+    enabled = bool(data.get('enabled', False))
+
+    if section not in ('goals', 'analysis', 'nutrition'):
+        return JsonResponse({'error': 'Unknown section'}, status=400)
+
+    # Translate on first enable if not already translated
+    if enabled and section in ('analysis', 'nutrition'):
+        try:
+            translate_program_section(program, section)
+            program.refresh_from_db()
+        except Exception as exc:
+            logger.exception('translate_program_section failed for section=%s: %s', section, exc)
+            return JsonResponse({'error': str(exc)}, status=500)
+
+    shared = program.shared_sections or {}
+    shared[section] = enabled
+    program.shared_sections = shared
+    program.save(update_fields=['shared_sections'])
+    return JsonResponse({'status': 'ok', 'section': section, 'enabled': enabled})
+
+
+@login_required
+@require_POST
+def backfill_program_english(request, pk):
+    """Translate all empty name_en fields and clean Russian reps for an existing program."""
+    program = get_object_or_404(WorkoutProgram, pk=pk)
+    try:
+        p, d, r = backfill_english_names(program)
+        from django.contrib import messages
+        messages.success(request, f'Translated: {p} program name, {d} day names, {r} reps cleaned.')
+    except Exception as e:
+        from django.contrib import messages
+        messages.error(request, f'Translation failed: {e}')
+    return redirect('programs:detail', pk=pk)
 
 
 @login_required
@@ -235,13 +343,21 @@ def add_exercise_to_program(request):
 @login_required
 @require_POST
 def generate_illustration(request):
-    data = json.loads(request.body)
-    ex = get_object_or_404(ExerciseLibrary, pk=data['id'])
-    result = generate_exercise_illustration(ex.name, ex.get_muscle_group_display(), ex.description)
-    ex.photo_url = result['image_url']
-    ex.posture_tips = result['posture_tips']
-    ex.save(update_fields=['photo_url', 'posture_tips'])
-    return JsonResponse({'image_url': result['image_url'], 'posture_tips': result['posture_tips']})
+    import logging
+    logger = logging.getLogger(__name__)
+    try:
+        data = json.loads(request.body)
+        ex = get_object_or_404(ExerciseLibrary, pk=data['id'])
+        logger.info('generate_illustration: starting for exercise pk=%s name=%r', ex.pk, ex.name)
+        result = generate_exercise_illustration(ex.name, ex.get_muscle_group_display(), ex.description)
+        ex.photo_url = result['image_url']
+        ex.posture_tips = result['posture_tips']
+        ex.save(update_fields=['photo_url', 'posture_tips'])
+        logger.info('generate_illustration: done for pk=%s', ex.pk)
+        return JsonResponse({'image_url': result['image_url'], 'posture_tips': result['posture_tips']})
+    except Exception as exc:
+        logger.exception('generate_illustration failed: %s', exc)
+        return JsonResponse({'error': str(exc)}, status=500)
 
 
 @login_required
@@ -252,6 +368,93 @@ def update_exercise_photo(request):
     ex.photo_url = data.get('photo_url', '').strip()
     ex.save(update_fields=['photo_url'])
     return JsonResponse({'status': 'ok'})
+
+
+@login_required
+@require_POST
+def create_exercise(request):
+    """Create a new exercise in the library and redirect back.
+    If generate_image=1, the redirect includes ?autogen=<pk> so the page
+    auto-triggers the AJAX illustration via the existing generate_illustration endpoint."""
+    name = request.POST.get('name', '').strip()
+    description = request.POST.get('description', '').strip()
+    muscle_group = request.POST.get('muscle_group', 'full_body')
+    difficulty = request.POST.get('difficulty', 'beginner')
+    if not name:
+        from django.contrib import messages
+        messages.error(request, 'Exercise name is required.')
+        return redirect('programs:exercise_library')
+    ex = ExerciseLibrary.objects.create(
+        name=name,
+        description=description or name,
+        muscle_group=muscle_group,
+        difficulty=difficulty,
+    )
+    from django.urls import reverse
+    url = reverse('programs:exercise_library')
+    params = []
+    if muscle_group:
+        params.append(f'muscle={muscle_group}')
+    if request.POST.get('generate_image') == '1':
+        params.append(f'autogen={ex.pk}')
+    if params:
+        url += '?' + '&'.join(params)
+    return redirect(url)
+
+
+@login_required
+@require_POST
+def add_exercise_to_day(request):
+    """AJAX: add an exercise from the library to a program day."""
+    data = json.loads(request.body)
+    day = get_object_or_404(ProgramDay, pk=data['day_pk'])
+    ex = get_object_or_404(ExerciseLibrary, pk=data['exercise_pk'])
+    order = day.exercises.count()
+    pe = ProgramExercise.objects.create(
+        program_day=day,
+        exercise=ex,
+        sets=int(data.get('sets', 3)),
+        reps=str(data.get('reps', '10-12')),
+        order=order,
+        confirmed=True,
+    )
+    return JsonResponse({
+        'status': 'ok',
+        'pk': pe.pk,
+        'exercise_pk': ex.pk,
+        'name': ex.name,
+        'muscle_group': ex.muscle_group,
+        'muscle_group_display': ex.get_muscle_group_display(),
+        'sets': pe.sets,
+        'reps': pe.reps,
+        'photo_url': ex.photo_url or '',
+        'posture_tips': ex.posture_tips or '',
+    })
+
+
+@login_required
+@require_POST
+def delete_program_exercise(request):
+    """AJAX: remove an exercise from a program day."""
+    data = json.loads(request.body)
+    pe = get_object_or_404(ProgramExercise, pk=data['id'])
+    pe.delete()
+    return JsonResponse({'status': 'ok'})
+
+
+@login_required
+@require_POST
+def update_program_exercise(request):
+    """AJAX: update sets/reps/weight/notes for an existing ProgramExercise."""
+    data = json.loads(request.body)
+    pe = get_object_or_404(ProgramExercise, pk=data['id'])
+    pe.sets = int(data.get('sets', pe.sets))
+    pe.reps = str(data.get('reps', pe.reps))
+    if data.get('weight_kg') is not None:
+        pe.weight_kg = float(data['weight_kg']) if data['weight_kg'] != '' else None
+    pe.notes = data.get('notes', pe.notes)
+    pe.save()
+    return JsonResponse({'status': 'ok', 'sets': pe.sets, 'reps': pe.reps})
 
 
 @login_required

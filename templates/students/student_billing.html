@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% trans "Billing" %} — {{ student.name }} — GYMprogrm{% endblock %}
+
+{% block extra_css %}
+<style>
+  .billing-wrap { max-width: 640px; margin: 0 auto; padding-bottom: 3rem; }
+
+  .pay-pills { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .3rem; }
+  .pay-pills input[type=radio] { display: none; }
+  .pay-pills label {
+    padding: .45rem 1rem;
+    border: 2px solid var(--border);
+    border-radius: 999px;
+    font-size: .85rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: all .15s;
+    margin: 0;
+  }
+  .pay-pills input[type=radio]:checked + label {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: #fff;
+  }
+
+  .status-pills { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .3rem; }
+  .status-pills input[type=radio] { display: none; }
+  .status-pills label {
+    padding: .4rem .9rem;
+    border: 2px solid var(--border);
+    border-radius: 999px;
+    font-size: .82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .15s;
+    margin: 0;
+  }
+  .status-pills label.paid   { color: #15803d; border-color: #86efac; background: #f0fdf4; }
+  .status-pills label.pending{ color: #b45309; border-color: #fcd34d; background: #fffbeb; }
+  .status-pills label.overdue{ color: #b91c1c; border-color: #fca5a5; background: #fef2f2; }
+  .status-pills input[type=radio]:checked + label.paid   { background: #16a34a; color: #fff; border-color: #16a34a; }
+  .status-pills input[type=radio]:checked + label.pending{ background: #d97706; color: #fff; border-color: #d97706; }
+  .status-pills input[type=radio]:checked + label.overdue{ background: #dc2626; color: #fff; border-color: #dc2626; }
+
+  .countdown-card {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    color: #fff;
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+  .countdown-card .big-number {
+    font-size: 3rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .countdown-card .label-sm {
+    font-size: .8rem;
+    opacity: .8;
+    margin-top: .15rem;
+  }
+  .countdown-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-top: 1.25rem;
+  }
+  @media (max-width: 480px) { .countdown-grid { grid-template-columns: 1fr 1fr; } }
+  .countdown-stat { text-align: center; }
+  .countdown-stat .val { font-size: 1.4rem; font-weight: 700; }
+  .countdown-stat .lbl { font-size: .75rem; opacity: .75; }
+
+  .edit-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.4rem 1.5rem;
+    margin-bottom: 1.25rem;
+    box-shadow: var(--shadow);
+  }
+  .edit-section-title {
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--primary);
+    margin-bottom: 1.1rem;
+  }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: .85rem; }
+  @media (max-width: 560px) { .two-col { grid-template-columns: 1fr; } }
+
+  .pay-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .65rem 1.2rem;
+    border-radius: 10px;
+    font-size: .9rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: opacity .15s;
+  }
+  .pay-action-btn:hover { opacity: .85; }
+  .pay-btn-venmo  { background: #008CFF; color: #fff; }
+  .pay-btn-paypal { background: #003087; color: #fff; }
+  .pay-btn-zelle  { background: #6D1ED4; color: #fff; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="billing-wrap">
+
+<div class="page-header">
+  <div>
+    <a href="{% url 'students:detail' student.pk %}" style="color:var(--text-muted);font-size:.9rem;text-decoration:none;">← {{ student.name }}</a>
+    <h1 class="page-title" style="margin-top:.25rem;">💳 {% trans "Billing" %}</h1>
+  </div>
+  <a href="{% url 'students:trainer_payment_settings' %}" class="btn btn-outline btn-sm">⚙️ {% trans "My Payment Handles" %}</a>
+</div>
+
+<!-- Countdown card -->
+{% if student.payment_start_date and days_until is not None %}
+<div class="countdown-card">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:.75rem;">
+    <div>
+      <div style="font-size:.8rem;opacity:.8;margin-bottom:.25rem;">{% trans "Next payment in" %}</div>
+      <div class="big-number">{{ days_until }}</div>
+      <div class="label-sm">{% trans "days" %}</div>
+    </div>
+    <div style="text-align:right;">
+      {% if student.payment_status == 'paid' %}
+        <span style="background:rgba(255,255,255,.2);padding:.3rem .8rem;border-radius:999px;font-size:.8rem;font-weight:700;">✓ {% trans "Paid" %}</span>
+      {% elif student.payment_status == 'overdue' %}
+        <span style="background:rgba(255,100,100,.4);padding:.3rem .8rem;border-radius:999px;font-size:.8rem;font-weight:700;">⚠ {% trans "Overdue" %}</span>
+      {% elif student.payment_status == 'pending' %}
+        <span style="background:rgba(255,220,0,.3);padding:.3rem .8rem;border-radius:999px;font-size:.8rem;font-weight:700;">⏳ {% trans "Pending" %}</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="countdown-grid">
+    <div class="countdown-stat">
+      <div class="val">{{ student.get_payment_plan_display }}</div>
+      <div class="lbl">{% trans "Plan" %}</div>
+    </div>
+    <div class="countdown-stat">
+      <div class="val">{{ days_since }}</div>
+      <div class="lbl">{% trans "days since payment" %}</div>
+    </div>
+    <div class="countdown-stat">
+      <div class="val">{{ next_payment_date|date:"d M" }}</div>
+      <div class="lbl">{% trans "next due date" %}</div>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="card" style="margin-bottom:1.25rem;color:var(--text-muted);font-size:.9rem;">
+  ℹ️ {% trans "Set a payment start date below to see the countdown." %}
+</div>
+{% endif %}
+
+<!-- Payment action buttons -->
+{% if student.payment_handle %}
+<div class="card" style="margin-bottom:1.25rem;">
+  <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:.85rem;">{% trans "Collect Payment" %}</div>
+  <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+    {% if student.payment_method == 'venmo' %}
+      {% if student.payment_handle|slice:":1" == '@' %}
+        <a href="https://venmo.com/{{ student.payment_handle|slice:'1:' }}" target="_blank" class="pay-action-btn pay-btn-venmo">💜 {% trans "Request via Venmo" %}</a>
+      {% else %}
+        <a href="https://venmo.com/{{ student.payment_handle }}" target="_blank" class="pay-action-btn pay-btn-venmo">💜 {% trans "Request via Venmo" %}</a>
+      {% endif %}
+    {% elif student.payment_method == 'paypal' %}
+      {% if 'paypal.me' in student.payment_handle or 'paypal.com' in student.payment_handle %}
+        <a href="{{ student.payment_handle }}" target="_blank" class="pay-action-btn pay-btn-paypal">💛 {% trans "Request via PayPal" %}</a>
+      {% else %}
+        <a href="https://paypal.me/{{ student.payment_handle }}" target="_blank" class="pay-action-btn pay-btn-paypal">💛 {% trans "Request via PayPal" %}</a>
+      {% endif %}
+    {% elif student.payment_method == 'zelle' %}
+      <a href="https://enroll.zellepay.com/qr-codes?data={{ student.payment_handle|urlencode }}" target="_blank" class="pay-action-btn pay-btn-zelle">💜 {% trans "Request via Zelle" %}</a>
+      <div style="align-self:center;font-size:.85rem;color:var(--text-muted);">{{ student.payment_handle }}</div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Edit form -->
+<form method="post">
+{% csrf_token %}
+<div class="edit-section" style="border-color:#e0e7ff;">
+  <div class="edit-section-title" style="color:#6366f1;">✏️ {% trans "Edit Billing Info" %}</div>
+
+  <div class="two-col" style="margin-bottom:1rem;">
+    <div class="form-group" style="margin-bottom:0;">
+      <label class="form-label">{% trans "Plan" %}</label>
+      <select name="payment_plan" class="form-control">
+        {% for val, label in student.PAYMENT_PLAN_CHOICES %}
+          <option value="{{ val }}" {% if student.payment_plan == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group" style="margin-bottom:0;">
+      <label class="form-label">{% trans "Start Date" %}</label>
+      <input type="date" name="payment_start_date" class="form-control"
+        value="{% if student.payment_start_date %}{{ student.payment_start_date|date:'Y-m-d' }}{% endif %}">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">{% trans "Payment Method" %}</label>
+    <div class="pay-pills">
+      {% for val, label in student.PAYMENT_METHOD_CHOICES %}
+        {% if val %}
+        <input type="radio" name="payment_method" id="pm_{{ val }}" value="{{ val }}"
+          {% if student.payment_method == val %}checked{% endif %}>
+        <label for="pm_{{ val }}">
+          {% if val == 'venmo' %}💜 Venmo
+          {% elif val == 'paypal' %}💛 PayPal
+          {% elif val == 'zelle' %}💜 Zelle
+          {% elif val == 'cash' %}💵 Cash
+          {% elif val == 'bank' %}🏦 Bank
+          {% else %}{{ label }}{% endif %}
+        </label>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">{% trans "Handle / Link / Phone" %}</label>
+    <input type="text" name="payment_handle" class="form-control"
+      value="{{ student.payment_handle }}"
+      placeholder="{% trans "@venmo, paypal.me/name, email, or phone for Zelle" %}">
+  </div>
+
+  <div class="form-group" style="margin-bottom:0;">
+    <label class="form-label">{% trans "Payment Status" %}</label>
+    <div class="status-pills">
+      <input type="radio" name="payment_status" id="ps_none" value=""
+        {% if not student.payment_status %}checked{% endif %}>
+      <label for="ps_none" style="color:var(--text-muted);">—</label>
+
+      <input type="radio" name="payment_status" id="ps_paid" value="paid"
+        {% if student.payment_status == 'paid' %}checked{% endif %}>
+      <label for="ps_paid" class="paid">✓ {% trans "Paid" %}</label>
+
+      <input type="radio" name="payment_status" id="ps_pending" value="pending"
+        {% if student.payment_status == 'pending' %}checked{% endif %}>
+      <label for="ps_pending" class="pending">⏳ {% trans "Pending" %}</label>
+
+      <input type="radio" name="payment_status" id="ps_overdue" value="overdue"
+        {% if student.payment_status == 'overdue' %}checked{% endif %}>
+      <label for="ps_overdue" class="overdue">⚠ {% trans "Overdue" %}</label>
+    </div>
+  </div>
+</div>
+
+<div style="display:flex;gap:.75rem;">
+  <button type="submit" class="btn btn-primary">{% trans "Save Billing" %}</button>
+  <a href="{% url 'students:detail' student.pk %}" class="btn btn-outline">{% trans "Cancel" %}</a>
+</div>
+
+</form>
+</div>
+{% endblock %}

@@ -48,19 +48,25 @@
   .stats-row {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: .75rem;
+    gap: .65rem;
     margin-bottom: 1.25rem;
   }
   .stat-card {
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: 14px;
-    padding: .85rem .75rem;
+    padding: .75rem .5rem;
     text-align: center;
     box-shadow: var(--shadow);
   }
-  .stat-number { font-size: 1.5rem; font-weight: 800; color: var(--primary); }
-  .stat-label  { font-size: .72rem; color: var(--text-muted); margin-top: .15rem; text-transform: uppercase; letter-spacing: .04em; }
+  .stat-number { font-size: 1.35rem; font-weight: 800; color: var(--primary); }
+  .stat-label  { font-size: .68rem; color: var(--text-muted); margin-top: .15rem; text-transform: uppercase; letter-spacing: .03em; line-height: 1.2; }
+
+  @media (max-width: 360px) {
+    .stats-row { grid-template-columns: 1fr 1fr; }
+    .stats-row .stat-card:last-child { grid-column: 1 / -1; }
+    .stat-number { font-size: 1.5rem; }
+  }
 
   /* Today's workout */
   .today-card {
@@ -229,7 +235,7 @@
     {% if active_program %}
     <div class="prog-bar-wrap">
       <div class="prog-bar-label">
-        <span>{% if CURRENT_LANG == 'ru' or not active_program.name_en %}{{ active_program.name }}{% else %}{{ active_program.name_en }}{% endif %}</span>
+        <span>{% if CURRENT_LANG == 'ru' and active_program.name_ru %}{{ active_program.name_ru }}{% elif active_program.name_en %}{{ active_program.name_en }}{% else %}{{ active_program.name }}{% endif %}</span>
         <span>{{ progress_pct }}%</span>
       </div>
       <div class="prog-bar-bg"><div class="prog-bar-fill" style="width:{{ progress_pct }}%;"></div></div>
@@ -258,11 +264,11 @@
 {% if next_day %}
 <div class="today-card">
   <span class="today-badge">💪 {% trans "Today's Workout" %}</span>
-  <div class="today-title">{% if CURRENT_LANG == 'ru' or not next_day.name_en %}{{ next_day.name }}{% else %}{{ next_day.name_en }}{% endif %}</div>
+  <div class="today-title">{% if CURRENT_LANG == 'ru' and next_day.name_ru %}{{ next_day.name_ru }}{% elif next_day.name_en %}{{ next_day.name_en }}{% else %}{{ next_day.name }}{% endif %}</div>
   <div class="today-meta">
     {% with exs=next_day.exercises.all %}
     {{ exs|length }} {% trans "exercises" %}
-    {% if active_program %} · {% if CURRENT_LANG == 'ru' or not active_program.name_en %}{{ active_program.name }}{% else %}{{ active_program.name_en }}{% endif %}{% endif %}
+    {% if active_program %} · {% if CURRENT_LANG == 'ru' and active_program.name_ru %}{{ active_program.name_ru }}{% elif active_program.name_en %}{{ active_program.name_en }}{% else %}{{ active_program.name }}{% endif %}{% endif %}
     {% endwith %}
   </div>
   <a href="{% url 'students:portal_log_workout' next_day.pk %}" class="today-start-btn">
@@ -286,7 +292,7 @@
   <a href="{% url 'students:portal_program' %}" class="tile">
     <div class="tile-icon">📋</div>
     <div class="tile-name">{% trans "My Program" %}</div>
-    <div class="tile-desc">{% if active_program %}{% if CURRENT_LANG == 'ru' or not active_program.name_en %}{{ active_program.name }}{% else %}{{ active_program.name_en }}{% endif %}{% else %}{% trans "View exercises" %}{% endif %}</div>
+    <div class="tile-desc">{% if active_program %}{% if CURRENT_LANG == 'ru' and active_program.name_ru %}{{ active_program.name_ru }}{% elif active_program.name_en %}{{ active_program.name_en }}{% else %}{{ active_program.name }}{% endif %}{% else %}{% trans "View exercises" %}{% endif %}</div>
   </a>
   <a href="{% url 'students:portal_history' %}" class="tile">
     <div class="tile-icon">📈</div>
@@ -294,39 +300,22 @@
     <div class="tile-desc">{% trans "Past workouts & progress" %}</div>
   </a>
   <a href="{% url 'students:portal_recommendations' %}" class="tile">
-    <div class="tile-icon">🤖</div>
-    <div class="tile-name">{% trans "AI Insights" %}</div>
-    <div class="tile-desc">{% if student.ai_recommendations %}{% trans "View your recommendations" %}{% else %}{% trans "Food, exercise & fasting tips" %}{% endif %}</div>
+    <div class="tile-icon">📝</div>
+    <div class="tile-name">{% trans "Trainer Tips" %}</div>
+    <div class="tile-desc">{% if student.trainer_recommendation_confirmed and student.trainer_recommendation %}{% trans "View your recommendations" %}{% else %}{% trans "Advice from your trainer" %}{% endif %}</div>
   </a>
 </div>
 
-<!-- ── AI Insights card ── -->
-<div class="insights-card">
-  <h2>🤖 {% trans "AI Insights" %}</h2>
-  <p>{% trans "Personalised recommendations based on your blood test, photo analysis & goals." %}</p>
-
-  {% if student.blood_analysis %}
-    {% if student.blood_analysis.deficiencies %}
-    <div>
-      <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;opacity:.6;margin-bottom:.35rem;">🩸 {% trans "Blood Test Findings" %}</div>
-      {% for d in student.blood_analysis.deficiencies|slice:":3" %}
-        <span class="insight-pill">⚠ {{ d.nutrient }}{% if d.severity %} ({{ d.severity }}){% endif %}</span>
-      {% endfor %}
-    </div>
-    {% endif %}
-  {% endif %}
-
-  {% if student.photo_analysis %}
-  <div style="margin-top:.75rem;">
-    <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;opacity:.6;margin-bottom:.35rem;">📸 {% trans "Body Assessment" %}</div>
-    <div style="font-size:.83rem;opacity:.85;line-height:1.55;">{{ student.photo_analysis|truncatewords:30 }}</div>
+<!-- ── Trainer Recommendations card ── -->
+{% if student.trainer_recommendation_confirmed and student.trainer_recommendation %}
+<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.25rem;margin-bottom:1.25rem;box-shadow:var(--shadow);">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;">
+    <h2 style="font-size:1rem;font-weight:800;">📝 {% trans "Trainer Recommendations" %}</h2>
   </div>
-  {% endif %}
-
-  <a href="{% url 'students:portal_recommendations' %}" class="insight-action" style="text-decoration:none;display:flex;">
-    ✨ {% trans "View Full Recommendations" %} →
-  </a>
+  <p style="font-size:.88rem;color:var(--text-muted);line-height:1.65;margin-bottom:.85rem;">{{ student.trainer_recommendation|truncatewords:40 }}</p>
+  <a href="{% url 'students:portal_recommendations' %}" style="font-size:.85rem;color:var(--primary);text-decoration:none;font-weight:700;">{% trans "Read full recommendations →" %}</a>
 </div>
+{% endif %}
 
 <!-- ── Doctor Connect ── -->
 {% if doctors %}
@@ -399,7 +388,7 @@
   {% for log in recent_logs %}
   <div class="workout-row">
     <div>
-      <div style="font-weight:600;font-size:.88rem;">{% if log.program_day %}{% if CURRENT_LANG == 'ru' or not log.program_day.name_en %}{{ log.program_day.name }}{% else %}{{ log.program_day.name_en }}{% endif %}{% else %}{% trans "Workout" %}{% endif %}</div>
+      <div style="font-weight:600;font-size:.88rem;">{% if log.program_day %}{% if CURRENT_LANG == 'ru' and log.program_day.name_ru %}{{ log.program_day.name_ru }}{% elif log.program_day.name_en %}{{ log.program_day.name_en }}{% else %}{{ log.program_day.name }}{% endif %}{% else %}{% trans "Workout" %}{% endif %}</div>
       <div style="font-size:.78rem;color:var(--text-muted);">{{ log.date|date:"d M Y" }}</div>
     </div>
     {% if log.completed %}<span style="color:var(--success);font-size:.82rem;font-weight:700;">✓ {% trans "Done" %}</span>{% endif %}

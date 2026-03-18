@@ -17,6 +17,7 @@ class Student(models.Model):
     PAYMENT_METHOD_CHOICES = [
         ('venmo', 'Venmo'),
         ('paypal', 'PayPal'),
+        ('zelle', 'Zelle'),
         ('cash', 'Cash'),
         ('bank', 'Bank Transfer'),
         ('other', 'Other'),
@@ -52,6 +53,8 @@ class Student(models.Model):
     blood_analysis = models.JSONField(null=True, blank=True, help_text='Cached AI blood test analysis')
     photo_analysis = models.TextField(blank=True, help_text='Cached AI photo analysis')
     ai_recommendations = models.JSONField(null=True, blank=True)
+    trainer_recommendation = models.TextField(blank=True, help_text='Trainer-written recommendation visible to student')
+    trainer_recommendation_confirmed = models.BooleanField(default=False, help_text='When True, student can see this recommendation')
     intake_status = models.CharField(max_length=20, choices=INTAKE_STATUS_CHOICES, default='active')
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
@@ -70,6 +73,24 @@ class Student(models.Model):
         return today.year - self.date_of_birth.year - (
             (today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day)
         )
+
+
+class TrainerPaymentSettings(models.Model):
+    """Singleton — stores the trainer's own payment handles used on all student billing pages."""
+    venmo_handle = models.CharField(max_length=200, blank=True, help_text='Your Venmo @handle (e.g. @YourName)')
+    paypal_handle = models.CharField(max_length=200, blank=True, help_text='Your PayPal.me link or email (e.g. paypal.me/YourName)')
+    zelle_handle = models.CharField(max_length=200, blank=True, help_text='Your Zelle phone number or email')
+
+    class Meta:
+        verbose_name = 'Trainer Payment Settings'
+
+    def __str__(self):
+        return 'Trainer Payment Settings'
+
+    @classmethod
+    def get(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
 
 
 class DoctorProfile(models.Model):

@@ -1,12 +1,13 @@
 {% extends 'base.html' %}
-{% load i18n %}
-{% block title %}{% trans "AI Insights" %} — GYMprogrm{% endblock %}
+{% load i18n program_filters %}
+{% block title %}{% trans "Trainer Tips" %} — GYMprogrm{% endblock %}
 
 {% block extra_css %}
 <style>
   .rec-wrap { max-width: 640px; margin: 0 auto; padding-bottom: 2rem; }
+
   .rec-hero {
-    background: linear-gradient(135deg, #0f172a, #1e3a8a, #7c3aed);
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #7c3aed 100%);
     border-radius: 20px;
     padding: 1.5rem;
     color: #fff;
@@ -15,7 +16,8 @@
   }
   .rec-hero h1 { font-size: 1.2rem; font-weight: 800; margin-bottom: .3rem; }
   .rec-hero p  { font-size: .85rem; opacity: .75; }
-  .rec-section {
+
+  .rec-card {
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: 16px;
@@ -23,29 +25,58 @@
     margin-bottom: 1.1rem;
     box-shadow: var(--shadow);
   }
-  .rec-section-title { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--primary); margin-bottom: .65rem; }
-  .rec-summary { font-size: .92rem; color: var(--text-muted); line-height: 1.6; margin-bottom: .85rem; }
-  .rec-list { list-style: none; padding: 0; margin: 0; }
-  .rec-list li { padding: .45rem .6rem; font-size: .88rem; border-radius: 8px; margin-bottom: .3rem; background: #f8fafc; border: 1px solid var(--border); }
-  .food-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; }
-  .food-chip {
-    padding: .4rem .7rem; border-radius: 8px; font-size: .85rem; font-weight: 600;
-    background: #f0fdf4; border: 1px solid #bbf7d0; color: #15803d;
+  .rec-card-title {
+    font-size: 1rem; font-weight: 800;
+    margin-bottom: .85rem;
+    display: flex; align-items: center; gap: .4rem;
+    padding-bottom: .65rem;
+    border-bottom: 1px solid var(--border);
   }
-  .food-chip.limit { background: #fff7ed; border-color: #fed7aa; color: #c2410c; }
-  .lifestyle-row { display: flex; gap: .6rem; align-items: flex-start; padding: .5rem 0; border-bottom: 1px solid var(--border); font-size: .88rem; }
-  .lifestyle-row:last-child { border-bottom: none; }
-  .lifestyle-icon { font-size: 1.1rem; flex-shrink: 0; width: 1.5rem; }
-  .gen-btn {
-    display: flex; align-items: center; justify-content: center; gap: .5rem;
-    width: 100%; padding: .95rem;
-    background: linear-gradient(135deg, var(--primary), #7c3aed);
-    color: #fff; border: none; border-radius: 12px;
-    font-size: 1rem; font-weight: 700; cursor: pointer;
-    transition: opacity .15s; margin-bottom: 1rem;
+  .rec-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .45rem; }
+  .rec-list li {
+    font-size: .88rem; line-height: 1.55;
+    padding: .45rem .75rem;
+    background: #f8fafc; border-radius: 8px;
+    border-left: 3px solid var(--primary);
   }
-  .gen-btn:hover { opacity: .9; }
-  .gen-btn:disabled { opacity: .6; cursor: not-allowed; }
+  .rec-findings li {
+    font-size: .87rem; color: var(--text-muted); line-height: 1.6;
+    margin-bottom: .55rem;
+    padding-left: .75rem;
+    border-left: 3px solid #7c3aed;
+    background: #faf5ff;
+    border-radius: 0 8px 8px 0;
+  }
+
+  /* Nutrition sub-sections */
+  .macro-row { display: grid; grid-template-columns: repeat(4,1fr); gap: .65rem; margin-bottom: 1.25rem; }
+  @media (max-width:480px) { .macro-row { grid-template-columns: repeat(2,1fr); } }
+  .macro-box { text-align:center; padding:.65rem .5rem; border-radius:10px; }
+  .macro-val { font-size:1.3rem; font-weight:800; }
+  .macro-lbl { font-size:.72rem; color:var(--text-muted); margin-top:.1rem; }
+
+  .meal-card { padding:.85rem; border:1px solid var(--border); border-radius:10px; margin-bottom:.6rem; }
+  .meal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:.5rem; flex-wrap:wrap; gap:.4rem; }
+  .meal-name { font-weight:700; font-size:.95rem; }
+  .meal-time { font-size:.8rem; color:var(--text-muted); }
+  .meal-food-list { margin:.2rem 0 .3rem 1.1rem; padding:0; }
+  .meal-food-list li { font-size:.86rem; color:var(--text-muted); margin-bottom:.2rem; }
+  .meal-note { font-size:.8rem; color:var(--primary); margin:.3rem 0 0 1.1rem; }
+
+  .fasting-box { padding:.9rem 1rem; border-radius:10px; margin-top:.85rem; }
+  .supp-chip {
+    display:inline-flex; align-items:center;
+    font-size:.8rem; padding:.25rem .7rem;
+    border-radius:999px; background:#faf5ff; color:#7c3aed;
+    margin:.2rem .2rem .2rem 0;
+  }
+  .gen-notes-section { margin-top:1rem; padding:.85rem; background:#f8fafc; border-radius:10px; }
+  .gen-notes-title { font-size:.82rem; font-weight:700; color:var(--text); margin-bottom:.3rem; }
+  .gen-notes-text { font-size:.84rem; color:var(--text-muted); line-height:1.6; }
+
+  .rec-empty { text-align:center; padding:3.5rem 1rem; color:var(--text-muted); }
+  .rec-empty-icon { font-size:3rem; margin-bottom:.75rem; }
+  .rec-empty-title { font-size:1rem; font-weight:700; color:var(--text); margin-bottom:.35rem; }
 </style>
 {% endblock %}
 
@@ -57,149 +88,157 @@
   </div>
 
   <div class="rec-hero">
-    <div style="font-size:2rem;margin-bottom:.5rem;">🤖</div>
-    <h1>{% trans "AI Insights & Recommendations" %}</h1>
-    <p>{% trans "Personalised for you based on your blood test, body assessment & goals" %}</p>
+    <div style="font-size:2rem;margin-bottom:.5rem;">📝</div>
+    <h1>{% trans "Trainer Tips" %}</h1>
+    <p>{% trans "Personalised advice from your trainer" %}</p>
   </div>
 
-  <button id="gen-btn" class="gen-btn" onclick="generateRecs()">
-    ✨ {% if recs %}{% trans "Refresh Recommendations" %}{% else %}{% trans "Generate Recommendations" %}{% endif %}
-  </button>
-  <div id="gen-status" style="text-align:center;color:var(--text-muted);font-size:.88rem;margin-bottom:1rem;display:none;"></div>
+  {% with prog=active_program %}
+  {% if has_any_shared %}
 
-  {% if recs_processing %}
-  <div style="text-align:center;padding:1.5rem;color:var(--text-muted);">
-    <p style="font-size:1.5rem;margin-bottom:.5rem;">⏳</p>
-    <p>{% trans "Analysis in progress — refresh in a moment." %}</p>
-  </div>
-  {% endif %}
-
-  <div id="recs-area">
-  {% if recs %}
-
-    {% if recs.nutrition %}
-    <div class="rec-section">
-      <div class="rec-section-title">🥗 {% trans "Nutrition" %}</div>
-      <div class="rec-summary">{{ recs.nutrition.summary }}</div>
-      {% if recs.nutrition.recommendations %}
+    {# ── Goals ── #}
+    {% if prog.shared_sections.goals and student.goals %}
+    <div class="rec-card">
+      <div class="rec-card-title">🎯 {% trans "Your Goals" %}</div>
       <ul class="rec-list">
-        {% for tip in recs.nutrition.recommendations %}
-        <li>✓ {{ tip }}</li>
+        {% for goal in student.goals|split_goals %}
+        <li>{{ goal }}</li>
         {% endfor %}
       </ul>
-      {% endif %}
-      {% if recs.nutrition.focus_foods %}
-      <div style="margin-top:.85rem;">
-        <div style="font-size:.78rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.45rem;">{% trans "Focus on" %}</div>
-        <div class="food-grid">
-          {% for f in recs.nutrition.focus_foods %}<div class="food-chip">{{ f }}</div>{% endfor %}
-        </div>
-      </div>
-      {% endif %}
-      {% if recs.nutrition.limit_foods %}
-      <div style="margin-top:.75rem;">
-        <div style="font-size:.78rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.45rem;">{% trans "Limit" %}</div>
-        <div class="food-grid">
-          {% for f in recs.nutrition.limit_foods %}<div class="food-chip limit">{{ f }}</div>{% endfor %}
-        </div>
-      </div>
-      {% endif %}
     </div>
     {% endif %}
 
-    {% if recs.exercise %}
-    <div class="rec-section">
-      <div class="rec-section-title">💪 {% trans "Exercise Strategy" %}</div>
-      <div class="rec-summary">{{ recs.exercise.summary }}</div>
-      {% if recs.exercise.priority_areas %}
-      <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.75rem;">
-        {% for area in recs.exercise.priority_areas %}
-        <span style="background:#eff6ff;color:var(--primary);padding:.25rem .65rem;border-radius:999px;font-size:.82rem;font-weight:600;border:1px solid #bfdbfe;">{{ area }}</span>
-        {% endfor %}
-      </div>
-      {% endif %}
-      {% if recs.exercise.recommendations %}
-      <ul class="rec-list">
-        {% for tip in recs.exercise.recommendations %}<li>✓ {{ tip }}</li>{% endfor %}
-      </ul>
-      {% endif %}
-    </div>
-    {% endif %}
-
-    {% if recs.lifestyle %}
-    <div class="rec-section">
-      <div class="rec-section-title">🌟 {% trans "Lifestyle & Fasting" %}</div>
-      {% if recs.lifestyle.fasting %}
-      <div class="lifestyle-row"><div class="lifestyle-icon">⏱</div><div><strong>{% trans "Fasting" %}:</strong> {{ recs.lifestyle.fasting }}</div></div>
-      {% endif %}
-      {% if recs.lifestyle.hydration %}
-      <div class="lifestyle-row"><div class="lifestyle-icon">💧</div><div><strong>{% trans "Hydration" %}:</strong> {{ recs.lifestyle.hydration }}</div></div>
-      {% endif %}
-      {% if recs.lifestyle.sleep %}
-      <div class="lifestyle-row"><div class="lifestyle-icon">😴</div><div><strong>{% trans "Sleep" %}:</strong> {{ recs.lifestyle.sleep }}</div></div>
-      {% endif %}
-      {% if recs.lifestyle.supplements %}
-      <div class="lifestyle-row" style="flex-direction:column;">
-        <div style="font-size:.78rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem;">{% trans "Supplements" %}</div>
-        <ul class="rec-list" style="width:100%;">
-          {% for s in recs.lifestyle.supplements %}<li>{{ s }}</li>{% endfor %}
+    {# ── Analysis & Findings ── #}
+    {% if prog.shared_sections.analysis %}
+      {% with findings=prog.description_en|default:prog.description %}
+      {% if findings %}
+      <div class="rec-card">
+        <div class="rec-card-title">📋 {% trans "Analysis & Findings" %}</div>
+        <ul class="rec-findings" style="list-style:none;padding:0;margin:0;">
+          {% for line in findings.splitlines %}
+            {% if line %}<li>{{ line }}</li>{% endif %}
+          {% endfor %}
         </ul>
       </div>
       {% endif %}
+      {% endwith %}
+    {% endif %}
+
+    {# ── Nutrition Plan ── #}
+    {% if prog.shared_sections.nutrition and prog.nutrition_plan %}
+    {% with n=prog.nutrition_plan_en|default:prog.nutrition_plan %}
+    <div class="rec-card">
+      <div class="rec-card-title">🥗 {% trans "Daily Nutrition Plan" %}</div>
+
+      {# Macros #}
+      {% if n.daily_calories %}
+      <div class="macro-row">
+        <div class="macro-box" style="background:#f0fdf4;">
+          <div class="macro-val" style="color:#16a34a;">{{ n.daily_calories }}</div>
+          <div class="macro-lbl">{% trans "kcal/day" %}</div>
+        </div>
+        {% if n.macros %}
+        <div class="macro-box" style="background:#eff6ff;">
+          <div class="macro-val" style="color:#2563eb;">{{ n.macros.protein_g }}g</div>
+          <div class="macro-lbl">{% trans "Protein" %}</div>
+        </div>
+        <div class="macro-box" style="background:#fefce8;">
+          <div class="macro-val" style="color:#ca8a04;">{{ n.macros.carbs_g }}g</div>
+          <div class="macro-lbl">{% trans "Carbs" %}</div>
+        </div>
+        <div class="macro-box" style="background:#fdf4ff;">
+          <div class="macro-val" style="color:#9333ea;">{{ n.macros.fat_g }}g</div>
+          <div class="macro-lbl">{% trans "Fat" %}</div>
+        </div>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      {# Meals #}
+      {% if n.meals %}
+      <h3 style="font-size:.92rem;font-weight:700;margin-bottom:.75rem;">🍽 {% trans "Meals" %}</h3>
+      {% for meal in n.meals %}
+      <div class="meal-card">
+        <div class="meal-header">
+          <span class="meal-name">{{ meal.meal }}</span>
+          {% if meal.time %}<span class="meal-time">🕐 {{ meal.time }}</span>{% endif %}
+          {% if meal.calories %}<span style="font-size:.75rem;font-weight:700;color:#16a34a;background:#f0fdf4;padding:.15rem .45rem;border-radius:5px;">{{ meal.calories }} {% trans "kcal" %}</span>{% endif %}
+        </div>
+        <ul class="meal-food-list">
+          {% for food in meal.foods %}<li>{{ food }}</li>{% endfor %}
+        </ul>
+        {% if meal.notes %}
+        {% for note in meal.notes %}
+        <div class="meal-note">{{ note }}</div>
+        {% endfor %}
+        {% endif %}
+      </div>
+      {% endfor %}
+      {% endif %}
+
+      {# Fasting #}
+      {% if n.fasting %}
+      <div class="fasting-box {% if n.fasting.recommended %}style='background:#f0fdf4;border:1px solid #86efac;'{% else %}" style="background:#fef9c3;border:1px solid #fde047;{% endif %}">
+        <h3 style="font-size:.92rem;font-weight:700;margin-bottom:.5rem;">⏱ {% trans "Fasting" %}</h3>
+        {% if n.fasting.recommended %}
+          <p style="font-size:.88rem;margin-bottom:.35rem;"><strong>✅ {{ n.fasting.type }}</strong>{% if n.fasting.eating_window %} — {% trans "window:" %} {{ n.fasting.eating_window }}{% endif %}</p>
+        {% else %}
+          <p style="font-size:.88rem;margin-bottom:.35rem;"><strong>❌ {% trans "Fasting not recommended" %}</strong></p>
+        {% endif %}
+        {% if n.fasting.reasoning %}
+        <p style="font-size:.84rem;color:var(--text-muted);line-height:1.6;">{{ n.fasting.reasoning }}</p>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      {# Supplements #}
+      {% if n.supplements %}
+      <div style="margin-top:.85rem;">
+        <h3 style="font-size:.92rem;font-weight:700;margin-bottom:.6rem;">💊 {% trans "Supplements" %}</h3>
+        {% for s in n.supplements %}
+        <div class="supp-chip">{{ s }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {# General notes #}
+      {% if n.notes %}
+      <div class="gen-notes-section">
+        <div class="gen-notes-title">📝 {% trans "General Recommendations" %}</div>
+        {% if n.notes.0.text %}
+          {# notes is a list of {title, text} dicts #}
+          <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.4rem;">
+          {% for note in n.notes %}
+            <li style="font-size:.84rem;line-height:1.6;">
+              {% if note.title %}<strong>{{ note.title }}:</strong> {% endif %}{{ note.text }}
+            </li>
+          {% endfor %}
+          </ul>
+        {% else %}
+          <div class="gen-notes-text">{{ n.notes }}</div>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+    {% endwith %}
+    {% endif %}
+
+    {# ── Manual trainer note ── #}
+    {% if student.trainer_recommendation_confirmed and student.trainer_recommendation %}
+    <div class="rec-card">
+      <div class="rec-card-title">👩‍💼 {% trans "Personal Note from Trainer" %}</div>
+      <div style="font-size:.9rem;line-height:1.7;white-space:pre-wrap;">{{ student.trainer_recommendation }}</div>
     </div>
     {% endif %}
 
-  {% elif not recs %}
-    <div style="text-align:center;padding:2rem;color:var(--text-muted);">
-      <p style="font-size:1.5rem;margin-bottom:.75rem;">✨</p>
-      <p>{% trans "Click the button above to generate your personalised recommendations." %}</p>
+  {% else %}
+    <div class="rec-empty">
+      <div class="rec-empty-icon">💌</div>
+      <div class="rec-empty-title">{% trans "No recommendations yet" %}</div>
+      <p style="font-size:.88rem;">{% trans "Your trainer will share personalised tips with you soon." %}</p>
     </div>
   {% endif %}
-  </div>
+  {% endwith %}
 
 </div>
-
-<script>
-function generateRecs() {
-  var btn    = document.getElementById('gen-btn');
-  var status = document.getElementById('gen-status');
-  btn.disabled = true;
-  btn.textContent = '⏳ {% trans "Generating…"|escapejs %}';
-  status.textContent = '{% trans "Analysing your data with AI — this takes ~15 seconds…"|escapejs %}';
-  status.style.display = 'block';
-
-  fetch('{% url "students:portal_get_recommendations" %}', {
-    method: 'POST',
-    headers: {'X-CSRFToken': '{{ csrf_token }}'},
-  })
-  .then(function(r) { return r.json(); })
-  .then(function() { pollRecs(); })
-  .catch(function() {
-    btn.disabled = false;
-    btn.textContent = '✨ {% trans "Generate Recommendations"|escapejs %}';
-    status.textContent = '{% trans "Network error — please try again."|escapejs %}';
-  });
-}
-
-function pollRecs() {
-  setTimeout(function() {
-    fetch('{% url "students:portal_check_recommendations" %}')
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      if (data.status === 'done') {
-        window.location.reload();
-      } else if (data.status === 'error') {
-        var btn = document.getElementById('gen-btn');
-        var status = document.getElementById('gen-status');
-        btn.disabled = false;
-        btn.textContent = '✨ {% trans "Generate Recommendations"|escapejs %}';
-        status.textContent = '{% trans "Error"|escapejs %}: ' + (data.error || '{% trans "Unknown error"|escapejs %}');
-      } else {
-        pollRecs();
-      }
-    })
-    .catch(function() { pollRecs(); });
-  }, 3000);
-}
-</script>
 {% endblock %}

@@ -97,22 +97,12 @@
       {% if student.payment_handle %}<span style="color:var(--text-muted);">· {{ student.payment_handle }}</span>{% endif %}
     </div>
     {% endif %}
-    {% if student.payment_handle %}
-      {% if student.payment_method == 'venmo' %}
-        {% if student.payment_handle|slice:":1" == '@' %}
-          <a href="https://venmo.com/{{ student.payment_handle|slice:'1:' }}" target="_blank" class="btn btn-primary btn-sm" style="margin-bottom:.5rem;">💸 {% trans "Pay via Venmo" %}</a>
-        {% else %}
-          <a href="https://venmo.com/{{ student.payment_handle }}" target="_blank" class="btn btn-primary btn-sm" style="margin-bottom:.5rem;">💸 {% trans "Pay via Venmo" %}</a>
-        {% endif %}
-      {% elif student.payment_method == 'paypal' %}
-        {% if 'paypal.me' in student.payment_handle or 'paypal.com' in student.payment_handle %}
-          <a href="{{ student.payment_handle }}" target="_blank" class="btn btn-primary btn-sm" style="margin-bottom:.5rem;">💸 {% trans "Pay via PayPal" %}</a>
-        {% else %}
-          <a href="https://paypal.me/{{ student.payment_handle }}" target="_blank" class="btn btn-primary btn-sm" style="margin-bottom:.5rem;">💸 {% trans "Pay via PayPal" %}</a>
-        {% endif %}
-      {% endif %}
+    {% if student.payment_start_date %}
+      {% with today=student.payment_start_date %}
+        {# countdown computed in view — show link to billing page #}
+      {% endwith %}
     {% endif %}
-    <a href="{% url 'students:edit' student.pk %}" style="font-size:.82rem;color:var(--primary);text-decoration:none;display:block;margin-top:.25rem;">{% trans "Edit billing info →" %}</a>
+    <a href="{% url 'students:billing' student.pk %}" class="btn btn-primary btn-sm" style="margin-top:.4rem;display:inline-block;">💳 {% trans "Manage Billing →" %}</a>
   </div>
 </div>
 
@@ -133,7 +123,12 @@
 <div class="card" style="margin-bottom:1.5rem;">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:.5rem;">
     <h2 style="font-size:1rem;font-weight:700;">📸 {% trans "Photo Analysis" %}</h2>
-    <button id="analyze-photo-btn" class="btn btn-accent btn-sm" onclick="analyzePhoto()">🔍 {% trans "Analyze Photo" %}</button>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+      <button id="analyze-photo-btn" class="btn btn-accent btn-sm" onclick="analyzePhoto()">🔍 {% trans "Analyze Photo" %}</button>
+      {% if student.photo_analysis and not student.photo_analysis|slice:":1" == "_" %}
+      <button id="suggest-ex-btn" class="btn btn-primary btn-sm" onclick="suggestExercisesFromPhoto()">💪 {% trans "Suggest Exercises" %}</button>
+      {% endif %}
+    </div>
   </div>
   <div id="photo-analysis-area">
     {% if student.photo_analysis %}
@@ -144,6 +139,37 @@
   </div>
 </div>
 {% endif %}
+
+<!-- Suggest Exercises Modal -->
+<div id="suggest-ex-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:flex-start;justify-content:center;overflow-y:auto;padding:1rem;">
+  <div style="background:#fff;border-radius:16px;padding:1.75rem;width:100%;max-width:540px;margin:2rem auto;box-shadow:0 8px 32px rgba(0,0,0,.2);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+      <h3 style="font-size:1.05rem;font-weight:700;margin:0;">💪 {% trans "Exercises from Photo Analysis" %}</h3>
+      <button onclick="closeSuggestModal()" style="background:none;border:none;font-size:1.25rem;cursor:pointer;color:var(--text-muted);">✕</button>
+    </div>
+    <div id="suggest-ex-loading" style="text-align:center;padding:2rem;color:var(--text-muted);">
+      <div style="font-size:1.5rem;margin-bottom:.5rem;">⏳</div>
+      {% trans "AI is analyzing the photo and selecting exercises…" %}
+    </div>
+    <div id="suggest-ex-content" style="display:none;">
+      <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:1rem;">{% trans "Select exercises to add and choose a program day:" %}</p>
+
+      <div class="form-group">
+        <label class="form-label">{% trans "Add to program day" %}</label>
+        <select id="suggest-day-select" class="form-control"></select>
+      </div>
+
+      <div id="suggest-ex-list" style="display:flex;flex-direction:column;gap:.6rem;margin-bottom:1.25rem;"></div>
+
+      <button onclick="addSelectedExercises()"
+        style="width:100%;padding:.65rem;border-radius:8px;border:none;background:var(--primary);color:#fff;font-size:.95rem;font-weight:700;cursor:pointer;">
+        ＋ {% trans "Add Selected to Day" %}
+      </button>
+      <div id="suggest-add-status" style="margin-top:.5rem;font-size:.85rem;text-align:center;"></div>
+    </div>
+    <div id="suggest-ex-error" style="display:none;color:var(--danger);font-size:.9rem;padding:1rem;"></div>
+  </div>
+</div>
 
 <!-- Blood Test -->
 <div class="card" style="margin-bottom:1.5rem;">
@@ -287,6 +313,141 @@ function pollPhotoAnalysis() {
 {% trans "Link copied!" as msg_copied %}
 {% trans "Copy this link:" as msg_copy %}
 {% trans "Network error — please try again." as msg_net %}
+function saveRec(pk) {
+  var text = document.getElementById('rec-textarea').value;
+  var status = document.getElementById('rec-status');
+  fetch('/students/' + pk + '/recommendation/save/', {
+    method: 'POST',
+    headers: {'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/x-www-form-urlencoded'},
+    body: 'text=' + encodeURIComponent(text),
+  }).then(function(r) { return r.json(); }).then(function() {
+    status.style.display = 'block';
+    status.style.color = 'var(--success)';
+    status.textContent = '✓ {% trans "Draft saved."|escapejs %}';
+    setTimeout(function() { status.style.display = 'none'; }, 2500);
+  });
+}
+
+function confirmRec(pk) {
+  var text = document.getElementById('rec-textarea').value;
+  var status = document.getElementById('rec-status');
+  fetch('/students/' + pk + '/recommendation/confirm/', {
+    method: 'POST',
+    headers: {'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/x-www-form-urlencoded'},
+    body: 'text=' + encodeURIComponent(text),
+  }).then(function(r) { return r.json(); }).then(function() {
+    status.style.display = 'block';
+    status.style.color = 'var(--success)';
+    status.textContent = '✅ {% trans "Sent to student!"|escapejs %}';
+    setTimeout(function() { window.location.reload(); }, 1500);
+  });
+}
+
+// ── Suggest Exercises from Photo ─────────────────────────────────
+let _suggestData = null;
+
+function suggestExercisesFromPhoto() {
+  const modal = document.getElementById('suggest-ex-modal');
+  modal.style.display = 'flex';
+  document.getElementById('suggest-ex-loading').style.display = 'block';
+  document.getElementById('suggest-ex-content').style.display = 'none';
+  document.getElementById('suggest-ex-error').style.display = 'none';
+
+  fetch('{% url "students:suggest_exercises_from_photo" student.pk %}', {
+    method: 'POST',
+    headers: {'X-CSRFToken': '{{ csrf_token }}'},
+  })
+  .then(r => r.json())
+  .then(data => {
+    document.getElementById('suggest-ex-loading').style.display = 'none';
+    if (data.error) {
+      const errEl = document.getElementById('suggest-ex-error');
+      errEl.textContent = data.error;
+      errEl.style.display = 'block';
+      return;
+    }
+    _suggestData = data;
+    // Populate day select
+    const daySelect = document.getElementById('suggest-day-select');
+    daySelect.innerHTML = '';
+    (data.days || []).forEach(d => {
+      const opt = document.createElement('option');
+      opt.value = d.pk;
+      opt.textContent = d.label;
+      daySelect.appendChild(opt);
+    });
+    if (!data.days || !data.days.length) {
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = '— No active program days —';
+      daySelect.appendChild(opt);
+    }
+    // Populate exercise list
+    const listEl = document.getElementById('suggest-ex-list');
+    listEl.innerHTML = '';
+    (data.suggestions || []).forEach((s, i) => {
+      const row = document.createElement('label');
+      row.style.cssText = 'display:flex;gap:.75rem;align-items:flex-start;padding:.75rem;border:1px solid var(--border);border-radius:10px;cursor:pointer;';
+      row.innerHTML = `
+        <input type="checkbox" name="ex-pick" value="${i}" style="margin-top:.2rem;flex-shrink:0;" ${s.exercise_pk ? 'checked' : ''}>
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:.92rem;">${s.name}</div>
+          <div style="font-size:.82rem;color:var(--text-muted);">${s.sets} sets × ${s.reps} reps${s.muscle_group ? ' · ' + s.muscle_group : ''}</div>
+          ${s.reason ? `<div style="font-size:.82rem;color:var(--primary);margin-top:.2rem;">🎯 ${s.reason}</div>` : ''}
+          ${!s.exercise_pk ? '<div style="font-size:.78rem;color:var(--danger);margin-top:.2rem;">⚠ Not in library — will be skipped</div>' : ''}
+        </div>`;
+      listEl.appendChild(row);
+    });
+    document.getElementById('suggest-ex-content').style.display = 'block';
+  })
+  .catch(() => {
+    document.getElementById('suggest-ex-loading').style.display = 'none';
+    const errEl = document.getElementById('suggest-ex-error');
+    errEl.textContent = '{% trans "Network error — please try again."|escapejs %}';
+    errEl.style.display = 'block';
+  });
+}
+
+function closeSuggestModal() {
+  document.getElementById('suggest-ex-modal').style.display = 'none';
+  _suggestData = null;
+}
+
+document.getElementById('suggest-ex-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeSuggestModal();
+});
+
+function addSelectedExercises() {
+  const dayPk = document.getElementById('suggest-day-select').value;
+  if (!dayPk) { alert('Please select a program day.'); return; }
+  const checked = Array.from(document.querySelectorAll('input[name="ex-pick"]:checked'));
+  if (!checked.length) { alert('Select at least one exercise.'); return; }
+  const suggestions = _suggestData.suggestions;
+  const statusEl = document.getElementById('suggest-add-status');
+  statusEl.textContent = '⏳ Adding…';
+
+  const toAdd = checked.map(cb => suggestions[parseInt(cb.value)]).filter(s => s.exercise_pk);
+  if (!toAdd.length) { statusEl.textContent = '⚠ No exercises with library match selected.'; return; }
+
+  let done = 0;
+  toAdd.forEach(s => {
+    fetch('{% url "programs:add_exercise_to_day" %}', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}'},
+      body: JSON.stringify({day_pk: dayPk, exercise_pk: s.exercise_pk, sets: s.sets, reps: s.reps}),
+    })
+    .then(r => r.json())
+    .then(() => {
+      done++;
+      if (done === toAdd.length) {
+        statusEl.style.color = 'var(--success)';
+        statusEl.textContent = `✓ Added ${done} exercise${done > 1 ? 's' : ''} to the day.`;
+        setTimeout(closeSuggestModal, 1800);
+      }
+    });
+  });
+}
+
 function sendInvite(studentId) {
   var resultEl = document.getElementById('invite-result');
   resultEl.textContent = '{{ msg_generating|escapejs }}';
@@ -318,6 +479,22 @@ function sendInvite(studentId) {
   <p style="color:var(--text-muted);font-size:.92rem;">{{ student.notes|linebreaksbr }}</p>
 </div>
 {% endif %}
+
+<!-- Trainer Recommendations -->
+<div class="card" style="margin-bottom:1.5rem;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.85rem;flex-wrap:wrap;gap:.5rem;">
+    <h2 style="font-size:1rem;font-weight:700;">📝 {% trans "Recommendations for Student" %}</h2>
+    {% if student.trainer_recommendation_confirmed %}
+      <span style="font-size:.75rem;padding:.2rem .6rem;border-radius:999px;background:#dcfce7;color:#15803d;font-weight:600;">✓ {% trans "Sent to student" %}</span>
+    {% endif %}
+  </div>
+  <textarea id="rec-textarea" rows="5" style="width:100%;padding:.75rem;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:.9rem;line-height:1.6;resize:vertical;box-sizing:border-box;">{{ student.trainer_recommendation }}</textarea>
+  <div style="display:flex;gap:.6rem;margin-top:.75rem;flex-wrap:wrap;">
+    <button class="btn btn-outline btn-sm" onclick="saveRec({{ student.pk }})">💾 {% trans "Save Draft" %}</button>
+    <button class="btn btn-primary btn-sm" onclick="confirmRec({{ student.pk }})">✅ {% trans "Confirm & Send to Student" %}</button>
+  </div>
+  <div id="rec-status" style="margin-top:.5rem;font-size:.83rem;display:none;"></div>
+</div>
 
 <!-- Programs -->
 <div class="card">

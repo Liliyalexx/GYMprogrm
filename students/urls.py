@@ -15,10 +15,16 @@ urlpatterns = [
     path('<int:pk>/check-blood-analysis/', views.check_blood_analysis, name='check_blood_analysis'),
     path('<int:pk>/analyze-photo/', views.analyze_photo, name='analyze_photo'),
     path('<int:pk>/check-photo-analysis/', views.check_photo_analysis, name='check_photo_analysis'),
+    path('<int:pk>/suggest-exercises-from-photo/', views.suggest_exercises_from_photo, name='suggest_exercises_from_photo'),
+    path('<int:pk>/billing/', views.student_billing, name='billing'),
     path('<int:pk>/send-invite/', views.send_invite, name='send_invite'),
+    path('<int:pk>/recommendation/save/', views.save_trainer_recommendation, name='save_trainer_recommendation'),
+    path('<int:pk>/recommendation/confirm/', views.confirm_trainer_recommendation, name='confirm_trainer_recommendation'),
+    path('payment-settings/', views.trainer_payment_settings, name='trainer_payment_settings'),
 
     # Student portal
     path('portal/', views.portal_dashboard, name='portal_dashboard'),
+    path('portal/billing/', views.portal_billing, name='portal_billing'),
     path('portal/intake/', views.portal_intake, name='portal_intake'),
     path('portal/program/', views.portal_program, name='portal_program'),
     path('portal/log/<int:program_day_id>/', views.portal_log_workout, name='portal_log_workout'),

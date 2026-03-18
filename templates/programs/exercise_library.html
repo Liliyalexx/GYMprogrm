@@ -4,8 +4,12 @@
 {% block title %}{% trans "Exercise Library" %} — GYMprogrm{% endblock %}
 
 {% block content %}
-<div class="page-header">
-  <h1 class="page-title">{% trans "Exercise Library" %}</h1>
+<div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;">
+  <h1 class="page-title" style="margin:0;">{% trans "Exercise Library" %}</h1>
+  <button onclick="document.getElementById('create-ex-modal').style.display='flex'"
+    style="display:flex;align-items:center;gap:.4rem;padding:.55rem 1.1rem;border-radius:10px;border:none;background:linear-gradient(135deg,var(--primary),#7c3aed);color:#fff;font-size:.9rem;font-weight:700;cursor:pointer;">
+    ＋ {% trans "New Exercise" %}
+  </button>
 </div>
 
 <!-- Muscle filter -->
@@ -107,6 +111,64 @@
   {% endfor %}
 </div>
 
+<!-- Create Exercise modal -->
+<div id="create-ex-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:1.75rem;width:min(480px,94vw);box-shadow:0 8px 32px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto;">
+    <h3 style="margin:0 0 1.25rem;font-size:1.05rem;font-weight:800;">＋ {% trans "Create New Exercise" %}</h3>
+    <form method="post" action="{% url 'programs:create_exercise' %}" id="create-ex-form">
+      {% csrf_token %}
+
+      <div style="margin-bottom:.85rem;">
+        <label style="display:block;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-bottom:.3rem;">{% trans "Exercise Name" %} *</label>
+        <input type="text" name="name" required placeholder="e.g. Barbell Hip Thrust"
+          style="width:100%;padding:.6rem .8rem;border:1.5px solid var(--border);border-radius:8px;font-size:.95rem;box-sizing:border-box;font-family:inherit;">
+      </div>
+
+      <div style="margin-bottom:.85rem;">
+        <label style="display:block;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-bottom:.3rem;">{% trans "Muscle Group" %}</label>
+        <select name="muscle_group"
+          style="width:100%;padding:.6rem .8rem;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;box-sizing:border-box;background:#fff;font-family:inherit;">
+          {% for val, label in muscle_choices %}
+          <option value="{{ val }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div style="margin-bottom:.85rem;">
+        <label style="display:block;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-bottom:.3rem;">{% trans "Difficulty" %}</label>
+        <select name="difficulty"
+          style="width:100%;padding:.6rem .8rem;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;box-sizing:border-box;background:#fff;font-family:inherit;">
+          <option value="beginner">{% trans "Beginner" %}</option>
+          <option value="intermediate">{% trans "Intermediate" %}</option>
+          <option value="advanced">{% trans "Advanced" %}</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom:.85rem;">
+        <label style="display:block;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-bottom:.3rem;">{% trans "Description" %}</label>
+        <textarea name="description" rows="3" placeholder="{% trans "Which muscles are worked and how to perform it" %}"
+          style="width:100%;padding:.6rem .8rem;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;box-sizing:border-box;font-family:inherit;resize:vertical;"></textarea>
+      </div>
+
+      <label style="display:flex;align-items:center;gap:.55rem;cursor:pointer;margin-bottom:1.25rem;font-size:.88rem;font-weight:600;">
+        <input type="checkbox" name="generate_image" value="1" style="width:16px;height:16px;accent-color:var(--primary);">
+        ✨ {% trans "Auto-generate AI illustration after saving" %}
+      </label>
+
+      <div style="display:flex;gap:.6rem;justify-content:flex-end;">
+        <button type="button" onclick="document.getElementById('create-ex-modal').style.display='none'"
+          style="padding:.5rem 1.1rem;border-radius:8px;border:1.5px solid var(--border);background:#f8fafc;cursor:pointer;font-size:.9rem;">
+          {% trans "Cancel" %}
+        </button>
+        <button type="submit" id="create-ex-submit"
+          style="padding:.5rem 1.25rem;border-radius:8px;border:none;background:linear-gradient(135deg,var(--primary),#7c3aed);color:#fff;font-size:.9rem;font-weight:700;cursor:pointer;">
+          {% trans "Save Exercise" %}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Photo edit modal -->
 <div id="photo-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;">
   <div style="background:#fff;border-radius:12px;padding:1.5rem;width:min(420px,90vw);box-shadow:0 8px 32px rgba(0,0,0,.2);">
@@ -198,8 +260,49 @@ function savePhoto() {
 document.getElementById('photo-modal').addEventListener('click', function(e) {
   if (e.target === this) closePhotoModal();
 });
+
+document.getElementById('create-ex-modal').addEventListener('click', function(e) {
+  if (e.target === this) this.style.display = 'none';
+});
+
+document.getElementById('create-ex-form').addEventListener('submit', function() {
+  var btn = document.getElementById('create-ex-submit');
+  var hasGenerate = this.querySelector('[name=generate_image]').checked;
+  btn.disabled = true;
+  btn.textContent = hasGenerate ? '⏳ {% trans "Saving & generating…"|escapejs %}' : '⏳ {% trans "Saving…"|escapejs %}';
+});
 document.getElementById('photo-url-input').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') savePhoto();
 });
+
+// Auto-generate illustration for a newly created exercise (?autogen=<pk>)
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var autogenId = params.get('autogen');
+  if (!autogenId) return;
+  var btn = document.querySelector('#media-' + autogenId + ' button');
+  if (!btn) return;
+  // Show a toast banner
+  var toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;top:1rem;left:50%;transform:translateX(-50%);background:#1e3a8a;color:#fff;padding:.65rem 1.25rem;border-radius:10px;font-size:.88rem;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.2);';
+  toast.textContent = '✨ {% trans "Generating AI illustration…"|escapejs %}';
+  document.body.appendChild(toast);
+  // Scroll the new card into view
+  var card = document.getElementById('media-' + autogenId);
+  if (card) card.scrollIntoView({behavior:'smooth', block:'center'});
+  // Trigger generation
+  generateIllustration(parseInt(autogenId), btn);
+  // Remove autogen param from URL so refresh doesn't re-trigger
+  params.delete('autogen');
+  var newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+  history.replaceState(null, '', newUrl);
+  // Remove toast after generation completes (watch btn text change)
+  var toastTimer = setInterval(function() {
+    if (!btn.disabled || btn.textContent.startsWith('✗')) {
+      clearInterval(toastTimer);
+      toast.remove();
+    }
+  }, 500);
+})();
 </script>
 {% endblock %}
