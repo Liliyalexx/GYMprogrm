@@ -1,0 +1,26 @@
+{% load i18n %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>GYMprogrm</title>
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <style>
+    body { display:flex; align-items:center; justify-content:center; min-height:100vh; padding:1rem; }
+    .auth-card { width:100%; max-width:400px; background:var(--card); border:1px solid var(--border); border-radius:20px; padding:2rem 1.75rem; box-shadow:0 4px 24px rgba(0,0,0,.08); text-align:center; }
+  </style>
+</head>
+<body>
+<div class="auth-card">
+  <div style="font-size:3rem;margin-bottom:.75rem;">⏳</div>
+  <h1 style="font-size:1.3rem;font-weight:700;margin-bottom:.6rem;">{% trans "Waiting for your trainer" %}</h1>
+  <p style="color:var(--text-muted);font-size:.9rem;line-height:1.6;">{% trans "Your account is set up but your trainer hasn't added you yet. Ask them to send you an invite link." %}</p>
+  <form method="post" action="/logout/" style="margin-top:1.5rem;">
+    {% csrf_token %}
+    <button type="submit" class="btn" style="border:1.5px solid var(--border);background:transparent;color:var(--text-muted);">{% trans "Sign out" %}</button>
+  </form>
+</div>
+</body>
+</html>

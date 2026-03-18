@@ -511,9 +511,24 @@ def intake_success(request):
 @login_required
 def auth_redirect(request):
     """Role-based redirect after login."""
+    # Try to link Google OAuth user to existing student by email
+    user = request.user
+    if not hasattr(user, 'student'):
+        student = Student.objects.filter(email=user.email, user__isnull=True).first()
+        if student:
+            student.user = user
+            student.save(update_fields=['user'])
+
     if hasattr(request.user, 'student'):
         return redirect('students:portal_dashboard')
-    return redirect('students:list')
+    if request.user.is_staff:
+        return redirect('students:list')
+    # Logged in via Google but no student profile yet
+    return redirect('no_student_profile')
+
+
+def no_student_profile(request):
+    return render(request, 'registration/no_student_profile.html')
 
 
 # ---------------------------------------------------------------------------
