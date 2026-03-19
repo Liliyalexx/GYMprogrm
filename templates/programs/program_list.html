@@ -18,7 +18,7 @@
     <!-- Header -->
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.85rem;flex-wrap:wrap;gap:.5rem;">
       <div>
-        <div style="font-weight:700;font-size:1.1rem;">{{ program.name }}</div>
+        <div style="font-weight:700;font-size:1.1rem;">{{ program.name_en|default:program.name }}</div>
         <div style="font-size:.82rem;color:var(--text-muted);margin-top:.25rem;">
           {{ program.days.count }} {% trans "days" %} · {{ program.training_days }} {% trans "workouts/week" %} · {% trans "Created" %} {{ program.created_at|date:"d M Y" }}
         </div>

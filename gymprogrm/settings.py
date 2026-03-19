@@ -52,6 +52,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
+    'gymprogrm.middleware.TrainerEnglishMiddleware',
 ]
 
 ROOT_URLCONF = 'gymprogrm.urls'
