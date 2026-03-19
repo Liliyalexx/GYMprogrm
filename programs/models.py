@@ -19,6 +19,11 @@ class ExerciseLibrary(models.Model):
         ('intermediate', 'Intermediate'),
         ('advanced', 'Advanced'),
     ]
+    EXERCISE_TYPE_CHOICES = [
+        ('main', 'Main Exercise'),
+        ('warmup', 'Warm-up / Activation'),
+        ('stretch', 'Stretch / Cool-down'),
+    ]
 
     name = models.CharField(max_length=200)
     photo_url = models.URLField(blank=True, max_length=2000, help_text='Start position image')
@@ -27,6 +32,7 @@ class ExerciseLibrary(models.Model):
     posture_tips = models.TextField(blank=True, help_text='AI-generated posture & technique tips')
     muscle_group = models.CharField(max_length=50, choices=MUSCLE_GROUP_CHOICES)
     difficulty = models.CharField(max_length=20, choices=DIFFICULTY_CHOICES, default='beginner')
+    exercise_type = models.CharField(max_length=20, choices=EXERCISE_TYPE_CHOICES, default='main')
 
     class Meta:
         ordering = ['muscle_group', 'name']
@@ -92,3 +98,49 @@ class ProgramExercise(models.Model):
 
     def __str__(self):
         return f'{self.exercise.name} — {self.program_day}'
+
+
+# ── Program Templates ──────────────────────────────────────────────────────────
+
+class ProgramTemplate(models.Model):
+    """A reusable program structure not tied to any student."""
+    name = models.CharField(max_length=200, help_text='E.g. "Muscle building — straight back teenager"')
+    description = models.TextField(blank=True, help_text='Trainer notes: who this is for, goals, notes')
+    training_days = models.PositiveSmallIntegerField(default=3)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
+class ProgramTemplateDay(models.Model):
+    template = models.ForeignKey(ProgramTemplate, on_delete=models.CASCADE, related_name='days')
+    day_number = models.PositiveSmallIntegerField()
+    name = models.CharField(max_length=200)
+    name_en = models.CharField(max_length=200, blank=True)
+    warmup_data = models.JSONField(null=True, blank=True)
+    cooldown_data = models.JSONField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['day_number']
+
+    def __str__(self):
+        return f'{self.template.name} / {self.name}'
+
+
+class ProgramTemplateExercise(models.Model):
+    template_day = models.ForeignKey(ProgramTemplateDay, on_delete=models.CASCADE, related_name='exercises')
+    exercise = models.ForeignKey(ExerciseLibrary, on_delete=models.PROTECT)
+    sets = models.PositiveSmallIntegerField(default=3)
+    reps = models.CharField(max_length=20, default='10')
+    weight_kg = models.DecimalField(max_digits=6, decimal_places=1, null=True, blank=True)
+    order = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
+
+    def __str__(self):
+        return f'{self.exercise.name} — {self.template_day}'

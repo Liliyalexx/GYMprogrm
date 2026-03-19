@@ -120,6 +120,14 @@ _DEFAULT_SVG = _MUSCLE_SVG['full_body']
 
 
 @register.filter
+def dict_get(d, key):
+    """Return d[key] if it exists, else None. Used for dynamic dict lookups in templates."""
+    if isinstance(d, dict):
+        return d.get(str(key).lower())
+    return None
+
+
+@register.filter
 def exercise_illustration(muscle_group):
     """Return an inline SVG illustration for the given muscle group."""
     bg, color, shapes = _MUSCLE_SVG.get(muscle_group, _DEFAULT_SVG)

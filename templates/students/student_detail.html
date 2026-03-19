@@ -498,9 +498,15 @@ function sendInvite(studentId) {
 
 <!-- Programs -->
 <div class="card">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
-    <h2 style="font-size:1rem;font-weight:700;">📋 {% trans "Programs" %}</h2>
-    <a href="{% url 'programs:generate' student.pk %}" class="btn btn-accent btn-sm">🤖 {% trans "Generate New" %}</a>
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem;">
+    <h2 style="font-size:1rem;font-weight:700;margin:0;">📋 {% trans "Programs" %}</h2>
+    <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
+      <a href="{% url 'programs:template_list' %}?assign={{ student.pk }}"
+         style="display:inline-flex;align-items:center;gap:.3rem;padding:.35rem .8rem;border-radius:8px;border:1.5px solid #16a34a;background:#f0fdf4;color:#15803d;font-size:.82rem;font-weight:700;text-decoration:none;">
+        📋 {% trans "Use Template" %}
+      </a>
+      <a href="{% url 'programs:generate' student.pk %}" class="btn btn-accent btn-sm">🤖 {% trans "Generate New" %}</a>
+    </div>
   </div>
   {% with programs=student.programs.all %}
   {% if programs %}

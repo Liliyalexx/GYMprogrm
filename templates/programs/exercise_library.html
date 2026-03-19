@@ -19,11 +19,23 @@
 </div>
 <div id="gen-all-status" style="display:none;margin-bottom:1rem;padding:.75rem 1rem;background:#faf5ff;border-radius:10px;border:1px solid #e9d5ff;font-size:.88rem;color:#6b21a8;"></div>
 
+<!-- Type filter -->
+<div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.65rem;">
+  <a href="{% url 'programs:exercise_library' %}{% if muscle_filter %}?muscle={{ muscle_filter }}{% endif %}"
+     class="btn {% if not type_filter %}btn-primary{% else %}btn-outline{% endif %} btn-sm">All</a>
+  <a href="?type=main{% if muscle_filter %}&muscle={{ muscle_filter }}{% endif %}"
+     class="btn {% if type_filter == 'main' %}btn-primary{% else %}btn-outline{% endif %} btn-sm">🏋️ Main</a>
+  <a href="?type=warmup{% if muscle_filter %}&muscle={{ muscle_filter }}{% endif %}"
+     class="btn {% if type_filter == 'warmup' %}btn-primary{% else %}btn-outline{% endif %} btn-sm" style="{% if type_filter == 'warmup' %}{% else %}border-color:#f97316;color:#c2410c;{% endif %}">🔥 Warm-up</a>
+  <a href="?type=stretch{% if muscle_filter %}&muscle={{ muscle_filter }}{% endif %}"
+     class="btn {% if type_filter == 'stretch' %}btn-primary{% else %}btn-outline{% endif %} btn-sm" style="{% if type_filter == 'stretch' %}{% else %}border-color:#22c55e;color:#15803d;{% endif %}">🧘 Stretch</a>
+</div>
+
 <!-- Muscle filter -->
 <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem;">
-  <a href="{% url 'programs:exercise_library' %}" class="btn {% if not muscle_filter %}btn-primary{% else %}btn-outline{% endif %} btn-sm">{% trans "All" %}</a>
+  <a href="{% if type_filter %}?type={{ type_filter }}{% else %}{% url 'programs:exercise_library' %}{% endif %}" class="btn {% if not muscle_filter %}btn-primary{% else %}btn-outline{% endif %} btn-sm">{% trans "All muscles" %}</a>
   {% for val, label in muscle_choices %}
-  <a href="?muscle={{ val }}" class="btn {% if muscle_filter == val %}btn-primary{% else %}btn-outline{% endif %} btn-sm">{{ label }}</a>
+  <a href="?muscle={{ val }}{% if type_filter %}&type={{ type_filter }}{% endif %}" class="btn {% if muscle_filter == val %}btn-primary{% else %}btn-outline{% endif %} btn-sm">{{ label }}</a>
   {% endfor %}
 </div>
 
@@ -92,7 +104,14 @@
     <!-- Name & badge -->
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.4rem;gap:.4rem;">
       <strong style="font-size:.95rem;">{{ ex.name }}</strong>
-      <span class="badge badge-{{ ex.muscle_group }}">{{ ex.get_muscle_group_display }}</span>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.25rem;">
+        <span class="badge badge-{{ ex.muscle_group }}">{{ ex.get_muscle_group_display }}</span>
+        {% if ex.exercise_type == 'warmup' %}
+          <span style="font-size:.62rem;font-weight:800;background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;padding:.1rem .4rem;border-radius:4px;">🔥 WARM-UP</span>
+        {% elif ex.exercise_type == 'stretch' %}
+          <span style="font-size:.62rem;font-weight:800;background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;padding:.1rem .4rem;border-radius:4px;">🧘 STRETCH</span>
+        {% endif %}
+      </div>
     </div>
     <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:.6rem;text-transform:capitalize;">{{ ex.difficulty }}</div>
     <p style="font-size:.83rem;color:var(--text-muted);line-height:1.5;flex:1;">{{ ex.description|truncatechars:140 }}</p>
@@ -186,6 +205,18 @@
         <textarea name="description" rows="3" placeholder="{% trans "Which muscles are worked and how to perform it" %}"
           style="width:100%;padding:.6rem .8rem;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;box-sizing:border-box;font-family:inherit;resize:vertical;"></textarea>
       </div>
+
+      <div style="margin-bottom:.85rem;">
+        <label style="display:block;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-bottom:.3rem;">{% trans "Exercise Type" %}</label>
+        <select name="exercise_type" id="create-ex-type"
+          style="width:100%;padding:.6rem .8rem;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;box-sizing:border-box;background:#fff;font-family:inherit;">
+          <option value="main">🏋️ Main Exercise</option>
+          <option value="warmup">🔥 Warm-up / Activation</option>
+          <option value="stretch">🧘 Stretch / Cool-down</option>
+        </select>
+      </div>
+
+      <input type="hidden" name="type_filter" id="create-ex-type-filter" value="{{ type_filter }}">
 
       <label style="display:flex;align-items:center;gap:.55rem;cursor:pointer;margin-bottom:1.25rem;font-size:.88rem;font-weight:600;">
         <input type="checkbox" name="generate_image" value="1" style="width:16px;height:16px;accent-color:var(--primary);">

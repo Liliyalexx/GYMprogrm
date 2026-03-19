@@ -35,7 +35,7 @@ def _clean_reps(reps_str):
     return s or reps_str
 
 from students.models import Student
-from .models import ExerciseLibrary, WorkoutProgram, ProgramDay, ProgramExercise
+from .models import ExerciseLibrary, WorkoutProgram, ProgramDay, ProgramExercise, ProgramTemplate, ProgramTemplateDay, ProgramTemplateExercise
 from .ai import suggest_program, suggest_nutrition, correct_text, generate_exercise_illustration, backfill_english_names, translate_program_section
 
 
@@ -50,10 +50,14 @@ def program_list(request, student_pk):
 def program_detail(request, pk):
     program = get_object_or_404(WorkoutProgram, pk=pk)
     exercise_library_qs = ExerciseLibrary.objects.all().values('pk', 'name', 'muscle_group')
+    warmup_library = {ex.name.lower(): ex for ex in ExerciseLibrary.objects.filter(exercise_type='warmup')}
+    stretch_library = {ex.name.lower(): ex for ex in ExerciseLibrary.objects.filter(exercise_type='stretch')}
     return render(request, 'programs/program_detail.html', {
         'program': program,
         'exercise_library': list(exercise_library_qs),
         'muscle_choices': ExerciseLibrary.MUSCLE_GROUP_CHOICES,
+        'warmup_library': warmup_library,
+        'stretch_library': stretch_library,
     })
 
 
@@ -307,8 +311,11 @@ def skip_exercise(request):
 def exercise_library(request):
     exercises = ExerciseLibrary.objects.all()
     muscle_filter = request.GET.get('muscle', '')
+    type_filter = request.GET.get('type', '')  # 'main', 'warmup', 'stretch', or ''
     if muscle_filter:
         exercises = exercises.filter(muscle_group=muscle_filter)
+    if type_filter:
+        exercises = exercises.filter(exercise_type=type_filter)
 
     from students.models import Student
     students = Student.objects.filter(is_active=True).prefetch_related(
@@ -318,7 +325,9 @@ def exercise_library(request):
     return render(request, 'programs/exercise_library.html', {
         'exercises': exercises,
         'muscle_filter': muscle_filter,
+        'type_filter': type_filter,
         'muscle_choices': ExerciseLibrary.MUSCLE_GROUP_CHOICES,
+        'exercise_type_choices': ExerciseLibrary.EXERCISE_TYPE_CHOICES,
         'students': students,
     })
 
@@ -393,6 +402,7 @@ def create_exercise(request):
     description = request.POST.get('description', '').strip()
     muscle_group = request.POST.get('muscle_group', 'full_body')
     difficulty = request.POST.get('difficulty', 'beginner')
+    exercise_type = request.POST.get('exercise_type', 'main')
     if not name:
         from django.contrib import messages
         messages.error(request, 'Exercise name is required.')
@@ -402,11 +412,14 @@ def create_exercise(request):
         description=description or name,
         muscle_group=muscle_group,
         difficulty=difficulty,
+        exercise_type=exercise_type,
     )
     from django.urls import reverse
     url = reverse('programs:exercise_library')
     params = []
-    if muscle_group:
+    if type_val := request.POST.get('type_filter', ''):
+        params.append(f'type={type_val}')
+    elif muscle_group:
         params.append(f'muscle={muscle_group}')
     if request.POST.get('generate_image') == '1':
         params.append(f'autogen={ex.pk}')
@@ -480,3 +493,100 @@ def ai_correct_text(request):
         return JsonResponse({'error': 'No text provided'}, status=400)
     corrected = correct_text(text, field)
     return JsonResponse({'corrected': corrected})
+
+
+# ── Program Templates ──────────────────────────────────────────────────────────
+
+@login_required
+def template_list(request):
+    """Show all saved program templates. If ?assign=<student_pk>, show assign buttons."""
+    templates = ProgramTemplate.objects.prefetch_related('days__exercises').all()
+    assign_student = None
+    assign_pk = request.GET.get('assign')
+    if assign_pk:
+        assign_student = get_object_or_404(Student, pk=assign_pk)
+    active_students = Student.objects.filter(is_active=True).order_by('name')
+    return render(request, 'programs/template_list.html', {
+        'templates': templates,
+        'assign_student': assign_student,
+        'active_students': active_students,
+    })
+
+
+@login_required
+@require_POST
+def save_as_template(request, pk):
+    """Deep-copy a WorkoutProgram into a ProgramTemplate."""
+    program = get_object_or_404(WorkoutProgram, pk=pk)
+    name = request.POST.get('name', '').strip() or program.name_en or program.name
+    description = request.POST.get('description', '').strip()
+
+    tmpl = ProgramTemplate.objects.create(
+        name=name,
+        description=description,
+        training_days=program.training_days,
+    )
+    for day in program.days.all():
+        tday = ProgramTemplateDay.objects.create(
+            template=tmpl,
+            day_number=day.day_number,
+            name=day.name,
+            name_en=day.name_en,
+            warmup_data=day.warmup_data,
+            cooldown_data=day.cooldown_data,
+        )
+        for pe in day.exercises.filter(confirmed=True):
+            ProgramTemplateExercise.objects.create(
+                template_day=tday,
+                exercise=pe.exercise,
+                sets=pe.sets,
+                reps=pe.reps,
+                weight_kg=pe.weight_kg,
+                order=pe.order,
+            )
+    return redirect('programs:template_list')
+
+
+@login_required
+@require_POST
+def assign_template(request, template_pk):
+    """Create a WorkoutProgram for a student from a template."""
+    tmpl = get_object_or_404(ProgramTemplate, pk=template_pk)
+    student_pk = request.POST.get('student_pk')
+    student = get_object_or_404(Student, pk=student_pk)
+
+    program = WorkoutProgram.objects.create(
+        student=student,
+        name=tmpl.name,
+        name_en=tmpl.name,
+        training_days=tmpl.training_days,
+        start_date=date.today(),
+    )
+    for tday in tmpl.days.all():
+        day = ProgramDay.objects.create(
+            program=program,
+            day_number=tday.day_number,
+            name=tday.name,
+            name_en=tday.name_en,
+            warmup_data=tday.warmup_data,
+            cooldown_data=tday.cooldown_data,
+        )
+        for tex in tday.exercises.all():
+            ProgramExercise.objects.create(
+                program_day=day,
+                exercise=tex.exercise,
+                sets=tex.sets,
+                reps=tex.reps,
+                weight_kg=tex.weight_kg,
+                order=tex.order,
+                confirmed=True,
+            )
+    return redirect('programs:detail', pk=program.pk)
+
+
+@login_required
+@require_POST
+def delete_template(request, template_pk):
+    tmpl = get_object_or_404(ProgramTemplate, pk=template_pk)
+    tmpl.delete()
+    return redirect('programs:template_list')

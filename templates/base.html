@@ -72,6 +72,7 @@
   <div class="nav-links" id="nav-links">
     <a href="{% url 'students:list' %}"><span>Students</span></a>
     <a href="{% url 'programs:exercise_library' %}"><span>Exercises</span></a>
+    <a href="{% url 'programs:template_list' %}"><span>Templates</span></a>
     <a href="{% url 'students:doctor_list' %}"><span>Doctors</span></a>
     <form method="post" action="{% url 'logout' %}" style="margin:0;">
       {% csrf_token %}

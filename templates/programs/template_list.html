@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}Program Templates — GYMprogrm{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;margin-bottom:1.5rem;">
+  <div>
+    <h1 class="page-title" style="margin:0;">📋 Program Templates</h1>
+    {% if assign_student %}
+    <div style="margin-top:.3rem;font-size:.88rem;color:var(--text-muted);">
+      Assigning to <strong>{{ assign_student.name }}</strong> — pick a template below
+      <a href="{% url 'programs:template_list' %}" style="margin-left:.5rem;font-size:.82rem;color:var(--primary);">✕ cancel</a>
+    </div>
+    {% endif %}
+  </div>
+  <a href="{% url 'students:list' %}" style="font-size:.85rem;color:var(--text-muted);text-decoration:none;">← Back to Students</a>
+</div>
+
+{% if assign_student %}
+<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:.85rem 1rem;margin-bottom:1.5rem;font-size:.88rem;color:#1e40af;">
+  💡 Click <strong>"Assign to {{ assign_student.name }}"</strong> on any template below to instantly create their program — no AI generation needed.
+</div>
+{% endif %}
+
+{% if templates %}
+<div class="card-grid">
+  {% for tmpl in templates %}
+  <div class="card" style="display:flex;flex-direction:column;">
+
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-bottom:.5rem;">
+      <h2 style="font-size:1rem;font-weight:800;margin:0;line-height:1.3;">{{ tmpl.name }}</h2>
+      <span style="flex-shrink:0;font-size:.75rem;font-weight:700;background:#f1f5f9;color:var(--text-muted);padding:.2rem .55rem;border-radius:6px;">{{ tmpl.training_days }}×/week</span>
+    </div>
+
+    {% if tmpl.description %}
+    <p style="font-size:.83rem;color:var(--text-muted);margin:0 0 .6rem;line-height:1.5;">{{ tmpl.description }}</p>
+    {% endif %}
+
+    <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:.85rem;">
+      {{ tmpl.days.count }} day{% if tmpl.days.count != 1 %}s{% endif %} ·
+      {% with total=0 %}
+        {% for d in tmpl.days.all %}{{ d.exercises.count }}{% if not forloop.last %}+{% endif %}{% endfor %} exercises
+      {% endwith %}
+      · Saved {{ tmpl.created_at|date:"d M Y" }}
+    </div>
+
+    <!-- Days preview -->
+    <div style="margin-bottom:1rem;display:flex;flex-direction:column;gap:.3rem;">
+      {% for day in tmpl.days.all %}
+      <div style="padding:.4rem .65rem;background:#f8fafc;border-radius:8px;font-size:.8rem;">
+        <span style="font-weight:700;">{{ day.name_en|default:day.name }}</span>
+        <span style="color:var(--text-muted);margin-left:.4rem;">— {{ day.exercises.count }} exercises</span>
+        {% if day.warmup_data %}<span style="color:#c2410c;margin-left:.3rem;">🔥</span>{% endif %}
+        {% if day.cooldown_data %}<span style="color:#15803d;margin-left:.15rem;">🧘</span>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+
+    <div style="margin-top:auto;display:flex;flex-direction:column;gap:.5rem;">
+
+      {% if assign_student %}
+      <!-- Direct assign button when ?assign= is set -->
+      <form method="post" action="{% url 'programs:assign_template' tmpl.pk %}">
+        {% csrf_token %}
+        <input type="hidden" name="student_pk" value="{{ assign_student.pk }}">
+        <button type="submit"
+          style="width:100%;padding:.65rem;border-radius:10px;border:none;background:linear-gradient(135deg,var(--primary),#7c3aed);color:#fff;font-size:.9rem;font-weight:700;cursor:pointer;">
+          ✅ Assign to {{ assign_student.name }}
+        </button>
+      </form>
+      {% else %}
+      <!-- Assign to any student dropdown -->
+      <details style="margin:0;">
+        <summary style="cursor:pointer;font-size:.85rem;font-weight:700;color:var(--primary);list-style:none;padding:.55rem .85rem;border-radius:9px;border:1.5px solid var(--primary);background:#eff6ff;text-align:center;">
+          👤 Assign to Student ▾
+        </summary>
+        <div style="margin-top:.4rem;padding:.5rem;border:1px solid var(--border);border-radius:9px;max-height:200px;overflow-y:auto;">
+          {% for student in active_students %}
+          <form method="post" action="{% url 'programs:assign_template' tmpl.pk %}" style="margin-bottom:.25rem;">
+            {% csrf_token %}
+            <input type="hidden" name="student_pk" value="{{ student.pk }}">
+            <button type="submit"
+              style="width:100%;text-align:left;padding:.4rem .65rem;background:#f8fafc;border:1px solid var(--border);border-radius:7px;font-size:.85rem;cursor:pointer;font-weight:600;">
+              {{ student.name }}
+            </button>
+          </form>
+          {% empty %}
+          <p style="font-size:.83rem;color:var(--text-muted);padding:.3rem .5rem;">No active students.</p>
+          {% endfor %}
+        </div>
+      </details>
+      {% endif %}
+
+      <form method="post" action="{% url 'programs:delete_template' tmpl.pk %}"
+        onsubmit="return confirm('Delete template "{{ tmpl.name }}"? This cannot be undone.');">
+        {% csrf_token %}
+        <button type="submit"
+          style="width:100%;padding:.45rem;border-radius:8px;border:1px solid #fca5a5;background:#fff;color:#dc2626;font-size:.82rem;cursor:pointer;">
+          🗑 Delete Template
+        </button>
+      </form>
+    </div>
+
+  </div>
+  {% endfor %}
+</div>
+
+{% else %}
+<div class="empty-state" style="text-align:center;padding:4rem 1rem;">
+  <div style="font-size:3rem;margin-bottom:.75rem;">📋</div>
+  <div style="font-size:1.1rem;font-weight:800;margin-bottom:.4rem;">No templates yet</div>
+  <div style="color:var(--text-muted);font-size:.9rem;max-width:340px;margin:0 auto;">
+    Open any program, click <strong>💾 Save as Template</strong>, and it will appear here ready to assign to any student instantly.
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}

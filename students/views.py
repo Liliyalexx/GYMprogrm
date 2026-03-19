@@ -876,6 +876,10 @@ def portal_log_workout(request, program_day_id):
 
     all_days = program_day.program.days.all()
 
+    from programs.models import ExerciseLibrary
+    warmup_library = {ex.name.lower(): ex for ex in ExerciseLibrary.objects.filter(exercise_type='warmup')}
+    stretch_library = {ex.name.lower(): ex for ex in ExerciseLibrary.objects.filter(exercise_type='stretch')}
+
     return render(request, 'students/student_portal_log_workout.html', {
         'student': student,
         'program_day': program_day,
@@ -884,6 +888,8 @@ def portal_log_workout(request, program_day_id):
         'total': exercises.count(),
         'all_days': all_days,
         'error': error,
+        'warmup_library': warmup_library,
+        'stretch_library': stretch_library,
     })
 
 
