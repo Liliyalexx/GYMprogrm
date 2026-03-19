@@ -221,6 +221,21 @@
   <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:.75rem 1rem;color:#b91c1c;font-size:.9rem;margin-bottom:1rem;">{{ error }}</div>
   {% endif %}
 
+  {% if program_day.warmup_data %}
+  <div style="margin-bottom:1.25rem;background:#fff7ed;border-radius:14px;padding:1rem 1rem .75rem;border:1px solid #fed7aa;">
+    <div style="font-size:.82rem;font-weight:800;color:#c2410c;margin-bottom:.6rem;">🔥 {% trans "Warm-Up" %} <span style="font-weight:400;font-size:.78rem;">(~5 min before starting)</span></div>
+    {% for item in program_day.warmup_data %}
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:.35rem 0;{% if not forloop.last %}border-bottom:1px solid rgba(249,115,22,.12);{% endif %}">
+      <div>
+        <div style="font-size:.88rem;font-weight:700;color:var(--text);">{{ item.name }}</div>
+        {% if item.description %}<div style="font-size:.75rem;color:#9a3412;margin-top:.1rem;">{{ item.description }}</div>{% endif %}
+      </div>
+      <span style="font-size:.8rem;font-weight:700;color:#ea580c;background:#fff;border:1px solid #fed7aa;padding:.2rem .5rem;border-radius:6px;white-space:nowrap;margin-left:.5rem;">{{ item.duration }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
   <form method="post" id="workout-form">
     {% csrf_token %}
 
@@ -288,7 +303,22 @@
     {% endwith %}
     {% endfor %}
 
-    <div class="form-group" style="margin-top:.5rem;">
+    {% if program_day.cooldown_data %}
+    <div style="margin-top:1rem;background:#f0fdf4;border-radius:14px;padding:1rem 1rem .75rem;border:1px solid #bbf7d0;">
+      <div style="font-size:.82rem;font-weight:800;color:#15803d;margin-bottom:.6rem;">🧘 {% trans "Cool-Down / Stretch" %} <span style="font-weight:400;font-size:.78rem;">(~5 min)</span></div>
+      {% for item in program_day.cooldown_data %}
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:.35rem 0;{% if not forloop.last %}border-bottom:1px solid rgba(34,197,94,.12);{% endif %}">
+        <div>
+          <div style="font-size:.88rem;font-weight:700;color:var(--text);">{{ item.name }}</div>
+          {% if item.description %}<div style="font-size:.75rem;color:#166534;margin-top:.1rem;">{{ item.description }}</div>{% endif %}
+        </div>
+        <span style="font-size:.8rem;font-weight:700;color:#16a34a;background:#fff;border:1px solid #bbf7d0;padding:.2rem .5rem;border-radius:6px;white-space:nowrap;margin-left:.5rem;">{{ item.duration }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="form-group" style="margin-top:.75rem;">
       <label class="form-label" style="font-size:.82rem;">📝 {% trans "Workout notes (optional)" %}</label>
       <textarea class="form-control" name="notes" rows="2"
                 placeholder="{% trans "How did it feel? Any PRs?" %}"></textarea>

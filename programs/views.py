@@ -118,6 +118,8 @@ def program_generate(request, student_pk):
                     day_number=day_data.get('day_number', 1),
                     name=day_data.get('day_name', 'День'),
                     name_en=day_data.get('day_name_en', ''),
+                    warmup_data=day_data.get('warmup') or None,
+                    cooldown_data=day_data.get('cooldown') or None,
                 )
                 used_in_day = set()  # track exercise PKs within this day
                 for order, ex_data in enumerate(day_data.get('exercises', [])):
@@ -351,13 +353,24 @@ def generate_illustration(request):
         logger.info('generate_illustration: starting for exercise pk=%s name=%r', ex.pk, ex.name)
         result = generate_exercise_illustration(ex.name, ex.get_muscle_group_display(), ex.description)
         ex.photo_url = result['image_url']
+        ex.photo_url_2 = result.get('image_url_2', '')
         ex.posture_tips = result['posture_tips']
-        ex.save(update_fields=['photo_url', 'posture_tips'])
+        ex.save(update_fields=['photo_url', 'photo_url_2', 'posture_tips'])
         logger.info('generate_illustration: done for pk=%s', ex.pk)
-        return JsonResponse({'image_url': result['image_url'], 'posture_tips': result['posture_tips']})
+        return JsonResponse({'image_url': result['image_url'], 'image_url_2': result.get('image_url_2', ''), 'posture_tips': result['posture_tips']})
     except Exception as exc:
         logger.exception('generate_illustration failed: %s', exc)
         return JsonResponse({'error': str(exc)}, status=500)
+
+
+@login_required
+def generate_missing_illustrations(request):
+    """
+    Returns JSON list of exercises missing photo_url so the page can queue them one by one.
+    GET → list of {id, name}
+    """
+    qs = ExerciseLibrary.objects.filter(photo_url='').order_by('muscle_group', 'name')
+    return JsonResponse({'exercises': [{'id': ex.pk, 'name': ex.name} for ex in qs]})
 
 
 @login_required

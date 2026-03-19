@@ -125,7 +125,14 @@
   {% for day in program.days.all %}
   <div class="pw-day">
     <div class="pw-day-title">{% if CURRENT_LANG == 'ru' and day.name_ru %}{{ day.name_ru }}{% elif day.name_en %}{{ day.name_en }}{% else %}{{ day.name }}{% endif %}</div>
-    <div class="pw-day-sub">{% trans "Workouts" %}</div>
+
+    {% if day.warmup_data %}
+    <div style="display:flex;align-items:center;gap:.4rem;margin:.45rem 0 .2rem;font-size:.75rem;font-weight:700;color:#c2410c;">
+      🔥 {% trans "Warm-up" %} · {% for w in day.warmup_data %}{{ w.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="pw-day-sub" style="margin-top:.15rem;">{{ day.exercises.count }} {% trans "exercises" %}</div>
 
     <div class="pw-ex-row">
       {% for ex in day.exercises.all %}
@@ -142,6 +149,12 @@
       </div>
       {% endfor %}
     </div>
+
+    {% if day.cooldown_data %}
+    <div style="display:flex;align-items:center;gap:.4rem;margin:.2rem 0 .6rem;font-size:.75rem;font-weight:700;color:#15803d;">
+      🧘 {% trans "Cool-down" %} · {% for c in day.cooldown_data %}{{ c.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+    </div>
+    {% endif %}
 
     <a href="{% url 'students:portal_log_workout' day.pk %}" class="pw-start-btn">
       🏋️ {% trans "Start Workout" %}

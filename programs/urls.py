@@ -22,4 +22,5 @@ urlpatterns = [
     path('ai-correct/', views.ai_correct_text, name='ai_correct_text'),
     path('exercises/update-photo/', views.update_exercise_photo, name='update_exercise_photo'),
     path('exercises/generate-illustration/', views.generate_illustration, name='generate_illustration'),
+    path('exercises/missing-illustrations/', views.generate_missing_illustrations, name='missing_illustrations'),
 ]

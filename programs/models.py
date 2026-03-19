@@ -21,7 +21,8 @@ class ExerciseLibrary(models.Model):
     ]
 
     name = models.CharField(max_length=200)
-    photo_url = models.URLField(blank=True, max_length=2000)
+    photo_url = models.URLField(blank=True, max_length=2000, help_text='Start position image')
+    photo_url_2 = models.URLField(blank=True, max_length=2000, help_text='Peak / mid-movement image')
     description = models.TextField(help_text='What to do and which muscles are worked')
     posture_tips = models.TextField(blank=True, help_text='AI-generated posture & technique tips')
     muscle_group = models.CharField(max_length=50, choices=MUSCLE_GROUP_CHOICES)
@@ -64,6 +65,8 @@ class ProgramDay(models.Model):
     name = models.CharField(max_length=200, help_text='E.g. "Day 1 — Glutes & Legs"')
     name_en = models.CharField(max_length=200, blank=True)
     name_ru = models.CharField(max_length=200, blank=True)
+    warmup_data = models.JSONField(null=True, blank=True, help_text='List of warm-up exercises [{name, duration, description}]')
+    cooldown_data = models.JSONField(null=True, blank=True, help_text='List of cool-down stretches [{name, duration, description}]')
 
     class Meta:
         ordering = ['day_number']

@@ -186,6 +186,25 @@
     {{ day.name_en|default:day.name }}
   </h2>
 
+  {% if day.warmup_data %}
+  <div style="margin-bottom:1.25rem;padding:.85rem;background:#fff7ed;border-radius:10px;border-left:3px solid #f97316;">
+    <div style="font-size:.82rem;font-weight:800;color:#c2410c;margin-bottom:.65rem;display:flex;align-items:center;gap:.35rem;">
+      🔥 {% trans "Warm-Up" %} <span style="font-weight:400;color:#9a3412;">(~5 min)</span>
+    </div>
+    {% for item in day.warmup_data %}
+    <div style="display:flex;justify-content:space-between;align-items:baseline;padding:.3rem 0;{% if not forloop.last %}border-bottom:1px solid rgba(249,115,22,.15);{% endif %}">
+      <span style="font-size:.85rem;font-weight:600;color:var(--text);">{{ item.name }}</span>
+      <span style="font-size:.78rem;color:#9a3412;white-space:nowrap;margin-left:.5rem;">{{ item.duration }}</span>
+    </div>
+    {% if item.description %}
+    <div style="font-size:.77rem;color:#c2410c;opacity:.8;padding-bottom:.3rem;">{{ item.description }}</div>
+    {% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div style="font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:.75rem;">🏋️ {% trans "Main Training" %}</div>
+
   <div class="day-exercises" id="day-exercises-{{ day.pk }}">
   {% for pe in day.exercises.all %}
   <div class="exercise-row" data-pe-pk="{{ pe.pk }}" style="display:grid;grid-template-columns:120px 1fr;gap:1.25rem;padding:1rem 0;border-bottom:1px solid var(--border);align-items:start;{% if not pe.confirmed %}opacity:.6;{% endif %}">
@@ -278,6 +297,23 @@
   <p class="no-exercises-msg" style="color:var(--text-muted);font-size:.9rem;">{% trans "Exercises not yet added." %}</p>
   {% endfor %}
   </div><!-- end day-exercises -->
+
+  {% if day.cooldown_data %}
+  <div style="margin-top:1.25rem;padding:.85rem;background:#f0fdf4;border-radius:10px;border-left:3px solid #22c55e;">
+    <div style="font-size:.82rem;font-weight:800;color:#15803d;margin-bottom:.65rem;display:flex;align-items:center;gap:.35rem;">
+      🧘 {% trans "Cool-Down / Stretch" %} <span style="font-weight:400;color:#166534;">(~5 min)</span>
+    </div>
+    {% for item in day.cooldown_data %}
+    <div style="display:flex;justify-content:space-between;align-items:baseline;padding:.3rem 0;{% if not forloop.last %}border-bottom:1px solid rgba(34,197,94,.15);{% endif %}">
+      <span style="font-size:.85rem;font-weight:600;color:var(--text);">{{ item.name }}</span>
+      <span style="font-size:.78rem;color:#166534;white-space:nowrap;margin-left:.5rem;">{{ item.duration }}</span>
+    </div>
+    {% if item.description %}
+    <div style="font-size:.77rem;color:#15803d;opacity:.8;padding-bottom:.3rem;">{{ item.description }}</div>
+    {% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}
 
   <div style="margin-top:1rem;padding-top:.75rem;border-top:1px solid var(--border);">
     <button onclick="openAddExercise({{ day.pk }}, this)"

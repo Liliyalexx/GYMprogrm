@@ -5,12 +5,19 @@
 
 {% block content %}
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;">
-  <h1 class="page-title" style="margin:0;">{% trans "Exercise Library" %}</h1>
-  <button onclick="document.getElementById('create-ex-modal').style.display='flex'"
-    style="display:flex;align-items:center;gap:.4rem;padding:.55rem 1.1rem;border-radius:10px;border:none;background:linear-gradient(135deg,var(--primary),#7c3aed);color:#fff;font-size:.9rem;font-weight:700;cursor:pointer;">
-    ＋ {% trans "New Exercise" %}
-  </button>
+  <h1 class="page-title" style="margin:0;">Exercise Library</h1>
+  <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+    <button id="gen-all-btn" onclick="generateAllMissing(this)"
+      style="display:flex;align-items:center;gap:.4rem;padding:.55rem 1.1rem;border-radius:10px;border:1.5px solid #a855f7;background:#faf5ff;color:#7c3aed;font-size:.88rem;font-weight:700;cursor:pointer;">
+      ✨ Generate All Missing
+    </button>
+    <button onclick="document.getElementById('create-ex-modal').style.display='flex'"
+      style="display:flex;align-items:center;gap:.4rem;padding:.55rem 1.1rem;border-radius:10px;border:none;background:linear-gradient(135deg,var(--primary),#7c3aed);color:#fff;font-size:.9rem;font-weight:700;cursor:pointer;">
+      ＋ New Exercise
+    </button>
+  </div>
 </div>
+<div id="gen-all-status" style="display:none;margin-bottom:1rem;padding:.75rem 1rem;background:#faf5ff;border-radius:10px;border:1px solid #e9d5ff;font-size:.88rem;color:#6b21a8;"></div>
 
 <!-- Muscle filter -->
 <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem;">
@@ -25,29 +32,59 @@
   <div class="card" style="display:flex;flex-direction:column;">
 
     <!-- Video / Image -->
-    <div style="border-radius:8px;overflow:hidden;height:160px;background:#f1f5f9;margin-bottom:1rem;flex-shrink:0;position:relative;" id="media-{{ ex.pk }}">
+    <div style="border-radius:8px;overflow:hidden;margin-bottom:1rem;flex-shrink:0;position:relative;" id="media-{{ ex.pk }}">
       {% if ex.photo_url %}
-        {% if ".mp4" in ex.photo_url %}
-          <video src="{{ ex.photo_url }}" autoplay muted loop playsinline
-            style="width:100%;height:100%;object-fit:cover;clip-path:inset(0 0 18% 0);"
-            onerror="this.parentElement.innerHTML='<div style=\'height:100%;display:flex;align-items:center;justify-content:center;font-size:2rem;\'>💪</div>'">
-          </video>
-        {% else %}
-          <img src="{{ ex.photo_url }}" alt="{{ ex.name }}"
-            style="width:100%;height:100%;object-fit:cover;clip-path:inset(0 0 18% 0);"
-            onerror="this.parentElement.innerHTML='<div style=\'height:100%;display:flex;align-items:center;justify-content:center;font-size:2rem;\'>💪</div>'">
-        {% endif %}
-        <button onclick="openPhotoEdit({{ ex.pk }}, this)"
-          style="position:absolute;bottom:.4rem;right:.4rem;font-size:.72rem;padding:.2rem .5rem;border-radius:5px;border:none;background:rgba(0,0,0,.45);color:#fff;cursor:pointer;">
-          ✎ {% trans "Edit" %}
-        </button>
-      {% else %}
-        <div id="media-svg-{{ ex.pk }}" style="width:100%;height:100%;">{{ ex.muscle_group|exercise_illustration }}</div>
-        <div style="position:absolute;bottom:0;left:0;right:0;text-align:center;padding:.4rem;background:linear-gradient(transparent,rgba(255,255,255,.9));">
-          <button onclick="generateIllustration({{ ex.pk }}, this)"
-            style="font-size:.75rem;padding:.3rem .75rem;border-radius:6px;border:none;background:linear-gradient(135deg,#a855f7,#6366f1);color:#fff;cursor:pointer;font-weight:600;">
-            ✨ {% trans "Generate" %}
+        {% if ex.photo_url_2 %}
+          <!-- Two images side by side -->
+          <div style="display:flex;gap:2px;height:160px;background:#f1f5f9;">
+            <div style="flex:1;position:relative;overflow:hidden;">
+              <img src="{{ ex.photo_url }}" alt="{% trans "Start position" %}"
+                style="width:100%;height:100%;object-fit:cover;"
+                onerror="this.style.display='none'">
+              <span style="position:absolute;bottom:3px;left:4px;font-size:.62rem;background:rgba(0,0,0,.55);color:#fff;padding:.1rem .35rem;border-radius:3px;font-weight:700;">{% trans "START" %}</span>
+            </div>
+            <div style="flex:1;position:relative;overflow:hidden;">
+              <img src="{{ ex.photo_url_2 }}" alt="{% trans "Peak position" %}"
+                style="width:100%;height:100%;object-fit:cover;"
+                onerror="this.style.display='none'">
+              <span style="position:absolute;bottom:3px;left:4px;font-size:.62rem;background:rgba(0,0,0,.55);color:#fff;padding:.1rem .35rem;border-radius:3px;font-weight:700;">{% trans "PEAK" %}</span>
+            </div>
+          </div>
+          <button onclick="openPhotoEdit({{ ex.pk }}, this)"
+            style="position:absolute;bottom:.4rem;right:.4rem;font-size:.72rem;padding:.2rem .5rem;border-radius:5px;border:none;background:rgba(0,0,0,.45);color:#fff;cursor:pointer;">
+            ✎ {% trans "Edit" %}
           </button>
+        {% elif ".mp4" in ex.photo_url %}
+          <div style="height:160px;background:#f1f5f9;">
+            <video src="{{ ex.photo_url }}" autoplay muted loop playsinline
+              style="width:100%;height:100%;object-fit:cover;clip-path:inset(0 0 18% 0);"
+              onerror="this.parentElement.innerHTML='<div style=\'height:100%;display:flex;align-items:center;justify-content:center;font-size:2rem;\'>💪</div>'">
+            </video>
+          </div>
+          <button onclick="openPhotoEdit({{ ex.pk }}, this)"
+            style="position:absolute;bottom:.4rem;right:.4rem;font-size:.72rem;padding:.2rem .5rem;border-radius:5px;border:none;background:rgba(0,0,0,.45);color:#fff;cursor:pointer;">
+            ✎ {% trans "Edit" %}
+          </button>
+        {% else %}
+          <div style="height:160px;background:#f1f5f9;">
+            <img src="{{ ex.photo_url }}" alt="{{ ex.name }}"
+              style="width:100%;height:100%;object-fit:cover;clip-path:inset(0 0 18% 0);"
+              onerror="this.parentElement.innerHTML='<div style=\'height:160px;display:flex;align-items:center;justify-content:center;font-size:2rem;\'>💪</div>'">
+          </div>
+          <button onclick="openPhotoEdit({{ ex.pk }}, this)"
+            style="position:absolute;bottom:.4rem;right:.4rem;font-size:.72rem;padding:.2rem .5rem;border-radius:5px;border:none;background:rgba(0,0,0,.45);color:#fff;cursor:pointer;">
+            ✎ {% trans "Edit" %}
+          </button>
+        {% endif %}
+      {% else %}
+        <div style="height:160px;background:#f1f5f9;position:relative;">
+          <div id="media-svg-{{ ex.pk }}" style="width:100%;height:100%;">{{ ex.muscle_group|exercise_illustration }}</div>
+          <div style="position:absolute;bottom:0;left:0;right:0;text-align:center;padding:.4rem;background:linear-gradient(transparent,rgba(255,255,255,.9));">
+            <button onclick="generateIllustration({{ ex.pk }}, this)"
+              style="font-size:.75rem;padding:.3rem .75rem;border-radius:6px;border:none;background:linear-gradient(135deg,#a855f7,#6366f1);color:#fff;cursor:pointer;font-weight:600;">
+              ✨ {% trans "Generate" %}
+            </button>
+          </div>
         </div>
       {% endif %}
     </div>
@@ -197,7 +234,7 @@ let _currentExId = null;
 function generateIllustration(exId, btn) {
   btn.disabled = true;
   btn.textContent = '⏳ {{ msg_generating|escapejs }}';
-  fetch('{% url "programs:generate_illustration" %}', {
+  return fetch('{% url "programs:generate_illustration" %}', {
     method: 'POST',
     headers: {'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}'},
     body: JSON.stringify({id: exId}),
@@ -206,9 +243,18 @@ function generateIllustration(exId, btn) {
   .then(data => {
     if (data.image_url) {
       const container = document.getElementById('media-' + exId);
-      container.innerHTML =
-        `<img src="${data.image_url}" style="width:100%;height:100%;object-fit:cover;clip-path:inset(0 0 18% 0);" alt="exercise illustration">` +
-        `<button onclick="openPhotoEdit(${exId})" style="position:absolute;bottom:.4rem;right:.4rem;font-size:.72rem;padding:.2rem .5rem;border-radius:5px;border:none;background:rgba(0,0,0,.45);color:#fff;cursor:pointer;">✎ {% trans "Edit" %}</button>`;
+      if (data.image_url_2) {
+        container.innerHTML =
+          `<div style="display:flex;gap:2px;height:160px;background:#f1f5f9;">` +
+          `<div style="flex:1;position:relative;overflow:hidden;"><img src="${data.image_url}" style="width:100%;height:100%;object-fit:cover;" alt="start"><span style="position:absolute;bottom:3px;left:4px;font-size:.62rem;background:rgba(0,0,0,.55);color:#fff;padding:.1rem .35rem;border-radius:3px;font-weight:700;">{% trans "START" %}</span></div>` +
+          `<div style="flex:1;position:relative;overflow:hidden;"><img src="${data.image_url_2}" style="width:100%;height:100%;object-fit:cover;" alt="peak"><span style="position:absolute;bottom:3px;left:4px;font-size:.62rem;background:rgba(0,0,0,.55);color:#fff;padding:.1rem .35rem;border-radius:3px;font-weight:700;">{% trans "PEAK" %}</span></div>` +
+          `</div>` +
+          `<button onclick="openPhotoEdit(${exId})" style="position:absolute;bottom:.4rem;right:.4rem;font-size:.72rem;padding:.2rem .5rem;border-radius:5px;border:none;background:rgba(0,0,0,.45);color:#fff;cursor:pointer;">✎ {% trans "Edit" %}</button>`;
+      } else {
+        container.innerHTML =
+          `<div style="height:160px;background:#f1f5f9;"><img src="${data.image_url}" style="width:100%;height:100%;object-fit:cover;clip-path:inset(0 0 18% 0);" alt="exercise illustration"></div>` +
+          `<button onclick="openPhotoEdit(${exId})" style="position:absolute;bottom:.4rem;right:.4rem;font-size:.72rem;padding:.2rem .5rem;border-radius:5px;border:none;background:rgba(0,0,0,.45);color:#fff;cursor:pointer;">✎ {% trans "Edit" %}</button>`;
+      }
       const card = container.closest('.card');
       let tipsBox = card.querySelector('.posture-tips-box');
       if (!tipsBox) {
@@ -219,10 +265,59 @@ function generateIllustration(exId, btn) {
       }
       tipsBox.innerHTML =
         `<div style="font-size:.75rem;font-weight:700;color:#7c3aed;margin-bottom:.3rem;">🧘 {% trans "Posture tips" %}</div>` +
-        `<div style="font-size:.78rem;color:#6b21a8;line-height:1.6;white-space:pre-line;">${data.posture_tips}</div>`;
+        `<div style="font-size:.78rem;color:#6b21a8;line-height:1.6;white-space:pre-line;">${data.posture_tips||''}</div>`;
     }
+    btn.disabled = false;
+    return data;
   })
   .catch(() => { btn.textContent = '✗ {{ msg_error|escapejs }}'; btn.disabled = false; });
+}
+
+async function generateAllMissing(btn) {
+  btn.disabled = true;
+  btn.textContent = '⏳ Loading…';
+  const statusEl = document.getElementById('gen-all-status');
+  statusEl.style.display = 'block';
+
+  let missing = [];
+  try {
+    const r = await fetch('{% url "programs:missing_illustrations" %}');
+    const data = await r.json();
+    missing = data.exercises || [];
+  } catch(e) {
+    statusEl.textContent = '✗ Failed to load missing list.';
+    btn.disabled = false;
+    btn.innerHTML = '✨ Generate All Missing';
+    return;
+  }
+
+  if (!missing.length) {
+    statusEl.textContent = '✅ All exercises already have images!';
+    btn.disabled = false;
+    btn.innerHTML = '✨ Generate All Missing';
+    return;
+  }
+
+  let done = 0;
+  statusEl.textContent = `Generating 0 / ${missing.length}…`;
+
+  for (const item of missing) {
+    // Find the generate button for this exercise
+    const genBtn = document.querySelector(`#media-${item.id} button[onclick*="generateIllustration"]`);
+    if (genBtn) {
+      await generateIllustration(item.id, genBtn);
+    } else {
+      // Already generated or card not visible — skip
+    }
+    done++;
+    statusEl.textContent = `Generating ${done} / ${missing.length} — "${item.name}"…`;
+    // Small pause between requests to avoid rate limiting
+    await new Promise(res => setTimeout(res, 800));
+  }
+
+  statusEl.textContent = `✅ Done! Generated ${done} illustrations.`;
+  btn.disabled = false;
+  btn.innerHTML = '✨ Generate All Missing';
 }
 
 function openPhotoEdit(exId) {
