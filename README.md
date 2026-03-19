@@ -41,14 +41,14 @@ The app has two sides:
 ### AI Program Generation
 ![Program Generation](docs/screenshots/program_generate.png)
 
-### Program Detail — Workout Days & Nutrition Plan
+### Program Detail — AI Analysis & Workout Days
 ![Program Detail](docs/screenshots/program_detail.png)
 
 ### Exercise Library
 ![Exercise Library](docs/screenshots/exercise_library.png)
 
-### Client Portal — My Program
-![Client Portal](docs/screenshots/client_portal.jpg)
+### Client Login — Mobile View
+![Client Portal](docs/screenshots/client_portal.png)
 
 ---
 
