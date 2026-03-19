@@ -244,6 +244,44 @@
   </div>
 </div>
 
+<!-- ── Pay Now banner ── -->
+{% if payment_days is not None and student.payment_status != 'paid' and payment_days <= 7 %}
+{% if payment_days < 0 %}
+<a href="{% url 'students:portal_billing' %}" style="display:block;text-decoration:none;margin-bottom:1.25rem;">
+  <div style="background:linear-gradient(135deg,#dc2626,#b91c1c);border-radius:16px;padding:1.1rem 1.25rem;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:.75rem;box-shadow:0 4px 16px rgba(220,38,38,.35);">
+    <div>
+      <div style="font-size:.8rem;font-weight:700;opacity:.85;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.2rem;">⚠ {% trans "Payment Overdue" %}</div>
+      <div style="font-size:1rem;font-weight:800;">{% trans "Your subscription payment is past due" %}</div>
+      <div style="font-size:.82rem;opacity:.85;margin-top:.2rem;">{{ student.get_payment_plan_display }}</div>
+    </div>
+    <div style="background:rgba(255,255,255,.2);border-radius:10px;padding:.6rem 1rem;font-weight:800;font-size:.9rem;white-space:nowrap;flex-shrink:0;">{% trans "Pay Now →" %}</div>
+  </div>
+</a>
+{% elif payment_days == 0 %}
+<a href="{% url 'students:portal_billing' %}" style="display:block;text-decoration:none;margin-bottom:1.25rem;">
+  <div style="background:linear-gradient(135deg,#d97706,#b45309);border-radius:16px;padding:1.1rem 1.25rem;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:.75rem;box-shadow:0 4px 16px rgba(217,119,6,.35);">
+    <div>
+      <div style="font-size:.8rem;font-weight:700;opacity:.85;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.2rem;">💳 {% trans "Payment Due Today" %}</div>
+      <div style="font-size:1rem;font-weight:800;">{% trans "Time to renew your subscription" %}</div>
+      <div style="font-size:.82rem;opacity:.85;margin-top:.2rem;">{{ student.get_payment_plan_display }}</div>
+    </div>
+    <div style="background:rgba(255,255,255,.2);border-radius:10px;padding:.6rem 1rem;font-weight:800;font-size:.9rem;white-space:nowrap;flex-shrink:0;">{% trans "Pay Now →" %}</div>
+  </div>
+</a>
+{% else %}
+<a href="{% url 'students:portal_billing' %}" style="display:block;text-decoration:none;margin-bottom:1.25rem;">
+  <div style="background:linear-gradient(135deg,#2563eb,#4f46e5);border-radius:16px;padding:1.1rem 1.25rem;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:.75rem;box-shadow:0 4px 16px rgba(37,99,235,.25);">
+    <div>
+      <div style="font-size:.8rem;font-weight:700;opacity:.85;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.2rem;">💳 {% trans "Payment Due Soon" %}</div>
+      <div style="font-size:1rem;font-weight:800;">{% blocktrans with days=payment_days %}Due in {{ days }} day{{ days|pluralize }}{% endblocktrans %}</div>
+      <div style="font-size:.82rem;opacity:.85;margin-top:.2rem;">{{ student.get_payment_plan_display }}</div>
+    </div>
+    <div style="background:rgba(255,255,255,.2);border-radius:10px;padding:.6rem 1rem;font-weight:800;font-size:.9rem;white-space:nowrap;flex-shrink:0;">{% trans "View →" %}</div>
+  </div>
+</a>
+{% endif %}
+{% endif %}
+
 <!-- ── Stats ── -->
 <div class="stats-row">
   <div class="stat-card">
@@ -343,41 +381,19 @@
 </div>
 {% endif %}
 
-<!-- ── Payment Info ── -->
-{% if student.payment_plan or student.payment_status %}
-<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.25rem;box-shadow:var(--shadow);margin-bottom:1.25rem;">
-  <h2 style="font-size:1rem;font-weight:800;margin-bottom:.85rem;">💳 {% trans "Subscription" %}</h2>
-  <div style="display:flex;flex-direction:column;gap:.5rem;">
-    {% if student.payment_plan %}
-    <div style="display:flex;justify-content:space-between;font-size:.88rem;">
-      <span style="color:var(--text-muted);">{% trans "Plan" %}</span>
-      <span style="font-weight:600;">{{ student.get_payment_plan_display }}</span>
-    </div>
-    {% endif %}
+<!-- ── Subscription (compact) ── -->
+{% if student.payment_plan %}
+<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1rem 1.25rem;box-shadow:var(--shadow);margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem;">
+  <div>
+    <div style="font-size:.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;font-weight:600;">{% trans "Subscription" %}</div>
+    <div style="font-weight:700;font-size:.95rem;margin-top:.15rem;">{{ student.get_payment_plan_display }}</div>
     {% if student.payment_status %}
-    <div style="display:flex;justify-content:space-between;font-size:.88rem;">
-      <span style="color:var(--text-muted);">{% trans "Status" %}</span>
-      <span style="font-weight:700;{% if student.payment_status == 'paid' %}color:#15803d;{% elif student.payment_status == 'overdue' %}color:#dc2626;{% else %}color:#a16207;{% endif %}">
-        {% if student.payment_status == 'paid' %}✓ {% trans "Paid" %}
-        {% elif student.payment_status == 'overdue' %}⚠ {% trans "Overdue" %}
-        {% else %}⏳ {% trans "Pending" %}
-        {% endif %}
-      </span>
-    </div>
-    {% endif %}
-    {% if student.payment_method %}
-    <div style="display:flex;justify-content:space-between;font-size:.88rem;">
-      <span style="color:var(--text-muted);">{% trans "Pay via" %}</span>
-      <span style="font-weight:600;">{{ student.get_payment_method_display }}{% if student.payment_handle %} · {{ student.payment_handle }}{% endif %}</span>
-    </div>
-    {% endif %}
-    {% if student.payment_start_date %}
-    <div style="display:flex;justify-content:space-between;font-size:.88rem;">
-      <span style="color:var(--text-muted);">{% trans "Since" %}</span>
-      <span style="font-weight:600;">{{ student.payment_start_date|date:"d M Y" }}</span>
+    <div style="font-size:.8rem;margin-top:.1rem;{% if student.payment_status == 'paid' %}color:#15803d;font-weight:700;{% elif student.payment_status == 'overdue' %}color:#dc2626;font-weight:700;{% else %}color:#a16207;font-weight:600;{% endif %}">
+      {% if student.payment_status == 'paid' %}✓ {% trans "Paid" %}{% elif student.payment_status == 'overdue' %}⚠ {% trans "Overdue" %}{% else %}⏳ {% trans "Pending" %}{% endif %}
     </div>
     {% endif %}
   </div>
+  <a href="{% url 'students:portal_billing' %}" style="font-size:.85rem;font-weight:700;color:var(--primary);text-decoration:none;white-space:nowrap;">{% trans "Manage →" %}</a>
 </div>
 {% endif %}
 

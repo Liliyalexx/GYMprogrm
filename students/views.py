@@ -730,6 +730,8 @@ def portal_dashboard(request):
     from .models import DoctorProfile
     doctors = DoctorProfile.objects.filter(is_active=True)
 
+    payment_days = student.payment_days_until() if student.payment_status != 'paid' else None
+
     return render(request, 'students/student_portal_dashboard.html', {
         'student': student,
         'active_program': active_program,
@@ -742,6 +744,7 @@ def portal_dashboard(request):
         'doctors': doctors,
         'photo_url': _safe_file_url(student.photo),
         'blood_test_url': _safe_file_url(student.blood_test_file),
+        'payment_days': payment_days,
     })
 
 
