@@ -35,6 +35,7 @@ class Student(models.Model):
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, blank=True)
     payment_handle = models.CharField(max_length=200, blank=True, help_text='Venmo @handle, PayPal email/link, etc.')
     payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, blank=True)
+    payment_amount = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True, help_text='Amount charged per billing period (e.g. 150.00)')
     payment_reminder_sent_date = models.DateField(null=True, blank=True, help_text='Last date a payment reminder email was sent')
 
     name = models.CharField(max_length=200)

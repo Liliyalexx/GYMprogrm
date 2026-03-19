@@ -148,6 +148,12 @@
     <span class="info-label">{% trans "Plan" %}</span>
     <span class="info-value">{{ student.get_payment_plan_display }}</span>
   </div>
+  {% if student.payment_amount %}
+  <div class="info-row">
+    <span class="info-label">{% trans "Amount due" %}</span>
+    <span class="info-value" style="font-size:1.05rem;color:var(--primary);font-weight:800;">${{ student.payment_amount }}</span>
+  </div>
+  {% endif %}
   {% if student.payment_start_date %}
   <div class="info-row">
     <span class="info-label">{% trans "Since" %}</span>

@@ -206,6 +206,14 @@ def student_billing(request, pk):
         student.payment_method = request.POST.get('payment_method', '')
         student.payment_handle = request.POST.get('payment_handle', '').strip()
         student.payment_status = request.POST.get('payment_status', '')
+        amount_raw = request.POST.get('payment_amount', '').strip()
+        if amount_raw:
+            try:
+                student.payment_amount = float(amount_raw)
+            except ValueError:
+                pass
+        else:
+            student.payment_amount = None
         start_raw = request.POST.get('payment_start_date', '').strip()
         if start_raw:
             from datetime import datetime as _dt
@@ -217,7 +225,7 @@ def student_billing(request, pk):
             student.payment_start_date = None
         student.save(update_fields=[
             'payment_plan', 'payment_method', 'payment_handle',
-            'payment_status', 'payment_start_date',
+            'payment_status', 'payment_start_date', 'payment_amount',
         ])
         return redirect('students:billing', pk=pk)
 
