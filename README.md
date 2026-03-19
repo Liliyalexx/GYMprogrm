@@ -9,7 +9,7 @@
   ![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python)
   ![Django](https://img.shields.io/badge/Django-5.2-green?logo=django)
   ![Claude](https://img.shields.io/badge/AI-Claude%20Sonnet%204.6-purple?logo=anthropic)
-  ![Deploy](https://img.shields.io/badge/Deployed-Render-46E3B7?logo=render)
+  ![Deploy](https://img.shields.io/badge/Deployed-Railway-purple?logo=railway)
   ![PWA](https://img.shields.io/badge/PWA-Installable-orange?logo=pwa)
 
   **🌐 Live at [gymprogrm.org](https://gymprogrm.org)**
@@ -49,9 +49,7 @@ The AI doesn't replace the trainer's judgment — it does the heavy lifting of s
 ![Exercise Library](docs/screenshots/exercise_library.png)
 
 ### Client Portal — My Program
-![Client Portal](docs/screenshots/client_portal.png)
-
-> **To add screenshots:** take a screenshot of each page, save it to `docs/screenshots/` with the matching filename, then push to GitHub.
+![Client Portal](docs/screenshots/client_portal.jpg)
 
 ---
 
@@ -63,7 +61,13 @@ The AI doesn't replace the trainer's judgment — it does the heavy lifting of s
 - Create and edit student profiles (goals, health issues, measurements, contact info, photo)
 - Public intake form — clients fill it in themselves via a shareable link, trainer reviews and accepts
 - Invite system — send a unique registration link to a client by email
-- Billing tracking per student — plan, status (paid / pending / overdue), payment method, start date, next renewal
+- Payment badges on student list — red "Overdue", yellow "Due in Xd" at a glance
+
+**Billing & payments**
+- Per-student billing: plan (Monthly / 3 Months), amount (USD), start date, payment method (Venmo / PayPal / Zelle / Cash / Bank), status
+- Global trainer payment handles (PayPal / Venmo / Zelle) — set once, applied to all students
+- Automatic payment reminder emails — sent 3 days before, day of, and day after due date (via Railway cron)
+- Manual status control: mark payments Paid / Pending / Overdue per student
 
 **AI program generation (Claude Sonnet 4.6)**
 - Input: student profile + goals + health issues + training days + blood test (optional) + body photo (optional)
@@ -83,10 +87,6 @@ The AI doesn't replace the trainer's judgment — it does the heavy lifting of s
 - Filter by muscle group (glutes, legs, back, chest, shoulders, arms, core, cardio)
 - AI-generated exercise illustrations (DALL-E 3) with posture tips (Claude Haiku)
 - Add any exercise to a specific program day in one click
-
-**Trainer payment settings**
-- Set global PayPal / Venmo / Zelle handles that apply to all students by default
-- Override per-student if needed
 
 **Trainer recommendations**
 - Write personal notes/recommendations for each client
@@ -109,6 +109,11 @@ The AI doesn't replace the trainer's judgment — it does the heavy lifting of s
 - Bottom tab bar: Home · Program · History · Tips · Billing
 - No hamburger menu — every section one tap away
 
+**Login options**
+- Email + password
+- Google Sign-In (one-tap OAuth)
+- Forgot password — email reset flow
+
 **Workouts**
 - View active program by day with exercise photos and technique tips
 - Log each session — sets, reps, weight per exercise with pre-filled previous values
@@ -119,7 +124,8 @@ The AI doesn't replace the trainer's judgment — it does the heavy lifting of s
 - Log weight, body fat %, and measurements (waist, hips, chest, arms, legs) over time
 
 **Billing page**
-- View subscription plan, status, and next renewal date
+- Prominent "Pay Now" banner on dashboard when payment is due or overdue — shows exact amount
+- View subscription plan, amount due, status, and next renewal date
 - "Pay via PayPal / Venmo / Zelle" button opens the trainer's payment link directly
 
 **Multilingual**
@@ -138,11 +144,13 @@ The AI doesn't replace the trainer's judgment — it does the heavy lifting of s
 | AI — programs & analysis | Anthropic Claude Sonnet 4.6 |
 | AI — posture tips & text | Anthropic Claude Haiku 4.5 |
 | AI — exercise illustrations | OpenAI DALL-E 3 |
+| Auth | Django auth + Google OAuth (django-allauth) |
 | Media storage | Cloudinary |
+| Email | Resend (SMTP) |
 | Static files | WhiteNoise |
 | PWA | Web App Manifest + Service Worker |
-| Server | Gunicorn (gthread, 4 threads, 300 s timeout) |
-| Deployment | Render (auto-deploy from GitHub) |
+| Server | Gunicorn |
+| Deployment | Railway (auto-deploy from GitHub) |
 
 ---
 
@@ -164,8 +172,9 @@ GYMprogrm/
 │   ├── images/        # Logo, exercise photos, student photos
 │   └── manifest.json  # PWA manifest
 ├── locale/            # Translation files (EN/RU/ES/FR/DE/IT/PT/ZH/AR/JA)
+├── docs/screenshots/  # App screenshots for README
 ├── Procfile           # Gunicorn start command
-└── render.yaml        # Render deploy config (web + PostgreSQL)
+└── railway.json       # Railway deploy config
 ```
 
 ---
@@ -182,7 +191,7 @@ Student
   └── BodyMeasurement
 
 TrainerPaymentSettings   # global PayPal / Venmo / Zelle handles
-Doctor                   # specialist referrals shown on portal
+DoctorProfile            # specialist referrals shown on portal
 ```
 
 ---
@@ -220,14 +229,17 @@ ANTHROPIC_API_KEY=                  # required — program generation & blood an
 OPENAI_API_KEY=                     # required — exercise illustrations (DALL-E 3)
 
 CLOUDINARY_URL=                     # optional — cloud media storage for photos
-RESEND_API_KEY=                     # optional — transactional email (invites)
+RESEND_API_KEY=                     # optional — transactional email (invites + payment reminders)
+
+GOOGLE_CLIENT_ID=                   # optional — Google OAuth login
+GOOGLE_CLIENT_SECRET=               # optional — Google OAuth login
 ```
 
 ---
 
-## Deployment (Render)
+## Deployment (Railway)
 
-The app is deployed at **[gymprogrm.org](https://gymprogrm.org)** on Render.
+The app is deployed at **[gymprogrm.org](https://gymprogrm.org)** on Railway.
 
 Every push to `main` triggers an automatic deploy:
 
@@ -235,15 +247,16 @@ Every push to `main` triggers an automatic deploy:
 ✓ pip install -r requirements.txt
 ✓ python manage.py collectstatic --noinput
 ✓ python manage.py migrate --noinput
-✓ gunicorn gymprogrm.wsgi --worker-class gthread --threads 4 --timeout 300
+✓ gunicorn gymprogrm.wsgi
 ```
 
-`render.yaml` in the repo root defines the web service + PostgreSQL database. To deploy your own copy:
+`railway.json` in the repo root defines the build and start commands.
 
-1. Fork this repo
-2. Go to **Render → New → Blueprint** and connect your fork
-3. Set `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `CLOUDINARY_URL`, `RESEND_API_KEY` in the Render environment variables
-4. Deploy — database is provisioned automatically
+**Payment reminder cron job** — set up in Railway as a separate cron service:
+```
+Schedule: 0 9 * * *   (daily at 9 AM UTC)
+Command:  python manage.py send_payment_reminders
+```
 
 ---
 
