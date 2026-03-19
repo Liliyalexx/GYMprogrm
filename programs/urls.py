@@ -23,6 +23,7 @@ urlpatterns = [
     path('exercises/update-photo/', views.update_exercise_photo, name='update_exercise_photo'),
     path('exercises/generate-illustration/', views.generate_illustration, name='generate_illustration'),
     path('exercises/missing-illustrations/', views.generate_missing_illustrations, name='missing_illustrations'),
+    path('exercises/create-warmup-stretch/', views.create_all_warmup_stretch, name='create_warmup_stretch'),
     path('templates/', views.template_list, name='template_list'),
     path('<int:pk>/save-as-template/', views.save_as_template, name='save_as_template'),
     path('templates/<int:template_pk>/assign/', views.assign_template, name='assign_template'),

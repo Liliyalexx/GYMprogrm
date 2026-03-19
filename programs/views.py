@@ -36,7 +36,7 @@ def _clean_reps(reps_str):
 
 from students.models import Student
 from .models import ExerciseLibrary, WorkoutProgram, ProgramDay, ProgramExercise, ProgramTemplate, ProgramTemplateDay, ProgramTemplateExercise
-from .ai import suggest_program, suggest_nutrition, correct_text, generate_exercise_illustration, backfill_english_names, translate_program_section
+from .ai import suggest_program, suggest_nutrition, correct_text, generate_exercise_illustration, backfill_english_names, translate_program_section, suggest_warmup_stretch_exercises
 
 
 @login_required
@@ -582,6 +582,44 @@ def assign_template(request, template_pk):
                 confirmed=True,
             )
     return redirect('programs:detail', pk=program.pk)
+
+
+@login_required
+@require_POST
+def create_all_warmup_stretch(request):
+    """
+    Step 1: Claude generates warm-up + stretch exercises for all muscle groups.
+    Creates ExerciseLibrary entries without images yet.
+    Returns JSON list of created IDs so the page can queue illustration generation.
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    try:
+        exercises = suggest_warmup_stretch_exercises()
+        created = []
+        skipped = 0
+        for ex in exercises:
+            name = ex.get('name', '').strip()
+            muscle_group = ex.get('muscle_group', 'full_body')
+            exercise_type = ex.get('exercise_type', 'warmup')
+            if not name:
+                continue
+            if ExerciseLibrary.objects.filter(name__iexact=name).exists():
+                skipped += 1
+                continue
+            obj = ExerciseLibrary.objects.create(
+                name=name,
+                description=ex.get('description', name),
+                muscle_group=muscle_group,
+                difficulty=ex.get('difficulty', 'beginner'),
+                exercise_type=exercise_type,
+            )
+            created.append({'id': obj.pk, 'name': obj.name, 'exercise_type': exercise_type})
+        logger.info('create_all_warmup_stretch: created=%d skipped=%d', len(created), skipped)
+        return JsonResponse({'status': 'ok', 'created': created, 'skipped': skipped})
+    except Exception as exc:
+        logger.exception('create_all_warmup_stretch failed')
+        return JsonResponse({'error': str(exc)}, status=500)
 
 
 @login_required

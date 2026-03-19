@@ -7,6 +7,10 @@
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;">
   <h1 class="page-title" style="margin:0;">Exercise Library</h1>
   <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+    <button id="auto-create-btn" onclick="autoCreateWarmupStretch(this)"
+      style="display:flex;align-items:center;gap:.4rem;padding:.55rem 1.1rem;border-radius:10px;border:1.5px solid #f97316;background:#fff7ed;color:#c2410c;font-size:.88rem;font-weight:700;cursor:pointer;">
+      🔥🧘 Auto-Generate Warmup &amp; Stretch
+    </button>
     <button id="gen-all-btn" onclick="generateAllMissing(this)"
       style="display:flex;align-items:center;gap:.4rem;padding:.55rem 1.1rem;border-radius:10px;border:1.5px solid #a855f7;background:#faf5ff;color:#7c3aed;font-size:.88rem;font-weight:700;cursor:pointer;">
       ✨ Generate All Missing
@@ -400,6 +404,76 @@ document.getElementById('create-ex-form').addEventListener('submit', function() 
 document.getElementById('photo-url-input').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') savePhoto();
 });
+
+async function autoCreateWarmupStretch(btn) {
+  btn.disabled = true;
+  btn.textContent = '⏳ Asking AI for exercises…';
+  const statusEl = document.getElementById('gen-all-status');
+  statusEl.style.display = 'block';
+  statusEl.textContent = '🤖 Claude is creating warm-up & stretch exercises for all muscle groups…';
+
+  let created = [];
+  try {
+    const r = await fetch('{% url "programs:create_warmup_stretch" %}', {
+      method: 'POST',
+      headers: {'X-CSRFToken': '{{ csrf_token }}'},
+    });
+    const data = await r.json();
+    if (data.error) throw new Error(data.error);
+    created = data.created || [];
+    statusEl.textContent = `✅ Created ${created.length} exercises (${data.skipped} already existed). Now generating images…`;
+  } catch(e) {
+    statusEl.textContent = '✗ Error creating exercises: ' + e.message;
+    btn.disabled = false;
+    btn.innerHTML = '🔥🧘 Auto-Generate Warmup & Stretch';
+    return;
+  }
+
+  if (!created.length) {
+    statusEl.textContent = '✅ All warmup & stretch exercises already exist!';
+    btn.disabled = false;
+    btn.innerHTML = '🔥🧘 Auto-Generate Warmup & Stretch';
+    // Reload to show new exercises
+    setTimeout(() => location.reload(), 1500);
+    return;
+  }
+
+  // Reload the page to show new exercise cards, then auto-generate images
+  // Store list in sessionStorage so after reload we pick up where we left off
+  sessionStorage.setItem('pendingIllustrations', JSON.stringify(created));
+  statusEl.textContent = `✅ Created ${created.length} exercises. Reloading to generate images…`;
+  setTimeout(() => {
+    // Navigate to warmup tab so user sees the new exercises
+    location.href = '?type=warmup';
+  }, 1200);
+}
+
+// On page load: check if there are pending illustrations from auto-create
+(function() {
+  const pending = sessionStorage.getItem('pendingIllustrations');
+  if (!pending) return;
+  sessionStorage.removeItem('pendingIllustrations');
+  const exercises = JSON.parse(pending);
+  if (!exercises.length) return;
+
+  const statusEl = document.getElementById('gen-all-status');
+  statusEl.style.display = 'block';
+  statusEl.textContent = `Generating images for ${exercises.length} new exercises…`;
+
+  (async function() {
+    let done = 0;
+    for (const ex of exercises) {
+      const genBtn = document.querySelector(`#media-${ex.id} button[onclick*="generateIllustration"]`);
+      if (genBtn) {
+        await generateIllustration(ex.id, genBtn);
+        done++;
+        statusEl.textContent = `Generating images… ${done} / ${exercises.length} — "${ex.name}"`;
+        await new Promise(res => setTimeout(res, 600));
+      }
+    }
+    statusEl.textContent = `✅ Done! All ${done} warmup & stretch exercises are ready.`;
+  })();
+})();
 
 // Auto-generate illustration for a newly created exercise (?autogen=<pk>)
 (function() {

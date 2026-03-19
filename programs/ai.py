@@ -232,6 +232,60 @@ def generate_exercise_illustration(exercise_name, muscle_group, description=''):
     }
 
 
+def suggest_warmup_stretch_exercises():
+    """
+    Ask Claude to suggest 2–3 warm-up (dynamic activation) and 2–3 stretch (static cool-down)
+    exercises for every muscle group. Returns a list of dicts:
+      {name, description, muscle_group, exercise_type, difficulty}
+    All descriptions written for teenage girls and adult women — gentle, PT-approved.
+    """
+    client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+
+    muscle_groups = [
+        'glutes', 'legs', 'back', 'chest', 'shoulders', 'arms', 'core', 'cardio', 'full_body'
+    ]
+
+    prompt = """You are a Stanford-trained physical therapist and personal trainer specializing in teenage girls, kids, and adult women. You work with posture correction, injury prevention, and safe strength training.
+
+Create a JSON array of warm-up and stretch exercises for a fitness app. For EACH of these muscle groups: glutes, legs, back, chest, shoulders, arms, core, cardio, full_body — provide:
+- 2 warm-up exercises (dynamic activation, done BEFORE training)
+- 2 stretch exercises (static holds, done AFTER training / cool-down)
+
+Rules:
+- All exercises must be safe for teenage girls (13+) and adult women
+- Warm-up = dynamic movement (leg swings, hip circles, arm circles, cat-cow, etc.)
+- Stretch = static hold (pigeon pose, child's pose, doorway chest stretch, etc.)
+- Descriptions: 1–2 sentences explaining HOW to do it and WHAT it helps
+- Names: use standard English exercise names
+- Difficulty: always "beginner"
+
+Return ONLY a valid JSON array, no markdown, no explanation:
+[
+  {
+    "name": "Hip Circles",
+    "description": "Stand with feet shoulder-width apart and rotate your hips in large circles. Loosens hip flexors and activates the glutes before loading.",
+    "muscle_group": "glutes",
+    "exercise_type": "warmup",
+    "difficulty": "beginner"
+  },
+  ...
+]"""
+
+    msg = client.messages.create(
+        model='claude-sonnet-4-6',
+        max_tokens=4000,
+        messages=[{'role': 'user', 'content': prompt}],
+    )
+    text = msg.content[0].text.strip()
+    # Strip markdown code fences if present
+    if text.startswith('```'):
+        text = text.split('```')[1]
+        if text.startswith('json'):
+            text = text[4:]
+    exercises = json.loads(text)
+    return exercises
+
+
 def _format_goals(text):
     """Split numbered/bulleted goals into one-per-line format for the AI prompt."""
     import re
