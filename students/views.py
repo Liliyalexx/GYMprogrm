@@ -96,13 +96,24 @@ def student_list(request):
     students = Student.objects.filter(is_active=True, intake_status='active')
     pending = Student.objects.filter(intake_status='pending')
 
-    # Gather all reminders for trainer dashboard
+    # Gather all reminders + annotate each student with a payment badge
     all_reminders = []
-    for s in students:
+    students_list = list(students)
+    for s in students_list:
         all_reminders.extend(get_reminders(s))
+        days = s.payment_days_until()
+        if days is not None and s.payment_status != 'paid':
+            if days < 0:
+                s.payment_badge = {'label': 'Overdue', 'color': '#dc2626', 'bg': '#fef2f2'}
+            elif days <= 3:
+                s.payment_badge = {'label': f'Due in {days}d', 'color': '#d97706', 'bg': '#fefce8'}
+            else:
+                s.payment_badge = None
+        else:
+            s.payment_badge = None
 
     return render(request, 'students/student_list.html', {
-        'students': students,
+        'students': students_list,
         'pending': pending,
         'all_reminders': all_reminders,
     })

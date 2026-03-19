@@ -35,6 +35,7 @@ class Student(models.Model):
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, blank=True)
     payment_handle = models.CharField(max_length=200, blank=True, help_text='Venmo @handle, PayPal email/link, etc.')
     payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, blank=True)
+    payment_reminder_sent_date = models.DateField(null=True, blank=True, help_text='Last date a payment reminder email was sent')
 
     name = models.CharField(max_length=200)
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True)
@@ -64,6 +65,18 @@ class Student(models.Model):
 
     def __str__(self):
         return self.name
+
+    def payment_days_until(self):
+        """Returns days until next payment (negative = overdue). None if not set up."""
+        if not self.payment_start_date:
+            return None
+        from datetime import date as date_cls
+        today = date_cls.today()
+        threshold = 84 if self.payment_plan == '3months' else 28
+        days_since = (today - self.payment_start_date).days
+        periods_done = days_since // threshold
+        next_payment_date = self.payment_start_date + __import__('datetime').timedelta(days=(periods_done + 1) * threshold)
+        return (next_payment_date - today).days
 
     @property
     def age(self):

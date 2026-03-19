@@ -121,8 +121,10 @@ function sendIntakeEmail() {
       {% else %}
         <span style="font-size:.75rem;padding:.15rem .5rem;border-radius:999px;background:#f1f5f9;color:var(--text-muted);font-weight:600;">{% trans "No account" %}</span>
       {% endif %}
-      {% if student.payment_plan %}
-        <span style="font-size:.75rem;padding:.15rem .5rem;border-radius:999px;background:#e0f2fe;color:#0c4a6e;font-weight:600;">{{ student.get_payment_plan_display }}</span>
+      {% if student.payment_status == 'paid' %}
+        <span style="font-size:.75rem;padding:.15rem .5rem;border-radius:999px;background:#d1fae5;color:#065f46;font-weight:600;">✓ {% trans "Paid" %}</span>
+      {% elif student.payment_badge %}
+        <span style="font-size:.75rem;padding:.15rem .5rem;border-radius:999px;background:{{ student.payment_badge.bg }};color:{{ student.payment_badge.color }};font-weight:700;">⚠ {{ student.payment_badge.label }}</span>
       {% endif %}
       <a href="{% url 'students:delete' student.pk %}" style="color:#ef4444;text-decoration:none;font-size:.85rem;padding:.25rem .55rem;border-radius:6px;border:1px solid #ef4444;" title="{% trans "Delete" %}">✕</a>
     </div>
