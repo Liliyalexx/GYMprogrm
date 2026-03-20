@@ -696,6 +696,15 @@ def portal_billing(request):
 
 
 @student_required
+def portal_doctors(request):
+    from .models import DoctorProfile
+    doctors = DoctorProfile.objects.filter(is_active=True)
+    return render(request, 'students/student_portal_doctors.html', {
+        'doctors': doctors,
+    })
+
+
+@student_required
 def portal_dashboard(request):
     from datetime import date as _date
     student = request.user.student

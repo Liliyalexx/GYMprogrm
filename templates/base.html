@@ -169,6 +169,12 @@
     </svg>
     <span class="bnav-label">{% trans "Tips" %}</span>
   </a>
+  <a href="{% url 'students:portal_doctors' %}" class="bnav-tab {% if cur == 'portal_doctors' %}active{% endif %}">
+    <svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+    </svg>
+    <span class="bnav-label">{% trans "Doctors" %}</span>
+  </a>
   <a href="{% url 'students:portal_billing' %}" class="bnav-tab {% if cur == 'portal_billing' %}active{% endif %}">
     <svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>

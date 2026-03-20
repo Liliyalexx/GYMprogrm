@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% trans "Doctors" %} — GYMprogrm{% endblock %}
+
+{% block extra_css %}
+<style>
+  .doc-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow);
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  .doc-photo {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 2px solid var(--border);
+  }
+  .doc-placeholder {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e0e7ff, #ede9fe);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    flex-shrink: 0;
+  }
+  .doc-name { font-size: 1rem; font-weight: 800; color: var(--text); margin-bottom: .15rem; }
+  .doc-specialty { font-size: .82rem; color: var(--primary); font-weight: 600; margin-bottom: .5rem; }
+  .doc-bio { font-size: .84rem; color: var(--text-muted); line-height: 1.55; margin-bottom: .75rem; }
+  .doc-book-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .5rem 1.1rem;
+    background: linear-gradient(135deg, var(--primary), #7c3aed);
+    color: #fff;
+    border-radius: 10px;
+    font-size: .88rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: opacity .15s;
+  }
+  .doc-book-btn:hover { opacity: .88; color: #fff; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:620px;margin:0 auto;padding-bottom:5rem;">
+
+  <div style="margin-bottom:1.5rem;">
+    <h1 style="font-size:1.3rem;font-weight:800;margin:0 0 .25rem;">🩺 {% trans "Recommended Doctors" %}</h1>
+    <p style="font-size:.87rem;color:var(--text-muted);margin:0;">{% trans "Specialists recommended by your trainer" %}</p>
+  </div>
+
+  {% if doctors %}
+    {% for doc in doctors %}
+    <div class="doc-card">
+      {% if doc.photo_url %}
+        <img src="{{ doc.photo_url }}" alt="{{ doc.name }}" class="doc-photo">
+      {% else %}
+        <div class="doc-placeholder">👩‍⚕️</div>
+      {% endif %}
+
+      <div style="flex:1;min-width:0;">
+        <div class="doc-name">{{ doc.name }}</div>
+        <div class="doc-specialty">{{ doc.specialty }}</div>
+        {% if doc.bio %}
+        <div class="doc-bio">{{ doc.bio }}</div>
+        {% endif %}
+        {% if doc.booking_link %}
+        <a href="{{ doc.booking_link }}" target="_blank" rel="noopener" class="doc-book-btn">
+          📅 {% trans "Book Appointment" %}
+        </a>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div style="text-align:center;padding:4rem 1rem;">
+      <div style="font-size:3rem;margin-bottom:.75rem;">🩺</div>
+      <div style="font-size:1rem;font-weight:700;margin-bottom:.4rem;">{% trans "No doctors yet" %}</div>
+      <div style="color:var(--text-muted);font-size:.88rem;">{% trans "Your trainer will add specialist recommendations here." %}</div>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}
