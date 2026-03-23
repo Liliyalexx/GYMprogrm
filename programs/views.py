@@ -485,6 +485,36 @@ def update_program_exercise(request):
 
 @login_required
 @require_POST
+def update_program(request, pk):
+    """AJAX: update program name / description."""
+    program = get_object_or_404(WorkoutProgram, pk=pk)
+    data = json.loads(request.body)
+    if 'name' in data:
+        program.name = data['name'].strip() or program.name
+    if 'name_en' in data:
+        program.name_en = data['name_en'].strip()
+    if 'description' in data:
+        program.description = data['description'].strip()
+    program.save(update_fields=['name', 'name_en', 'description'])
+    return JsonResponse({'status': 'ok', 'name': program.name, 'name_en': program.name_en})
+
+
+@login_required
+@require_POST
+def update_program_day(request, pk):
+    """AJAX: update day name."""
+    day = get_object_or_404(ProgramDay, pk=pk)
+    data = json.loads(request.body)
+    if 'name' in data:
+        day.name = data['name'].strip() or day.name
+    if 'name_en' in data:
+        day.name_en = data['name_en'].strip()
+    day.save(update_fields=['name', 'name_en'])
+    return JsonResponse({'status': 'ok', 'name': day.name, 'name_en': day.name_en})
+
+
+@login_required
+@require_POST
 def ai_correct_text(request):
     data = json.loads(request.body)
     text = data.get('text', '').strip()

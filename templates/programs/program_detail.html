@@ -7,7 +7,18 @@
 <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:.75rem;">
   <div>
     <a href="{% url 'programs:list' program.student.pk %}" style="color:var(--text-muted);font-size:.9rem;text-decoration:none;">← Programs {{ program.student.name }}</a>
-    <h1 class="page-title" style="margin-top:.25rem;">{{ program.name_en|default:program.name }}</h1>
+    <div style="display:flex;align-items:center;gap:.5rem;margin-top:.25rem;" id="program-name-row">
+      <h1 class="page-title" style="margin:0;" id="program-name-display">{{ program.name_en|default:program.name }}</h1>
+      <button onclick="editProgramName()" title="Edit program name"
+        style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1rem;padding:.2rem .4rem;border-radius:5px;flex-shrink:0;"
+        id="program-name-edit-btn">✎</button>
+    </div>
+    <div style="display:none;margin-top:.25rem;gap:.4rem;align-items:center;flex-wrap:wrap;" id="program-name-form">
+      <input id="program-name-input" type="text" value="{{ program.name_en|default:program.name }}"
+        style="padding:.45rem .7rem;border:1.5px solid var(--primary);border-radius:8px;font-size:1rem;font-weight:700;font-family:inherit;min-width:220px;box-sizing:border-box;">
+      <button onclick="saveProgramName()" style="padding:.45rem .9rem;border-radius:8px;border:none;background:var(--primary);color:#fff;font-size:.88rem;font-weight:700;cursor:pointer;">✓ Save</button>
+      <button onclick="cancelProgramName()" style="padding:.45rem .7rem;border-radius:8px;border:1px solid var(--border);background:#f8fafc;font-size:.88rem;cursor:pointer;">✕</button>
+    </div>
   </div>
   <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem;">
     <form method="post" action="{% url 'programs:backfill_english' program.pk %}">
@@ -188,9 +199,17 @@
 <!-- Workout Days -->
 {% for day in program.days.all %}
 <div class="card" style="margin-bottom:1.5rem;" data-day-pk="{{ day.pk }}">
-  <h2 style="font-size:1.05rem;font-weight:700;margin-bottom:1.25rem;padding-bottom:.75rem;border-bottom:1px solid var(--border);">
-    {{ day.name_en|default:day.name }}
-  </h2>
+  <div style="display:flex;align-items:center;gap:.4rem;margin-bottom:1.25rem;padding-bottom:.75rem;border-bottom:1px solid var(--border);">
+    <h2 style="font-size:1.05rem;font-weight:700;margin:0;flex:1;" id="day-name-display-{{ day.pk }}">{{ day.name_en|default:day.name }}</h2>
+    <button onclick="editDayName({{ day.pk }})" title="Edit day name"
+      style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:.9rem;padding:.15rem .35rem;border-radius:4px;flex-shrink:0;">✎</button>
+  </div>
+  <div style="display:none;margin-bottom:1.25rem;padding-bottom:.75rem;border-bottom:1px solid var(--border);gap:.4rem;align-items:center;flex-wrap:wrap;" id="day-name-form-{{ day.pk }}">
+    <input type="text" id="day-name-input-{{ day.pk }}" value="{{ day.name_en|default:day.name }}"
+      style="padding:.4rem .65rem;border:1.5px solid var(--primary);border-radius:8px;font-size:.95rem;font-weight:700;font-family:inherit;flex:1;min-width:160px;box-sizing:border-box;">
+    <button onclick="saveDayName({{ day.pk }})" style="padding:.4rem .8rem;border-radius:8px;border:none;background:var(--primary);color:#fff;font-size:.82rem;font-weight:700;cursor:pointer;">✓ Save</button>
+    <button onclick="cancelDayName({{ day.pk }})" style="padding:.4rem .65rem;border-radius:8px;border:1px solid var(--border);background:#f8fafc;font-size:.82rem;cursor:pointer;">✕</button>
+  </div>
 
   {% if day.warmup_data %}
   <div style="margin-bottom:1.25rem;padding:.85rem;background:#fff7ed;border-radius:10px;border-left:3px solid #f97316;">
@@ -439,7 +458,71 @@ document.getElementById('save-template-modal').addEventListener('click', functio
 
 <script>
 const CSRF = '{{ csrf_token }}';
+const UPDATE_PROGRAM_URL = '{% url "programs:update_program" program.pk %}';
 const TOGGLE_URL = '{% url "programs:toggle_share_section" program.pk %}';
+
+// ── Program name inline edit ─────────────────────────────────────────────────
+function editProgramName() {
+  document.getElementById('program-name-row').style.display = 'none';
+  const form = document.getElementById('program-name-form');
+  form.style.display = 'flex';
+  document.getElementById('program-name-input').focus();
+  document.getElementById('program-name-input').select();
+}
+function cancelProgramName() {
+  document.getElementById('program-name-form').style.display = 'none';
+  document.getElementById('program-name-row').style.display = 'flex';
+}
+function saveProgramName() {
+  const name = document.getElementById('program-name-input').value.trim();
+  if (!name) return;
+  fetch(UPDATE_PROGRAM_URL, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF},
+    body: JSON.stringify({name_en: name, name: name}),
+  }).then(r => r.json()).then(data => {
+    if (data.status === 'ok') {
+      document.getElementById('program-name-display').textContent = name;
+      document.title = name + ' — GYMprogrm';
+      cancelProgramName();
+    }
+  });
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && document.getElementById('program-name-form').style.display === 'flex') {
+    saveProgramName();
+  }
+  if (e.key === 'Escape' && document.getElementById('program-name-form').style.display === 'flex') {
+    cancelProgramName();
+  }
+});
+
+// ── Day name inline edit ──────────────────────────────────────────────────────
+function editDayName(dayPk) {
+  document.getElementById('day-name-display-' + dayPk).closest('div').style.display = 'none';
+  const form = document.getElementById('day-name-form-' + dayPk);
+  form.style.display = 'flex';
+  document.getElementById('day-name-input-' + dayPk).focus();
+  document.getElementById('day-name-input-' + dayPk).select();
+}
+function cancelDayName(dayPk) {
+  document.getElementById('day-name-form-' + dayPk).style.display = 'none';
+  document.getElementById('day-name-display-' + dayPk).closest('div').style.display = 'flex';
+}
+function saveDayName(dayPk) {
+  const name = document.getElementById('day-name-input-' + dayPk).value.trim();
+  if (!name) return;
+  fetch('/programs/day/' + dayPk + '/update/', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF},
+    body: JSON.stringify({name_en: name, name: name}),
+  }).then(r => r.json()).then(data => {
+    if (data.status === 'ok') {
+      document.getElementById('day-name-display-' + dayPk).textContent = name;
+      cancelDayName(dayPk);
+    }
+  });
+}
 const RETRANSLATE_URL = '{% url "programs:retranslate_section" program.pk %}';
 const ADD_TO_DAY_URL = '{% url "programs:add_exercise_to_day" %}';
 const DELETE_EX_URL = '{% url "programs:delete_program_exercise" %}';
