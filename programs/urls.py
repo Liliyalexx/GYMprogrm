@@ -21,6 +21,7 @@ urlpatterns = [
     path('exercises/update/', views.update_program_exercise, name='update_program_exercise'),
     path('ai-correct/', views.ai_correct_text, name='ai_correct_text'),
     path('<int:pk>/update/', views.update_program, name='update_program'),
+    path('<int:pk>/delete/', views.delete_program, name='delete_program'),
     path('day/<int:pk>/update/', views.update_program_day, name='update_program_day'),
     path('exercises/update-photo/', views.update_exercise_photo, name='update_exercise_photo'),
     path('exercises/generate-illustration/', views.generate_illustration, name='generate_illustration'),

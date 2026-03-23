@@ -47,6 +47,15 @@ def program_list(request, student_pk):
 
 
 @login_required
+@require_POST
+def delete_program(request, pk):
+    program = get_object_or_404(WorkoutProgram, pk=pk)
+    student_pk = program.student.pk
+    program.delete()
+    return redirect('students:detail', pk=student_pk)
+
+
+@login_required
 def program_detail(request, pk):
     program = get_object_or_404(WorkoutProgram, pk=pk)
     exercise_library_qs = ExerciseLibrary.objects.all().values('pk', 'name', 'muscle_group')

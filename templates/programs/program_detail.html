@@ -32,6 +32,14 @@
       style="display:flex;align-items:center;gap:.4rem;padding:.45rem .95rem;border-radius:8px;border:1.5px solid #16a34a;background:#f0fdf4;color:#15803d;font-size:.82rem;font-weight:700;cursor:pointer;">
       💾 {% trans "Save as Template" %}
     </button>
+    <form method="post" action="{% url 'programs:delete_program' program.pk %}"
+      onsubmit="return confirm('Delete this program? This cannot be undone.');">
+      {% csrf_token %}
+      <button type="submit"
+        style="display:flex;align-items:center;gap:.4rem;padding:.45rem .95rem;border-radius:8px;border:1.5px solid #fca5a5;background:#fee2e2;color:#dc2626;font-size:.82rem;font-weight:700;cursor:pointer;">
+        🗑 {% trans "Delete Program" %}
+      </button>
+    </form>
   </div>
 </div>
 
