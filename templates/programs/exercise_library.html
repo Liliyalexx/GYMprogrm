@@ -243,20 +243,46 @@
 
 <!-- Photo edit modal -->
 <div id="photo-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;">
-  <div style="background:#fff;border-radius:12px;padding:1.5rem;width:min(420px,90vw);box-shadow:0 8px 32px rgba(0,0,0,.2);">
-    <h3 style="margin:0 0 1rem;font-size:1rem;">📷 {% trans "Photo / Video URL" %}</h3>
-    <input id="photo-url-input" type="url" placeholder="https://… (.jpg, .png, .mp4)"
-      style="width:100%;padding:.6rem .8rem;border:1px solid var(--border);border-radius:8px;font-size:.9rem;box-sizing:border-box;margin-bottom:.35rem;">
-    <p style="font-size:.78rem;color:var(--text-muted);margin:0 0 1rem;">{% trans "Paste a direct image or .mp4 video URL" %}</p>
-    <div style="display:flex;gap:.6rem;justify-content:flex-end;">
-      <button onclick="closePhotoModal()"
-        style="padding:.45rem 1rem;border-radius:7px;border:1px solid var(--border);background:#f8fafc;cursor:pointer;font-size:.88rem;">
-        {% trans "Cancel" %}
-      </button>
-      <button onclick="savePhoto()"
-        style="padding:.45rem 1rem;border-radius:7px;border:none;background:var(--primary);color:#fff;cursor:pointer;font-size:.88rem;font-weight:600;">
-        {% trans "Save" %}
-      </button>
+  <div style="background:#fff;border-radius:16px;padding:1.5rem;width:min(460px,94vw);box-shadow:0 8px 32px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem;">
+      <h3 style="margin:0;font-size:1rem;font-weight:800;">📷 {% trans "Exercise Photos" %}</h3>
+      <button onclick="closePhotoModal()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--text-muted);">✕</button>
+    </div>
+
+    <!-- Upload slots -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.1rem;">
+      <!-- Slot 1: Start position -->
+      <div>
+        <div style="font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#c2410c;margin-bottom:.35rem;">🟠 Start Position</div>
+        <label id="upload-label-1" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4rem;height:110px;border:2px dashed #fed7aa;border-radius:10px;cursor:pointer;background:#fff7ed;transition:border-color .15s;">
+          <span id="upload-preview-1" style="font-size:2rem;">📤</span>
+          <span style="font-size:.75rem;color:#9a3412;font-weight:600;" id="upload-label-text-1">Tap to upload</span>
+          <input type="file" accept="image/*" style="display:none;" onchange="uploadPhoto(1, this)">
+        </label>
+        <div id="upload-progress-1" style="font-size:.72rem;color:#c2410c;margin-top:.25rem;text-align:center;min-height:1em;"></div>
+      </div>
+      <!-- Slot 2: Peak position -->
+      <div>
+        <div style="font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#7c3aed;margin-bottom:.35rem;">🔵 Peak Position</div>
+        <label id="upload-label-2" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4rem;height:110px;border:2px dashed #e9d5ff;border-radius:10px;cursor:pointer;background:#faf5ff;transition:border-color .15s;">
+          <span id="upload-preview-2" style="font-size:2rem;">📤</span>
+          <span style="font-size:.75rem;color:#7c3aed;font-weight:600;" id="upload-label-text-2">Tap to upload</span>
+          <input type="file" accept="image/*" style="display:none;" onchange="uploadPhoto(2, this)">
+        </label>
+        <div id="upload-progress-2" style="font-size:.72rem;color:#7c3aed;margin-top:.25rem;text-align:center;min-height:1em;"></div>
+      </div>
+    </div>
+
+    <div style="border-top:1px solid var(--border);padding-top:1rem;">
+      <div style="font-size:.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.4rem;">Or paste URL (start position)</div>
+      <div style="display:flex;gap:.4rem;">
+        <input id="photo-url-input" type="url" placeholder="https://… (.jpg .png .webp)"
+          style="flex:1;padding:.5rem .7rem;border:1px solid var(--border);border-radius:8px;font-size:.88rem;box-sizing:border-box;">
+        <button onclick="savePhoto()"
+          style="padding:.5rem .9rem;border-radius:8px;border:none;background:var(--primary);color:#fff;cursor:pointer;font-size:.85rem;font-weight:600;white-space:nowrap;">
+          Save URL
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -357,14 +383,86 @@ async function generateAllMissing(btn) {
 
 function openPhotoEdit(exId) {
   _currentExId = exId;
-  document.getElementById('photo-modal').style.display = 'flex';
+  // Reset modal state
   document.getElementById('photo-url-input').value = '';
-  setTimeout(() => document.getElementById('photo-url-input').focus(), 50);
+  document.getElementById('upload-progress-1').textContent = '';
+  document.getElementById('upload-progress-2').textContent = '';
+  document.getElementById('upload-preview-1').textContent = '📤';
+  document.getElementById('upload-preview-2').textContent = '📤';
+  document.getElementById('upload-label-text-1').textContent = 'Tap to upload';
+  document.getElementById('upload-label-text-2').textContent = 'Tap to upload';
+  document.getElementById('photo-modal').style.display = 'flex';
 }
 
 function closePhotoModal() {
   document.getElementById('photo-modal').style.display = 'none';
   _currentExId = null;
+}
+
+function _refreshMediaContainer(exId, url, slot) {
+  const container = document.getElementById('media-' + exId);
+  if (!container) return;
+  // Re-fetch both URLs from DOM data or re-render with what we know
+  if (slot === '1') {
+    // Replace start image, keep existing peak if present
+    const existingPeak = container.querySelector('img:last-of-type');
+    const peakSrc = existingPeak && existingPeak !== container.querySelector('img') ? existingPeak.src : null;
+    if (peakSrc) {
+      container.innerHTML =
+        `<div style="display:flex;gap:2px;height:160px;background:#f1f5f9;">` +
+        `<div style="flex:1;position:relative;overflow:hidden;"><img src="${url}" style="width:100%;height:100%;object-fit:cover;"><span style="position:absolute;bottom:3px;left:4px;font-size:.62rem;background:rgba(0,0,0,.55);color:#fff;padding:.1rem .35rem;border-radius:3px;font-weight:700;">START</span></div>` +
+        `<div style="flex:1;position:relative;overflow:hidden;"><img src="${peakSrc}" style="width:100%;height:100%;object-fit:cover;"><span style="position:absolute;bottom:3px;left:4px;font-size:.62rem;background:rgba(0,0,0,.55);color:#fff;padding:.1rem .35rem;border-radius:3px;font-weight:700;">PEAK</span></div>` +
+        `</div><button onclick="openPhotoEdit(${exId})" style="position:absolute;bottom:.4rem;right:.4rem;font-size:.72rem;padding:.2rem .5rem;border-radius:5px;border:none;background:rgba(0,0,0,.45);color:#fff;cursor:pointer;">✎ {% trans "Edit" %}</button>`;
+    } else {
+      container.innerHTML =
+        `<div style="height:160px;background:#f1f5f9;"><img src="${url}" style="width:100%;height:100%;object-fit:cover;clip-path:inset(0 0 18% 0);"></div>` +
+        `<button onclick="openPhotoEdit(${exId})" style="position:absolute;bottom:.4rem;right:.4rem;font-size:.72rem;padding:.2rem .5rem;border-radius:5px;border:none;background:rgba(0,0,0,.45);color:#fff;cursor:pointer;">✎ {% trans "Edit" %}</button>`;
+    }
+  } else {
+    const existingStart = container.querySelector('img');
+    const startSrc = existingStart ? existingStart.src : null;
+    if (startSrc) {
+      container.innerHTML =
+        `<div style="display:flex;gap:2px;height:160px;background:#f1f5f9;">` +
+        `<div style="flex:1;position:relative;overflow:hidden;"><img src="${startSrc}" style="width:100%;height:100%;object-fit:cover;"><span style="position:absolute;bottom:3px;left:4px;font-size:.62rem;background:rgba(0,0,0,.55);color:#fff;padding:.1rem .35rem;border-radius:3px;font-weight:700;">START</span></div>` +
+        `<div style="flex:1;position:relative;overflow:hidden;"><img src="${url}" style="width:100%;height:100%;object-fit:cover;"><span style="position:absolute;bottom:3px;left:4px;font-size:.62rem;background:rgba(0,0,0,.55);color:#fff;padding:.1rem .35rem;border-radius:3px;font-weight:700;">PEAK</span></div>` +
+        `</div><button onclick="openPhotoEdit(${exId})" style="position:absolute;bottom:.4rem;right:.4rem;font-size:.72rem;padding:.2rem .5rem;border-radius:5px;border:none;background:rgba(0,0,0,.45);color:#fff;cursor:pointer;">✎ {% trans "Edit" %}</button>`;
+    }
+  }
+}
+
+async function uploadPhoto(slot, input) {
+  if (!input.files[0] || !_currentExId) return;
+  const file = input.files[0];
+  const progressEl = document.getElementById('upload-progress-' + slot);
+  const previewEl = document.getElementById('upload-preview-' + slot);
+  const labelEl = document.getElementById('upload-label-text-' + slot);
+
+  progressEl.textContent = '⏳ Uploading…';
+  labelEl.textContent = file.name.length > 18 ? file.name.slice(0, 16) + '…' : file.name;
+
+  const form = new FormData();
+  form.append('id', _currentExId);
+  form.append('slot', String(slot));
+  form.append('photo', file);
+
+  try {
+    const r = await fetch('{% url "programs:upload_exercise_photo" %}', {
+      method: 'POST',
+      headers: {'X-CSRFToken': '{{ csrf_token }}'},
+      body: form,
+    });
+    const data = await r.json();
+    if (data.status === 'ok') {
+      progressEl.textContent = '✅ Saved!';
+      previewEl.innerHTML = `<img src="${data.url}" style="width:60px;height:60px;object-fit:cover;border-radius:6px;">`;
+      _refreshMediaContainer(_currentExId, data.url, String(slot));
+    } else {
+      progressEl.textContent = '✗ ' + (data.error || 'Upload failed');
+    }
+  } catch(e) {
+    progressEl.textContent = '✗ Network error';
+  }
 }
 
 function savePhoto() {
@@ -376,12 +474,7 @@ function savePhoto() {
     body: JSON.stringify({id: _currentExId, photo_url: url}),
   }).then(r => r.json()).then(data => {
     if (data.status === 'ok') {
-      const isVideo = url.endsWith('.mp4');
-      const container = document.getElementById('media-' + _currentExId);
-      const id = _currentExId;
-      container.innerHTML = isVideo
-        ? `<video src="${url}" autoplay muted loop playsinline style="width:100%;height:100%;object-fit:cover;clip-path:inset(0 0 18% 0);"></video><button onclick="openPhotoEdit(${id})" style="position:absolute;bottom:.4rem;right:.4rem;font-size:.72rem;padding:.2rem .5rem;border-radius:5px;border:none;background:rgba(0,0,0,.45);color:#fff;cursor:pointer;">✎ {% trans "Edit" %}</button>`
-        : `<img src="${url}" style="width:100%;height:100%;object-fit:cover;clip-path:inset(0 0 18% 0);"><button onclick="openPhotoEdit(${id})" style="position:absolute;bottom:.4rem;right:.4rem;font-size:.72rem;padding:.2rem .5rem;border-radius:5px;border:none;background:rgba(0,0,0,.45);color:#fff;cursor:pointer;">✎ {% trans "Edit" %}</button>`;
+      _refreshMediaContainer(_currentExId, url, '1');
       closePhotoModal();
     }
   });

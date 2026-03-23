@@ -24,6 +24,7 @@ urlpatterns = [
     path('<int:pk>/delete/', views.delete_program, name='delete_program'),
     path('day/<int:pk>/update/', views.update_program_day, name='update_program_day'),
     path('exercises/update-photo/', views.update_exercise_photo, name='update_exercise_photo'),
+    path('exercises/upload-photo/', views.upload_exercise_photo, name='upload_exercise_photo'),
     path('exercises/generate-illustration/', views.generate_illustration, name='generate_illustration'),
     path('exercises/missing-illustrations/', views.generate_missing_illustrations, name='missing_illustrations'),
     path('exercises/create-warmup-stretch/', views.create_all_warmup_stretch, name='create_warmup_stretch'),

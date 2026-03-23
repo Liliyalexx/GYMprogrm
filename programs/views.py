@@ -403,6 +403,47 @@ def update_exercise_photo(request):
 
 @login_required
 @require_POST
+def upload_exercise_photo(request):
+    """Upload one or two image files for an exercise. Stores to Cloudinary if configured, else saves locally."""
+    from django.conf import settings as _settings
+    ex_id = request.POST.get('id')
+    slot = request.POST.get('slot', '1')  # '1' = start position, '2' = peak position
+    ex = get_object_or_404(ExerciseLibrary, pk=ex_id)
+    img = request.FILES.get('photo')
+    if not img:
+        return JsonResponse({'error': 'No file uploaded'}, status=400)
+
+    try:
+        if getattr(_settings, 'CLOUDINARY_URL', ''):
+            import cloudinary.uploader
+            result = cloudinary.uploader.upload(
+                img,
+                folder='gymprogrm/exercises',
+                public_id=f'exercise_{ex.pk}_slot{slot}',
+                overwrite=True,
+                resource_type='image',
+            )
+            url = result['secure_url']
+        else:
+            # Fallback: save to MEDIA_ROOT and return relative URL (dev only)
+            import os
+            from django.core.files.storage import default_storage
+            path = default_storage.save(f'exercises/exercise_{ex.pk}_slot{slot}{os.path.splitext(img.name)[1]}', img)
+            url = default_storage.url(path)
+
+        if slot == '2':
+            ex.photo_url_2 = url
+            ex.save(update_fields=['photo_url_2'])
+        else:
+            ex.photo_url = url
+            ex.save(update_fields=['photo_url'])
+        return JsonResponse({'status': 'ok', 'url': url, 'slot': slot})
+    except Exception as exc:
+        return JsonResponse({'error': str(exc)}, status=500)
+
+
+@login_required
+@require_POST
 def create_exercise(request):
     """Create a new exercise in the library and redirect back.
     If generate_image=1, the redirect includes ?autogen=<pk> so the page
