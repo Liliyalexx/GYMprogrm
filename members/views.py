@@ -60,7 +60,10 @@ def _build_program_from_ai(member, extra_notes=''):
     exercise_library = list(
         ExerciseLibrary.objects.values('name', 'exercise_type', 'muscle_group', 'difficulty')
     )
-    data = generate_program(member, exercise_library, extra_notes=extra_notes)
+    # Pull latest posture analysis to inform exercise selection
+    latest_posture = member.posture_analyses.order_by('-created_at').first()
+    posture_text = latest_posture.ai_analysis if latest_posture else ''
+    data = generate_program(member, exercise_library, extra_notes=extra_notes, posture_analysis=posture_text)
 
     member.programs.filter(is_active=True).update(is_active=False)
     prog = MemberProgram.objects.create(
