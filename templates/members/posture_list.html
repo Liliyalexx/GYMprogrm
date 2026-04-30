@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}Posture Analysis — GymPro Coach{% endblock %}
+
+{% block extra_css %}
+<style>
+  body { background: #0f1119; }
+  .m-wrap { max-width: 640px; margin: 0 auto; padding: 1rem 1rem 5rem; }
+  .m-page-title { font-size: 1.3rem; font-weight: 800; color: #fff; margin-bottom: 1.25rem; }
+  .upload-btn {
+    display: block; width: 100%; box-sizing: border-box;
+    background: linear-gradient(135deg, #FF6B35, #e0521e);
+    color: #fff; font-weight: 700; font-size: .95rem; padding: .85rem;
+    border-radius: 14px; text-align: center; text-decoration: none; margin-bottom: 1.25rem;
+  }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+  .posture-card {
+    background: #1B1F3A; border-radius: 16px; overflow: hidden;
+    text-decoration: none; border: 1px solid rgba(255,255,255,.08);
+    display: flex; flex-direction: column;
+  }
+  .posture-card img { width: 100%; aspect-ratio: 3/4; object-fit: cover; }
+  .posture-card-body { padding: .7rem; }
+  .posture-date { font-size: .72rem; color: rgba(255,255,255,.5); }
+  .posture-preview { font-size: .78rem; color: rgba(255,255,255,.7); margin-top: .25rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .empty-state { text-align: center; padding: 3rem 1rem; color: rgba(255,255,255,.35); }
+  .intro-card {
+    background: rgba(255,107,53,.07); border: 1px solid rgba(255,107,53,.2);
+    border-radius: 16px; padding: 1.1rem; margin-bottom: 1.25rem;
+    font-size: .83rem; color: rgba(255,255,255,.65); line-height: 1.5;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="m-wrap">
+  <div class="m-page-title">Posture Analysis 📸</div>
+
+  <div class="intro-card">
+    Alex analyses your posture from photos and identifies areas to improve, with targeted exercise recommendations.
+  </div>
+
+  <a href="{% url 'members:posture_upload' %}" class="upload-btn">📸 Upload New Photo</a>
+
+  {% if analyses %}
+  <div class="grid">
+    {% for obj in analyses %}
+    <a href="{% url 'members:posture_detail' pk=obj.pk %}" class="posture-card">
+      {% if obj.photo %}
+      <img src="{{ obj.photo.url }}" alt="Posture photo">
+      {% else %}
+      <div style="aspect-ratio:3/4;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:2rem;">📷</div>
+      {% endif %}
+      <div class="posture-card-body">
+        <div class="posture-date">{{ obj.created_at|date:"M j, Y" }}</div>
+        {% if obj.ai_analysis %}
+        <div class="posture-preview">{{ obj.ai_analysis|truncatechars:80 }}</div>
+        {% else %}
+        <div class="posture-date">Analysing…</div>
+        {% endif %}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+    <div class="empty-state">
+      <div style="font-size:3rem;">🧍</div>
+      <p>Upload a full-body photo and Alex will analyse your posture</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

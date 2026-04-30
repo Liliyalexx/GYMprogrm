@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'programs',
     'progress',
     'measurements',
+    'members',
 ]
 
 SITE_ID = 1

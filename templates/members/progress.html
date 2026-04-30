@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% block title %}Progress — GymPro Coach{% endblock %}
+
+{% block extra_css %}
+<style>
+  body { background: #0f1119; }
+  .m-wrap { max-width: 640px; margin: 0 auto; padding: 1rem 1rem 5rem; }
+  .m-page-title { font-size: 1.3rem; font-weight: 800; color: #fff; margin-bottom: 1.25rem; }
+
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; margin-bottom: 1.25rem; }
+  .stat-card { background: #1B1F3A; border-radius: 16px; padding: 1.1rem; border: 1px solid rgba(255,255,255,.08); text-align: center; }
+  .stat-card .val { font-size: 2rem; font-weight: 900; color: #FF6B35; }
+  .stat-card .lbl { font-size: .75rem; color: rgba(255,255,255,.5); margin-top: .3rem; }
+
+  .chart-card { background: #1B1F3A; border-radius: 18px; padding: 1.25rem; margin-bottom: 1.25rem; border: 1px solid rgba(255,255,255,.08); }
+  .chart-title { font-size: .8rem; font-weight: 700; color: rgba(255,255,255,.5); margin-bottom: 1rem; letter-spacing: .06em; text-transform: uppercase; }
+  .chart-bars { display: flex; align-items: flex-end; gap: 4px; height: 90px; }
+  .chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: .25rem; }
+  .chart-bar { width: 100%; background: rgba(255,107,53,.3); border-radius: 3px 3px 0 0; min-height: 3px; }
+  .chart-bar.active { background: #FF6B35; }
+  .chart-day { font-size: .55rem; color: rgba(255,255,255,.3); }
+
+  .blood-card { background: #1B1F3A; border-radius: 18px; padding: 1.25rem; border: 1px solid rgba(255,255,255,.08); }
+  .blood-title { font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: .85rem; }
+  .marker-row { display: flex; align-items: center; justify-content: space-between; padding: .55rem 0; border-bottom: 1px solid rgba(255,255,255,.05); }
+  .marker-row:last-child { border-bottom: none; }
+  .marker-name { font-size: .83rem; color: rgba(255,255,255,.8); }
+  .marker-val { font-size: .83rem; font-weight: 600; }
+  .marker-val.normal { color: #4ade80; }
+  .marker-val.high { color: #f87171; }
+  .marker-val.low { color: #facc15; }
+  .marker-note { font-size: .72rem; color: rgba(255,255,255,.4); margin-top: .15rem; }
+
+  .section-title { font-size: .75rem; font-weight: 700; letter-spacing: .08em; color: rgba(255,255,255,.4); text-transform: uppercase; margin-bottom: .65rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="m-wrap">
+  <div class="m-page-title">Progress 📊</div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="val">{{ week_exercises }}</div>
+      <div class="lbl">Exercises this week</div>
+    </div>
+    <div class="stat-card">
+      <div class="val">{{ total_exercises }}</div>
+      <div class="lbl">Total completed</div>
+    </div>
+  </div>
+
+  <!-- Calorie chart -->
+  <div class="section-title">Calories — last 14 days</div>
+  <div class="chart-card">
+    <div class="chart-bars" id="cal-chart"></div>
+  </div>
+
+  <!-- Blood analysis -->
+  {% if blood_analysis %}
+  <div class="section-title">Blood Test Analysis</div>
+  <div class="blood-card">
+    <div class="blood-title">🩸 Lab Results — Alex's Take</div>
+    {% if blood_analysis.summary %}
+    <p style="font-size:.83rem;color:rgba(255,255,255,.65);line-height:1.55;margin-bottom:.85rem;">{{ blood_analysis.summary }}</p>
+    {% endif %}
+    {% if blood_analysis.markers %}
+    {% for m in blood_analysis.markers %}
+    <div class="marker-row">
+      <div>
+        <div class="marker-name">{{ m.name }}</div>
+        {% if m.note %}<div class="marker-note">{{ m.note }}</div>{% endif %}
+      </div>
+      <div class="marker-val {{ m.status }}">{{ m.value }} {{ m.unit }}</div>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% if blood_analysis.deficiencies %}
+    <div style="margin-top:.85rem;">
+      <div class="section-title" style="margin-bottom:.4rem;">Deficiencies</div>
+      {% for d in blood_analysis.deficiencies %}
+      <div style="font-size:.8rem;color:#facc15;padding:.2rem 0;">• {{ d }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% if blood_analysis.nutrition_recommendations %}
+    <div style="margin-top:.85rem;">
+      <div class="section-title" style="margin-bottom:.4rem;">Nutrition Advice</div>
+      {% for r in blood_analysis.nutrition_recommendations %}
+      <div style="font-size:.8rem;color:rgba(255,255,255,.65);padding:.2rem 0;">• {{ r }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var data = {{ nutrition_days|safe }};
+var max = Math.max(...data.map(d => d.calories), 1);
+var today = new Date().toLocaleDateString('en-CA');
+var chart = document.getElementById('cal-chart');
+data.forEach(function(d, i) {
+  var pct = Math.round((d.calories / max) * 90);
+  var wrap = document.createElement('div');
+  wrap.className = 'chart-bar-wrap';
+  wrap.innerHTML = `<div class="chart-bar${d.calories > 0 ? ' active' : ''}" style="height:${Math.max(pct, 3)}px"></div><div class="chart-day">${d.date.slice(5)}</div>`;
+  chart.appendChild(wrap);
+});
+</script>
+{% endblock %}

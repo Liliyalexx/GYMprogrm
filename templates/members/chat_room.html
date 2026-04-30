@@ -1,0 +1,424 @@
+{% extends 'base.html' %}
+{% block title %}{{ conv.title|truncatechars:40 }} — GymPro Coach{% endblock %}
+
+{% block extra_css %}
+<style>
+  body { background: #0f1119; }
+  .member-bnav { display: none !important; }
+  .container { display: contents; padding: 0; }
+
+  .chat-outer {
+    position: fixed; top: 80px; left: 0; right: 0; bottom: 0;
+    display: flex; flex-direction: column; background: #0f1119;
+  }
+  @media (max-width: 600px) { .chat-outer { top: 64px; } }
+
+  .chat-nav {
+    background: #1B1F3A; border-bottom: 1px solid rgba(255,255,255,.08);
+    padding: .75rem 1rem; display: flex; align-items: center; gap: .75rem; flex-shrink: 0;
+  }
+  .chat-nav a { color: #FF6B35; text-decoration: none; font-size: .9rem; font-weight: 600; }
+  .chat-nav-title { flex: 1; font-size: .9rem; font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .chat-msgs {
+    flex: 1; overflow-y: auto; padding: 1rem;
+    display: flex; flex-direction: column; gap: .75rem;
+  }
+
+  /* Message row: bubble + action buttons side-by-side */
+  .msg-row { display: flex; align-items: flex-start; gap: .4rem; }
+  .msg-row.user  { justify-content: flex-end; }
+  .msg-row.assistant { justify-content: flex-start; }
+
+  /* Action buttons column — always visible for user messages */
+  .msg-actions {
+    display: flex; flex-direction: column; gap: .2rem;
+    padding-top: .3rem; flex-shrink: 0; order: -1; /* left of bubble */
+  }
+  .msg-row.user .msg-actions { order: 2; } /* right of bubble */
+  .msg-act-btn {
+    background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1);
+    border-radius: 7px; padding: .22rem .38rem; cursor: pointer;
+    font-size: .68rem; color: rgba(255,255,255,.5); line-height: 1;
+    transition: background .15s, color .15s, border-color .15s;
+    white-space: nowrap;
+  }
+  .msg-act-btn:hover { background: rgba(255,107,53,.15); color: #FF6B35; border-color: rgba(255,107,53,.3); }
+  .msg-act-btn.del:hover { background: rgba(239,68,68,.15); color: #f87171; border-color: rgba(239,68,68,.3); }
+
+  /* Bubble */
+  .msg-body { display: flex; flex-direction: column; max-width: 78%; }
+  .msg-row.user  .msg-body { align-items: flex-end; }
+  .msg-row.assistant .msg-body { align-items: flex-start; }
+
+  .msg-bubble {
+    padding: .75rem 1rem; border-radius: 18px;
+    font-size: .88rem; line-height: 1.55; white-space: pre-wrap; word-break: break-word;
+  }
+  .msg-row.user .msg-bubble {
+    background: linear-gradient(135deg, #FF6B35, #e0521e);
+    color: #fff; border-bottom-right-radius: 4px;
+  }
+  .msg-row.assistant .msg-bubble {
+    background: #1B1F3A; color: rgba(255,255,255,.9);
+    border: 1px solid rgba(255,255,255,.08); border-bottom-left-radius: 4px;
+  }
+  .msg-time { font-size: .62rem; color: rgba(255,255,255,.28); margin-top: .25rem; }
+
+  /* Edit inline form */
+  .edit-form { display: none; margin-top: .45rem; width: 100%; max-width: 340px; }
+  .edit-form.open { display: flex; gap: .4rem; align-items: flex-end; }
+  .edit-textarea {
+    flex: 1; background: rgba(255,255,255,.08); border: 1.5px solid #FF6B35;
+    border-radius: 10px; padding: .5rem .75rem; color: #fff; font-family: inherit;
+    font-size: .85rem; resize: none; outline: none; line-height: 1.35;
+  }
+  .edit-btns { display: flex; flex-direction: column; gap: .3rem; }
+  .edit-save { background: #FF6B35; border: none; border-radius: 8px; padding: .45rem .65rem; color: #fff; cursor: pointer; font-size: .78rem; font-weight: 700; }
+  .edit-cancel-btn { background: none; border: 1px solid rgba(255,255,255,.12); border-radius: 8px; color: rgba(255,255,255,.4); cursor: pointer; font-size: .72rem; padding: .35rem .5rem; }
+
+  /* Cards */
+  .prog-card {
+    background: linear-gradient(135deg, rgba(27,31,58,.9), rgba(42,47,90,.9));
+    border: 1px solid rgba(255,107,53,.4);
+    border-radius: 14px; padding: .9rem 1rem; margin-top: .5rem; max-width: 280px;
+  }
+  .prog-card-title { font-size: .72rem; font-weight: 700; color: #FF6B35; margin-bottom: .35rem; letter-spacing: .04em; }
+  .prog-card-name { font-size: .95rem; font-weight: 800; color: #fff; }
+  .prog-card-sub { font-size: .75rem; color: rgba(255,255,255,.55); margin-top: .25rem; }
+  .prog-card-link { display: inline-block; margin-top: .5rem; background: #FF6B35; color: #fff; font-size: .75rem; font-weight: 700; padding: .3rem .7rem; border-radius: 8px; text-decoration: none; }
+
+  .nut-card {
+    background: linear-gradient(135deg, rgba(255,107,53,.15), rgba(255,107,53,.05));
+    border: 1px solid rgba(255,107,53,.3);
+    border-radius: 14px; padding: .9rem 1rem; margin-top: .5rem; max-width: 280px;
+  }
+  .nut-card-title { font-size: .72rem; font-weight: 700; color: #FF6B35; margin-bottom: .4rem; letter-spacing: .04em; }
+  .nut-card-cal { font-size: 1.35rem; font-weight: 900; color: #fff; }
+  .nut-card-macros { display: flex; gap: .75rem; margin-top: .45rem; }
+  .nut-card-macro .v { font-size: .82rem; font-weight: 700; color: #fff; }
+  .nut-card-macro .l { font-size: .62rem; color: rgba(255,255,255,.45); }
+
+  /* Typing */
+  .typing { display: flex; align-items: center; gap: 4px; padding: .45rem .6rem; }
+  .typing span { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,107,53,.6); animation: bounce 1.2s infinite; }
+  .typing span:nth-child(2) { animation-delay: .2s; }
+  .typing span:nth-child(3) { animation-delay: .4s; }
+  @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-7px)} }
+
+  /* Input */
+  .chat-input-wrap {
+    background: #1B1F3A; border-top: 1px solid rgba(255,255,255,.08);
+    padding: .75rem 1rem; padding-bottom: calc(.75rem + env(safe-area-inset-bottom));
+    display: flex; gap: .65rem; align-items: flex-end; flex-shrink: 0;
+  }
+  .chat-textarea {
+    flex: 1; background: rgba(255,255,255,.07); border: 1.5px solid rgba(255,255,255,.14);
+    border-radius: 12px; padding: .65rem .9rem; color: #fff; font-size: .95rem;
+    font-family: inherit; resize: none; outline: none; max-height: 120px; overflow-y: auto; line-height: 1.4;
+  }
+  .chat-textarea::placeholder { color: rgba(255,255,255,.35); }
+  .chat-textarea:focus { border-color: #FF6B35; }
+  .chat-send {
+    background: linear-gradient(135deg, #FF6B35, #e0521e); border: none; border-radius: 12px;
+    padding: .7rem 1rem; color: #fff; cursor: pointer; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .chat-send:disabled { opacity: .4; cursor: default; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chat-outer">
+
+  <div class="chat-nav">
+    <a href="{% url 'members:chat_list' %}">← Back</a>
+    <div class="chat-nav-title">{{ conv.title }}</div>
+  </div>
+
+  <div class="chat-msgs" id="chat-msgs">
+    {% if not msgs %}
+    <div style="text-align:center;padding:2.5rem 1rem;color:rgba(255,255,255,.35);font-size:.88rem;">
+      <div style="font-size:2.5rem;margin-bottom:.65rem;">👋</div>
+      Ask me anything — training, nutrition, recovery, injuries. I'm here to help.
+    </div>
+    {% endif %}
+
+    {% for msg in msgs %}
+    {% ifchanged msg.created_at|date:"Y-m-d" %}
+    <div style="text-align:center;margin:.5rem 0;">
+      <span style="background:rgba(255,255,255,.07);border-radius:99px;padding:.25rem .85rem;font-size:.7rem;color:rgba(255,255,255,.4);">
+        {{ msg.created_at|date:"M j, Y" }}
+      </span>
+    </div>
+    {% endifchanged %}
+    <div class="msg-row {{ msg.role }}" data-msg-id="{{ msg.pk }}">
+      {% if msg.role == 'user' %}
+      <div class="msg-actions">
+        <button class="msg-act-btn" title="Edit" onclick="openEdit({{ msg.pk }}, document.querySelector('[data-msg-id=\'{{ msg.pk }}\'] .msg-bubble').textContent)">✏️ Edit</button>
+        <button class="msg-act-btn del" title="Delete from here" onclick="deleteFromHere({{ msg.pk }})">🗑 Delete</button>
+      </div>
+      {% endif %}
+      <div class="msg-body">
+        <div class="msg-bubble">{{ msg.content }}</div>
+        <div class="msg-time">{{ msg.created_at|date:"H:i" }}</div>
+        {% if msg.role == 'user' %}
+        <div class="edit-form" id="edit-form-{{ msg.pk }}">
+          <textarea class="edit-textarea" rows="1" oninput="autoResize(this)"></textarea>
+          <div class="edit-btns">
+            <button class="edit-save" onclick="saveEdit({{ msg.pk }}, this)">Save</button>
+            <button class="edit-cancel-btn" onclick="closeEdit({{ msg.pk }})">Cancel</button>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+
+    <div id="typing-indicator" style="display:none;" class="msg-row assistant">
+      <div class="msg-body">
+        <div class="msg-bubble" style="padding:.45rem .75rem;">
+          <div class="typing"><span></span><span></span><span></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chat-input-wrap">
+    <textarea id="chat-input" class="chat-textarea" placeholder="Ask Alex anything…"
+      rows="1" oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
+    <button class="chat-send" id="send-btn" onclick="sendMessage()">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="22" y1="2" x2="11" y2="13"/>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+      </svg>
+    </button>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const msgsEl   = document.getElementById('chat-msgs');
+const inputEl  = document.getElementById('chat-input');
+const sendBtn  = document.getElementById('send-btn');
+const typingEl = document.getElementById('typing-indicator');
+const CSRF     = '{{ csrf_token }}';
+const CONV_PK  = {{ conv.pk }};
+
+function scrollBottom() { msgsEl.scrollTop = msgsEl.scrollHeight; }
+scrollBottom();
+inputEl.focus();
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+// ── Render helpers ────────────────────────────────────────────────────────────
+
+function makeNutCard(data) {
+  var d = document.createElement('div'); d.className = 'nut-card';
+  d.innerHTML = '<div class="nut-card-title">🥗 NUTRITION LOGGED</div>' +
+    '<div class="nut-card-cal">' + Math.round(data.total_calories||0) + ' kcal</div>' +
+    '<div class="nut-card-macros">' +
+      '<div class="nut-card-macro"><div class="v">' + ((data.total_protein_g||0).toFixed(1)) + 'g</div><div class="l">Protein</div></div>' +
+      '<div class="nut-card-macro"><div class="v">' + ((data.total_carbs_g||0).toFixed(1)) + 'g</div><div class="l">Carbs</div></div>' +
+      '<div class="nut-card-macro"><div class="v">' + ((data.total_fat_g||0).toFixed(1)) + 'g</div><div class="l">Fat</div></div>' +
+    '</div>';
+  return d;
+}
+
+function makeProgCard(data) {
+  var d = document.createElement('div'); d.className = 'prog-card';
+  if (data.status === 'error') {
+    d.innerHTML = '<div class="prog-card-title">⚠️ PROGRAM ERROR</div>' +
+      '<div class="prog-card-sub" style="color:rgba(239,68,68,.8);">' + (data.focus || 'Could not generate program. Try again.') + '</div>';
+  } else {
+    d.innerHTML = '<div class="prog-card-title">🏋️ PROGRAM READY</div>' +
+      '<div class="prog-card-name">' + (data.name || 'New Program') + '</div>' +
+      (data.focus ? '<div class="prog-card-sub">' + data.focus + '</div>' : '') +
+      '<div class="prog-card-sub" style="margin-top:.35rem;color:rgba(255,107,53,.6);font-size:.7rem;">Exercise images are generating in the background</div>' +
+      '<a href="' + (data.url || '/members/program/') + '" class="prog-card-link">View My Program →</a>';
+  }
+  return d;
+}
+
+function appendRow(role, content, opts) {
+  opts = opts || {};
+  var row = document.createElement('div');
+  row.className = 'msg-row ' + role;
+  if (opts.msgId) row.dataset.msgId = opts.msgId;
+
+  var body = document.createElement('div');
+  body.className = 'msg-body';
+
+  var bubble = document.createElement('div');
+  bubble.className = 'msg-bubble';
+  bubble.textContent = content;
+  body.appendChild(bubble);
+
+  var time = document.createElement('div');
+  time.className = 'msg-time';
+  time.textContent = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  body.appendChild(time);
+
+  if (role === 'user') {
+    var uid = opts.userMsgId || opts.msgId;
+    // Edit form
+    if (uid) {
+      var ef = document.createElement('div');
+      ef.className = 'edit-form'; ef.id = 'edit-form-' + uid;
+      ef.innerHTML = '<textarea class="edit-textarea" rows="1" oninput="autoResize(this)"></textarea>' +
+        '<div class="edit-btns">' +
+        '<button class="edit-save" onclick="saveEdit(' + uid + ', this)">Save</button>' +
+        '<button class="edit-cancel-btn" onclick="closeEdit(' + uid + ')">Cancel</button></div>';
+      body.appendChild(ef);
+    }
+    // Action buttons
+    var acts = document.createElement('div');
+    acts.className = 'msg-actions';
+    var editB = document.createElement('button');
+    editB.className = 'msg-act-btn'; editB.textContent = '✏️ Edit';
+    editB.onclick = (function(id, b) { return function() { openEdit(id, b.textContent); }; })(uid, bubble);
+    var delB = document.createElement('button');
+    delB.className = 'msg-act-btn del'; delB.textContent = '🗑 Delete';
+    delB.onclick = (function(id) { return function() { deleteFromHere(id); }; })(uid);
+    acts.appendChild(editB); acts.appendChild(delB);
+    row.appendChild(acts);
+  }
+
+  if (opts.nutrition) body.appendChild(makeNutCard(opts.nutrition));
+  if (opts.programCard) body.appendChild(makeProgCard(opts.programCard));
+
+  row.appendChild(body);
+  msgsEl.insertBefore(row, typingEl);
+  scrollBottom();
+  return row;
+}
+
+// ── Send ──────────────────────────────────────────────────────────────────────
+
+function sendMessage() {
+  var text = inputEl.value.trim();
+  if (!text || sendBtn.disabled) return;
+  appendRow('user', text);
+  inputEl.value = ''; inputEl.style.height = 'auto';
+  sendBtn.disabled = true; typingEl.style.display = 'flex'; scrollBottom();
+
+  // If a program is being requested show a patience hint after 8s
+  var slowHint = null;
+  var isProgramRequest = /program|workout|plan|schedule/i.test(text);
+  if (isProgramRequest) {
+    slowHint = setTimeout(function() {
+      var hint = document.getElementById('slow-hint');
+      if (!hint) {
+        hint = document.createElement('div');
+        hint.id = 'slow-hint';
+        hint.style.cssText = 'text-align:center;font-size:.75rem;color:rgba(255,107,53,.7);padding:.35rem 1rem;';
+        hint.textContent = '⏳ Designing your program — this may take a minute…';
+        msgsEl.insertBefore(hint, typingEl);
+        scrollBottom();
+      }
+    }, 8000);
+  }
+
+  function clearHint() {
+    if (slowHint) clearTimeout(slowHint);
+    var hint = document.getElementById('slow-hint');
+    if (hint) hint.remove();
+  }
+
+  fetch('/members/chat/' + CONV_PK + '/send/', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF},
+    body: JSON.stringify({message: text}),
+  })
+  .then(r => r.json())
+  .then(data => {
+    clearHint();
+    typingEl.style.display = 'none';
+    if (data.reply) {
+      appendRow('assistant', data.reply, {msgId: data.msg_id, nutrition: data.nutrition, programCard: data.program_card});
+    } else if (data.error) {
+      appendRow('assistant', '⚠️ ' + data.error);
+    }
+  })
+  .catch(() => { clearHint(); typingEl.style.display = 'none'; appendRow('assistant', '⚠️ Connection error.'); })
+  .finally(() => { sendBtn.disabled = false; inputEl.focus(); });
+}
+
+// ── Edit ─────────────────────────────────────────────────────────────────────
+
+function openEdit(msgId, currentText) {
+  var form = document.getElementById('edit-form-' + msgId);
+  if (!form) return;
+  closeAllEdits();
+  var ta = form.querySelector('textarea');
+  ta.value = currentText.trim();
+  form.classList.add('open');
+  autoResize(ta); ta.focus();
+}
+
+function closeEdit(msgId) {
+  var form = document.getElementById('edit-form-' + msgId);
+  if (form) form.classList.remove('open');
+}
+
+function closeAllEdits() {
+  document.querySelectorAll('.edit-form.open').forEach(f => f.classList.remove('open'));
+}
+
+function saveEdit(msgId, btn) {
+  var form = document.getElementById('edit-form-' + msgId);
+  var newText = form.querySelector('textarea').value.trim();
+  if (!newText) return;
+  btn.disabled = true; btn.textContent = '…';
+
+  fetch('/members/chat/' + CONV_PK + '/edit/' + msgId + '/', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF},
+    body: JSON.stringify({message: newText}),
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.error) { alert(data.error); return; }
+    removeFromMsg(msgId);
+    appendRow('user', data.new_text, {msgId: data.user_msg_id, userMsgId: data.user_msg_id});
+    if (data.reply) appendRow('assistant', data.reply, {msgId: data.msg_id, nutrition: data.nutrition, programCard: data.program_card});
+  })
+  .catch(() => alert('Error saving edit.'))
+  .finally(() => { btn.disabled = false; btn.textContent = 'Save'; });
+}
+
+// ── Delete ────────────────────────────────────────────────────────────────────
+
+function deleteFromHere(msgId) {
+  if (!confirm('Delete this message and everything after it?')) return;
+
+  fetch('/members/chat/' + CONV_PK + '/delete/' + msgId + '/', {
+    method: 'POST',
+    headers: {'X-CSRFToken': CSRF},
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.ok) removeFromMsg(msgId);
+    else alert(data.error || 'Delete failed.');
+  })
+  .catch(() => alert('Error deleting message.'));
+}
+
+function removeFromMsg(msgId) {
+  var el = document.querySelector('[data-msg-id="' + msgId + '"]');
+  if (!el) return;
+  var toRemove = [];
+  var cur = el;
+  while (cur && cur !== typingEl) { toRemove.push(cur); cur = cur.nextElementSibling; }
+  toRemove.forEach(e => e.remove());
+}
+</script>
+{% endblock %}

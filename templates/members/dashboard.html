@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — GymPro Coach{% endblock %}
+
+{% block extra_css %}
+<style>
+  body { background: #0f1119; }
+  .m-wrap { max-width: 640px; margin: 0 auto; padding: 1rem 1rem 5rem; }
+
+  /* Hero */
+  .m-hero {
+    background: linear-gradient(135deg, #1B1F3A 0%, #2a2f5a 100%);
+    border-radius: 20px; padding: 1.5rem; margin-bottom: 1.25rem;
+    border: 1px solid rgba(255,107,53,.25);
+    display: flex; align-items: center; gap: 1rem;
+  }
+  .m-avatar {
+    width: 60px; height: 60px; border-radius: 50%;
+    background: linear-gradient(135deg, #FF6B35, #e0521e);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; font-weight: 800; color: #fff; flex-shrink: 0;
+  }
+  .m-hero-name { font-size: 1.1rem; font-weight: 800; color: #fff; }
+  .m-hero-sub { font-size: .82rem; color: rgba(255,255,255,.55); margin-top: .2rem; }
+
+  /* Section title */
+  .m-section { margin-bottom: 1.25rem; }
+  .m-section-title {
+    font-size: .75rem; font-weight: 700; letter-spacing: .08em;
+    color: rgba(255,255,255,.4); text-transform: uppercase; margin-bottom: .65rem;
+  }
+
+  /* Quick action grid */
+  .qa-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+  .qa-card {
+    background: #1B1F3A; border-radius: 16px; padding: 1.1rem;
+    text-decoration: none; border: 1px solid rgba(255,255,255,.08);
+    display: flex; flex-direction: column; gap: .4rem;
+    transition: border-color .2s, transform .1s;
+  }
+  .qa-card:hover { border-color: #FF6B35; transform: translateY(-1px); }
+  .qa-card .ico { font-size: 1.6rem; }
+  .qa-card .qa-label { font-size: .82rem; font-weight: 700; color: #fff; }
+  .qa-card .qa-sub { font-size: .72rem; color: rgba(255,255,255,.45); }
+  .qa-card.accent { border-color: rgba(255,107,53,.35); background: linear-gradient(135deg, rgba(255,107,53,.12), rgba(255,107,53,.05)); }
+
+  /* Today's workout */
+  .ex-card {
+    background: #1B1F3A; border-radius: 14px; padding: 1rem 1.1rem;
+    margin-bottom: .5rem; display: flex; align-items: center; gap: .85rem;
+    border: 1px solid rgba(255,255,255,.07);
+  }
+  .ex-dot { width: 10px; height: 10px; border-radius: 50%; background: #FF6B35; flex-shrink: 0; }
+  .ex-dot.done { background: #22c55e; }
+  .ex-name { font-size: .9rem; font-weight: 600; color: #fff; }
+  .ex-meta { font-size: .75rem; color: rgba(255,255,255,.45); margin-top: .15rem; }
+
+  /* Nutrition summary */
+  .nut-card {
+    background: #1B1F3A; border-radius: 16px; padding: 1.1rem 1.25rem;
+    border: 1px solid rgba(255,255,255,.08);
+  }
+  .nut-row { display: flex; align-items: center; justify-content: space-between; }
+  .nut-cal { font-size: 1.6rem; font-weight: 900; color: #FF6B35; }
+  .nut-unit { font-size: .8rem; color: rgba(255,255,255,.5); }
+  .nut-macros { display: flex; gap: 1rem; margin-top: .75rem; }
+  .nut-macro { text-align: center; flex: 1; }
+  .nut-macro .val { font-size: .95rem; font-weight: 700; color: #fff; }
+  .nut-macro .lbl { font-size: .7rem; color: rgba(255,255,255,.4); margin-top: .1rem; }
+
+  /* Chat preview */
+  .chat-item {
+    background: #1B1F3A; border-radius: 14px; padding: .9rem 1.1rem;
+    text-decoration: none; display: block; margin-bottom: .5rem;
+    border: 1px solid rgba(255,255,255,.07);
+  }
+  .chat-title { font-size: .9rem; font-weight: 600; color: #fff; }
+  .chat-time { font-size: .72rem; color: rgba(255,255,255,.4); margin-top: .15rem; }
+
+  .empty-state { text-align: center; padding: 1.5rem; color: rgba(255,255,255,.35); font-size: .85rem; }
+  .gen-btn {
+    display: block; width: 100%; box-sizing: border-box;
+    background: linear-gradient(135deg, #FF6B35, #e0521e);
+    color: #fff; font-weight: 700; font-size: .95rem; padding: .8rem;
+    border-radius: 12px; text-align: center; text-decoration: none; border: none; cursor: pointer;
+    margin-top: .75rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="m-wrap">
+
+  <!-- Hero -->
+  <div class="m-hero">
+    <div class="m-avatar">{{ member.name|first|upper }}</div>
+    <div>
+      <div class="m-hero-name">Hey, {{ member.name|truncatechars:20 }} 👋</div>
+      <div class="m-hero-sub">Your personal coach Alex is ready</div>
+    </div>
+  </div>
+
+  <!-- Quick actions -->
+  <div class="m-section">
+    <div class="m-section-title">Quick Actions</div>
+    <div class="qa-grid">
+      <a href="{% url 'members:chat_new' %}" class="qa-card accent">
+        <div class="ico">💬</div>
+        <div class="qa-label">Ask Alex</div>
+        <div class="qa-sub">Chat with your coach</div>
+      </a>
+      <a href="{% url 'members:posture_upload' %}" class="qa-card">
+        <div class="ico">📸</div>
+        <div class="qa-label">Posture Check</div>
+        <div class="qa-sub">Upload a photo</div>
+      </a>
+      <a href="{% url 'members:nutrition_log' %}" class="qa-card">
+        <div class="ico">🥗</div>
+        <div class="qa-label">Log Food</div>
+        <div class="qa-sub">Track calories</div>
+      </a>
+      <a href="{% url 'members:progress' %}" class="qa-card">
+        <div class="ico">📊</div>
+        <div class="qa-label">Progress</div>
+        <div class="qa-sub">See your stats</div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Today's workout -->
+  <div class="m-section">
+    <div class="m-section-title">Today's Workout</div>
+    {% if today_exercises %}
+      {% for item in today_exercises %}
+      <div class="ex-card">
+        <div class="ex-dot {% if item.completed %}done{% endif %}"></div>
+        <div>
+          <div class="ex-name">{{ item.exercise.name }}</div>
+          <div class="ex-meta">
+            {% if item.sets and item.reps %}{{ item.sets }} × {{ item.reps }}{% endif %}
+            {% if item.notes %} · {{ item.notes }}{% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    {% elif active_program %}
+      <div class="empty-state">Rest day — recovery is part of the process 💪</div>
+    {% else %}
+      <div class="empty-state">No program yet</div>
+      <form method="post" action="{% url 'members:generate_program' %}">
+        {% csrf_token %}
+        <button type="submit" class="gen-btn">Generate My Program 🤖</button>
+      </form>
+    {% endif %}
+  </div>
+
+  <!-- Today's nutrition -->
+  <div class="m-section">
+    <div class="m-section-title">Today's Nutrition</div>
+    <div class="nut-card">
+      <div class="nut-row">
+        <div>
+          <div class="nut-cal">{{ total_cal|floatformat:0 }}</div>
+          <div class="nut-unit">kcal today</div>
+        </div>
+        <a href="{% url 'members:chat_new' %}" style="background:rgba(255,107,53,.15);border:1px solid rgba(255,107,53,.3);color:#FF6B35;border-radius:10px;padding:.5rem .85rem;text-decoration:none;font-size:.8rem;font-weight:600;">Log food →</a>
+      </div>
+      {% if today_nutrition %}
+      <div class="nut-macros">
+        <div class="nut-macro">
+          <div class="val">{{ today_protein|floatformat:0 }}g</div>
+          <div class="lbl">Protein</div>
+        </div>
+        <div class="nut-macro">
+          <div class="val">{{ today_carbs|floatformat:0 }}g</div>
+          <div class="lbl">Carbs</div>
+        </div>
+        <div class="nut-macro">
+          <div class="val">{{ today_fat|floatformat:0 }}g</div>
+          <div class="lbl">Fat</div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Recent chats -->
+  {% if recent_chats %}
+  <div class="m-section">
+    <div class="m-section-title">Recent Chats</div>
+    {% for conv in recent_chats %}
+    <a href="{% url 'members:chat_room' pk=conv.pk %}" class="chat-item">
+      <div class="chat-title">{{ conv.title|truncatechars:50 }}</div>
+      <div class="chat-time">{{ conv.updated_at|timesince }} ago</div>
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

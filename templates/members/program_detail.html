@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% block title %}{{ program.name }} — GymPro Coach{% endblock %}
+
+{% block extra_css %}
+<style>
+  body { background: #0f1119; }
+  .m-wrap { max-width: 640px; margin: 0 auto; padding: 1rem 1rem 5rem; }
+  .back-link { color: #FF6B35; text-decoration: none; font-size: .85rem; font-weight: 600; display: inline-block; margin-bottom: 1rem; }
+  .prog-hero {
+    background: linear-gradient(135deg, #1B1F3A, #2a2f5a);
+    border-radius: 20px; padding: 1.5rem; margin-bottom: 1.25rem;
+    border: 1px solid rgba(255,107,53,.25);
+  }
+  .prog-title { font-size: 1.3rem; font-weight: 800; color: #fff; margin-bottom: .3rem; }
+  .prog-meta { font-size: .8rem; color: rgba(255,255,255,.5); }
+  .prog-bar-bg { background: rgba(255,255,255,.1); border-radius: 99px; height: 6px; margin-top: .85rem; }
+  .prog-bar-fill { background: #FF6B35; border-radius: 99px; height: 6px; transition: width .4s; }
+  .prog-bar-label { font-size: .72rem; color: rgba(255,255,255,.5); margin-top: .35rem; }
+
+  .reasoning-card {
+    background: rgba(255,107,53,.06); border: 1px solid rgba(255,107,53,.2);
+    border-radius: 14px; padding: 1rem 1.1rem; margin-bottom: 1.25rem; cursor: pointer;
+  }
+  .reasoning-title { font-size: .85rem; font-weight: 700; color: rgba(255,255,255,.8); display: flex; align-items: center; justify-content: space-between; }
+  .reasoning-body { font-size: .82rem; color: rgba(255,255,255,.6); line-height: 1.55; margin-top: .65rem; display: none; }
+  .reasoning-body.open { display: block; }
+
+  .day-card {
+    background: #1B1F3A; border-radius: 18px; margin-bottom: 1rem;
+    border: 1px solid rgba(255,255,255,.08); overflow: hidden;
+  }
+  .day-header {
+    padding: 1rem 1.1rem; background: rgba(255,255,255,.03);
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    font-size: .9rem; font-weight: 700; color: rgba(255,255,255,.85);
+  }
+  .ex-row {
+    padding: .85rem 1.1rem; display: flex; align-items: center; gap: .85rem;
+    border-bottom: 1px solid rgba(255,255,255,.04);
+  }
+  .ex-row:last-child { border-bottom: none; }
+  .check-btn {
+    width: 32px; height: 32px; border-radius: 50%; border: 2px solid #FF6B35;
+    background: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: background .15s;
+  }
+  .check-btn.done { background: #FF6B35; border-color: #FF6B35; }
+  .check-btn svg { display: none; }
+  .check-btn.done svg { display: block; }
+  .ex-info { flex: 1; }
+  .ex-name { font-size: .9rem; font-weight: 600; color: #fff; }
+  .ex-name.done { text-decoration: line-through; color: rgba(255,255,255,.4); }
+  .ex-sets { font-size: .75rem; color: rgba(255,255,255,.45); margin-top: .15rem; }
+  .ex-notes { font-size: .72rem; color: rgba(255,107,53,.7); margin-top: .15rem; }
+
+  /* Demo GIFs */
+  .demo-wrap { padding: .75rem 1.1rem 1rem; border-top: 1px solid rgba(255,255,255,.05); }
+  .demo-title { font-size: .68rem; font-weight: 700; color: rgba(255,107,53,.7); letter-spacing: .06em; text-transform: uppercase; margin-bottom: .5rem; }
+  .demo-imgs { display: flex; gap: .5rem; }
+  .demo-img-wrap { flex: 1; border-radius: 10px; overflow: hidden; position: relative; background: #000; }
+  .demo-img-wrap.single { max-width: 200px; }
+  .demo-img-wrap img { width: 100%; height: auto; display: block; }
+  .demo-img-label { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,.6); font-size: .62rem; font-weight: 700; color: rgba(255,255,255,.8); padding: .25rem .4rem; text-align: center; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="m-wrap">
+  <a href="{% url 'members:program_list' %}" class="back-link">← Programs</a>
+
+  <div class="prog-hero">
+    <div class="prog-title">{{ program.name }}</div>
+    <div class="prog-meta">{{ done }} of {{ total }} exercises completed</div>
+    <div class="prog-bar-bg">
+      <div class="prog-bar-fill" style="width:{% if total %}{{ done|floatformat:0 }}{% else %}0{% endif %}%"></div>
+    </div>
+    <div class="prog-bar-label">
+      {% if total %}{{ done }}/{{ total }} done{% else %}No exercises yet{% endif %}
+    </div>
+  </div>
+
+  {% if program.ai_reasoning %}
+  <div class="reasoning-card" id="reasoning-card">
+    <div class="reasoning-title">
+      <span>🧠 Alex's reasoning</span>
+      <span id="reasoning-arrow">▼</span>
+    </div>
+    <div class="reasoning-body" id="reasoning-body">{{ program.ai_reasoning }}</div>
+  </div>
+  {% endif %}
+
+  {% for day in days %}
+  <div class="day-card">
+    <div class="day-header">Day {{ day.day_number }} — {{ day.name }}</div>
+    {% for ex in day.exercises.all %}
+    <div class="ex-row" id="ex-row-{{ ex.pk }}">
+      <button
+        class="check-btn {% if ex.completed %}done{% endif %}"
+        onclick="completeEx({{ ex.pk }}, this)"
+        {% if ex.completed %}disabled{% endif %}
+      >
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </button>
+      <div class="ex-info">
+        <div class="ex-name {% if ex.completed %}done{% endif %}">{{ ex.exercise.name }}</div>
+        <div class="ex-sets">
+          {% if ex.sets and ex.reps %}{{ ex.sets }} sets × {{ ex.reps }} reps{% endif %}
+        </div>
+        {% if ex.notes %}<div class="ex-notes">{{ ex.notes }}</div>{% endif %}
+      </div>
+    </div>
+    {% if ex.exercise.photo_url or ex.exercise.photo_url_2 %}
+    <div class="demo-wrap">
+      <div class="demo-title">How to do it</div>
+      <div class="demo-imgs">
+        {% if ex.exercise.photo_url %}
+        <div class="demo-img-wrap {% if not ex.exercise.photo_url_2 %}single{% endif %}">
+          <img src="{{ ex.exercise.photo_url }}" alt="{{ ex.exercise.name }}" loading="lazy">
+          {% if ex.exercise.photo_url_2 %}<div class="demo-img-label">View 1</div>{% endif %}
+        </div>
+        {% endif %}
+        {% if ex.exercise.photo_url_2 %}
+        <div class="demo-img-wrap">
+          <img src="{{ ex.exercise.photo_url_2 }}" alt="{{ ex.exercise.name }}" loading="lazy">
+          <div class="demo-img-label">View 2</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+    {% empty %}
+    <div style="padding:1rem;color:rgba(255,255,255,.35);font-size:.85rem;">No exercises assigned</div>
+    {% endfor %}
+  </div>
+  {% empty %}
+  <div style="text-align:center;padding:2rem;color:rgba(255,255,255,.35);">No days in this program</div>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('reasoning-card')?.addEventListener('click', function() {
+  var body = document.getElementById('reasoning-body');
+  var arrow = document.getElementById('reasoning-arrow');
+  body.classList.toggle('open');
+  arrow.textContent = body.classList.contains('open') ? '▲' : '▼';
+});
+
+function completeEx(id, btn) {
+  btn.disabled = true;
+  fetch('{% url "members:complete_exercise" exercise_id=0 %}'.replace('/0/', '/' + id + '/'), {
+    method: 'POST',
+    headers: {'X-CSRFToken': '{{ csrf_token }}'},
+  }).then(r => r.json()).then(data => {
+    if (data.ok) {
+      btn.classList.add('done');
+      var nameEl = btn.closest('.ex-row').querySelector('.ex-name');
+      nameEl && nameEl.classList.add('done');
+    } else {
+      btn.disabled = false;
+    }
+  }).catch(() => { btn.disabled = false; });
+}
+</script>
+{% endblock %}

@@ -52,19 +52,35 @@
     .lang-select option { color: #111; background: #fff; }
   </style>
 </head>
-<body{% if user.is_authenticated and user.student and not user.is_staff %} class="student-portal"{% endif %}>
+<body{% if user.is_authenticated and user.student and not user.is_staff %} class="student-portal"{% elif user.is_authenticated and user.member %} class="member-portal"{% endif %}>
 
 {% if user.is_authenticated %}
-<nav class="nav">
-  {% if user.is_staff or not user.student %}
+<nav class="nav{% if user.member %} nav-member{% endif %}">
+  {% if user.is_staff or not user.student and not user.member %}
   <a href="{% url 'students:list' %}" class="nav-brand" style="padding:0;">
+  {% elif user.member %}
+  <a href="{% url 'members:dashboard' %}" class="nav-brand" style="padding:0;">
   {% else %}
   <a href="{% url 'students:portal_dashboard' %}" class="nav-brand" style="padding:0;">
   {% endif %}
     <img src="{% static 'images/logo.png' %}" alt="GymProgram" style="height:62px;width:auto;display:block;">
   </a>
 
-  {% if user.is_staff or not user.student %}
+  {% if user.member %}
+  <!-- Member: compact top bar with profile link + logout -->
+  <div class="nav-links" style="gap:.5rem;">
+    <a href="{% url 'members:profile' %}" style="color:rgba(255,255,255,.85);font-size:.85rem;text-decoration:none;">
+      {{ user.member.name|truncatechars:16 }}
+    </a>
+    <form method="post" action="{% url 'logout' %}" style="margin:0;">
+      {% csrf_token %}
+      <button type="submit" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.65);font:inherit;font-size:.8rem;padding:.3rem .5rem;">
+        Logout
+      </button>
+    </form>
+  </div>
+
+  {% elif user.is_staff or not user.student %}
   <!-- Trainer: hamburger + full nav links (English only) -->
   <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu">
     <span></span><span></span><span></span>
@@ -140,6 +156,44 @@
 </script>
 
 {% block extra_js %}{% endblock %}
+
+{% if user.is_authenticated and user.member %}
+<!-- Member bottom tab bar -->
+{% with cur=request.resolver_match.url_name %}
+<nav class="bottom-nav member-bnav" role="navigation" aria-label="Member navigation">
+  <a href="{% url 'members:dashboard' %}" class="bnav-tab {% if cur == 'dashboard' %}active{% endif %}">
+    <svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+    </svg>
+    <span class="bnav-label">Home</span>
+  </a>
+  <a href="{% url 'members:program_list' %}" class="bnav-tab {% if cur == 'program_list' or cur == 'program_detail' %}active{% endif %}">
+    <svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>
+    </svg>
+    <span class="bnav-label">Program</span>
+  </a>
+  <a href="{% url 'members:chat_list' %}" class="bnav-tab {% if cur == 'chat_list' or cur == 'chat_room' %}active{% endif %}">
+    <svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    </svg>
+    <span class="bnav-label">Coach</span>
+  </a>
+  <a href="{% url 'members:nutrition_log' %}" class="bnav-tab {% if cur == 'nutrition_log' %}active{% endif %}">
+    <svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/>
+    </svg>
+    <span class="bnav-label">Nutrition</span>
+  </a>
+  <a href="{% url 'members:progress' %}" class="bnav-tab {% if cur == 'progress' %}active{% endif %}">
+    <svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+    </svg>
+    <span class="bnav-label">Progress</span>
+  </a>
+</nav>
+{% endwith %}
+{% endif %}
 
 {% if user.is_authenticated and user.student and not user.is_staff %}
 <!-- Student bottom tab bar -->

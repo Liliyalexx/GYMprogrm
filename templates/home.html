@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GYMprogrm — AI-Powered Fitness Platform</title>
+  <meta name="description" content="AI-powered fitness platform for personal trainers, their clients, and independent members. Programs, nutrition, posture analysis — all in one place.">
+  <link rel="icon" href="/static/images/logo.png">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0d16; color: #fff; line-height: 1.6; }
+
+    /* ── Nav ── */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(10,13,22,.85); backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(255,255,255,.07);
+      padding: .85rem 1.5rem; display: flex; align-items: center; gap: 1rem;
+    }
+    .nav-logo { display: flex; align-items: center; gap: .6rem; text-decoration: none; }
+    .nav-logo img { width: 32px; height: 32px; border-radius: 8px; }
+    .nav-logo span { font-size: 1.1rem; font-weight: 800; color: #fff; }
+    .nav-spacer { flex: 1; }
+    .nav-link { color: rgba(255,255,255,.6); text-decoration: none; font-size: .88rem; font-weight: 500; padding: .4rem .75rem; border-radius: 8px; transition: color .15s, background .15s; }
+    .nav-link:hover { color: #fff; background: rgba(255,255,255,.07); }
+    .nav-cta { background: linear-gradient(135deg, #FF6B35, #e0521e); color: #fff; font-weight: 700; font-size: .88rem; padding: .45rem 1.1rem; border-radius: 10px; text-decoration: none; transition: opacity .15s; }
+    .nav-cta:hover { opacity: .88; }
+
+    /* ── Hero ── */
+    .hero {
+      padding: 9rem 1.5rem 5rem; text-align: center; max-width: 800px; margin: 0 auto;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: rgba(255,107,53,.12); border: 1px solid rgba(255,107,53,.3);
+      border-radius: 99px; padding: .35rem 1rem; font-size: .8rem; color: #FF6B35; font-weight: 600;
+      margin-bottom: 1.5rem;
+    }
+    .hero h1 { font-size: clamp(2.2rem, 6vw, 3.8rem); font-weight: 900; line-height: 1.1; margin-bottom: 1.25rem; }
+    .hero h1 span { background: linear-gradient(135deg, #FF6B35, #ff9a6e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .hero-sub { font-size: 1.1rem; color: rgba(255,255,255,.6); max-width: 560px; margin: 0 auto 2.5rem; line-height: 1.65; }
+    .hero-actions { display: flex; gap: .85rem; justify-content: center; flex-wrap: wrap; }
+    .btn-primary { background: linear-gradient(135deg, #FF6B35, #e0521e); color: #fff; font-weight: 700; font-size: 1rem; padding: .85rem 2rem; border-radius: 14px; text-decoration: none; transition: opacity .15s; }
+    .btn-primary:hover { opacity: .88; }
+    .btn-outline { border: 1.5px solid rgba(255,255,255,.2); color: rgba(255,255,255,.85); font-weight: 600; font-size: 1rem; padding: .85rem 2rem; border-radius: 14px; text-decoration: none; transition: border-color .15s, color .15s; }
+    .btn-outline:hover { border-color: rgba(255,107,53,.5); color: #FF6B35; }
+
+    /* ── Stats strip ── */
+    .stats {
+      display: flex; justify-content: center; gap: 3rem; flex-wrap: wrap;
+      padding: 3rem 1.5rem; border-top: 1px solid rgba(255,255,255,.06); border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .stat-item { text-align: center; }
+    .stat-v { font-size: 2rem; font-weight: 900; color: #FF6B35; }
+    .stat-l { font-size: .78rem; color: rgba(255,255,255,.45); margin-top: .2rem; }
+
+    /* ── Section ── */
+    section { padding: 5rem 1.5rem; }
+    .section-inner { max-width: 1100px; margin: 0 auto; }
+    .section-tag { font-size: .75rem; font-weight: 700; letter-spacing: .1em; color: #FF6B35; text-transform: uppercase; margin-bottom: .75rem; }
+    .section-title { font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 900; margin-bottom: 1rem; }
+    .section-sub { font-size: 1rem; color: rgba(255,255,255,.55); max-width: 580px; line-height: 1.65; }
+
+    /* ── 3 user cards ── */
+    .user-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.25rem; margin-top: 3rem; }
+    .user-card {
+      background: #111526; border-radius: 22px; padding: 2rem;
+      border: 1px solid rgba(255,255,255,.08); position: relative; overflow: hidden;
+      transition: border-color .2s, transform .2s;
+    }
+    .user-card:hover { border-color: rgba(255,107,53,.35); transform: translateY(-3px); }
+    .user-card.featured { border-color: rgba(255,107,53,.4); background: linear-gradient(135deg, #111526, #1a1f3a); }
+    .user-card-badge {
+      position: absolute; top: 1.25rem; right: 1.25rem;
+      font-size: .65rem; font-weight: 800; padding: .25rem .6rem; border-radius: 99px; letter-spacing: .06em; text-transform: uppercase;
+    }
+    .badge-new { background: rgba(255,107,53,.2); color: #FF6B35; border: 1px solid rgba(255,107,53,.4); }
+    .badge-trainer { background: rgba(99,102,241,.2); color: #a5b4fc; border: 1px solid rgba(99,102,241,.3); }
+    .badge-client { background: rgba(34,197,94,.15); color: #4ade80; border: 1px solid rgba(34,197,94,.3); }
+    .user-ico { font-size: 2.5rem; margin-bottom: 1rem; }
+    .user-name { font-size: 1.25rem; font-weight: 800; margin-bottom: .5rem; }
+    .user-desc { font-size: .88rem; color: rgba(255,255,255,.55); margin-bottom: 1.5rem; line-height: 1.6; }
+    .user-features { list-style: none; }
+    .user-features li { font-size: .83rem; color: rgba(255,255,255,.7); padding: .3rem 0; padding-left: 1.4rem; position: relative; }
+    .user-features li::before { content: '✓'; position: absolute; left: 0; color: #FF6B35; font-weight: 700; }
+    .user-cta { display: inline-block; margin-top: 1.5rem; font-size: .85rem; font-weight: 700; color: #FF6B35; text-decoration: none; border: 1px solid rgba(255,107,53,.35); border-radius: 10px; padding: .55rem 1.1rem; transition: background .15s; }
+    .user-cta:hover { background: rgba(255,107,53,.1); }
+
+    /* ── How it works ── */
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-top: 3rem; }
+    .step { background: #111526; border-radius: 18px; padding: 1.5rem; border: 1px solid rgba(255,255,255,.07); }
+    .step-num { width: 36px; height: 36px; border-radius: 10px; background: rgba(255,107,53,.15); border: 1px solid rgba(255,107,53,.3); display: flex; align-items: center; justify-content: center; font-size: .85rem; font-weight: 800; color: #FF6B35; margin-bottom: 1rem; }
+    .step-title { font-size: .95rem; font-weight: 700; margin-bottom: .4rem; }
+    .step-desc { font-size: .82rem; color: rgba(255,255,255,.5); line-height: 1.55; }
+
+    /* ── AI section ── */
+    .ai-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-top: 3rem; }
+    @media (max-width: 640px) { .ai-grid { grid-template-columns: 1fr; } }
+    .ai-card { background: #111526; border-radius: 18px; padding: 1.5rem; border: 1px solid rgba(255,255,255,.07); }
+    .ai-card-ico { font-size: 1.75rem; margin-bottom: .75rem; }
+    .ai-card-title { font-size: .95rem; font-weight: 700; margin-bottom: .4rem; }
+    .ai-card-desc { font-size: .83rem; color: rgba(255,255,255,.5); line-height: 1.55; }
+    .ai-card.span2 { grid-column: span 2; }
+    @media (max-width: 640px) { .ai-card.span2 { grid-column: span 1; } }
+
+    /* ── Tech strip ── */
+    .tech-strip { display: flex; flex-wrap: wrap; gap: .65rem; margin-top: 2rem; }
+    .tech-pill { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 99px; padding: .3rem .85rem; font-size: .78rem; color: rgba(255,255,255,.65); }
+
+    /* ── Pricing ── */
+    .price-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; margin-top: 3rem; }
+    .price-card { background: #111526; border-radius: 18px; padding: 1.75rem; border: 1px solid rgba(255,255,255,.08); }
+    .price-card.highlight { border-color: rgba(255,107,53,.4); background: linear-gradient(135deg, #111526, #1a1f3a); }
+    .price-label { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: rgba(255,255,255,.4); margin-bottom: .5rem; }
+    .price-val { font-size: 2.2rem; font-weight: 900; color: #FF6B35; }
+    .price-unit { font-size: .8rem; color: rgba(255,255,255,.4); }
+    .price-desc { font-size: .83rem; color: rgba(255,255,255,.55); margin-top: .65rem; line-height: 1.55; }
+
+    /* ── Footer ── */
+    footer { border-top: 1px solid rgba(255,255,255,.07); padding: 2.5rem 1.5rem; text-align: center; }
+    .footer-logo { font-size: 1.1rem; font-weight: 800; color: #fff; margin-bottom: .5rem; }
+    .footer-sub { font-size: .82rem; color: rgba(255,255,255,.35); }
+    .footer-links { display: flex; gap: 1.5rem; justify-content: center; margin-top: 1rem; flex-wrap: wrap; }
+    .footer-links a { font-size: .82rem; color: rgba(255,255,255,.4); text-decoration: none; transition: color .15s; }
+    .footer-links a:hover { color: #FF6B35; }
+
+    @media (max-width: 600px) {
+      .nav-link { display: none; }
+      .stats { gap: 2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav class="nav">
+  <a class="nav-logo" href="/">
+    <img src="/static/images/logo.png" alt="GYMprogrm">
+    <span>GYMprogrm</span>
+  </a>
+  <div class="nav-spacer"></div>
+  <a class="nav-link" href="#features">Features</a>
+  <a class="nav-link" href="#ai">AI</a>
+  <a class="nav-link" href="#pricing">Pricing</a>
+  <a class="nav-cta" href="/members/register/">Join Free</a>
+</nav>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-badge">🚀 Now with AI Coach & Independent Member access</div>
+  <h1>Your fitness,<br><span>powered by AI</span></h1>
+  <p class="hero-sub">The complete platform for personal trainers, their clients, and independent members who want professional-grade AI coaching — without needing a trainer.</p>
+  <div class="hero-actions">
+    <a class="btn-primary" href="/members/register/">Start as Independent Member</a>
+    <a class="btn-outline" href="/login/">Trainer Login</a>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stats">
+  <div class="stat-item"><div class="stat-v">3</div><div class="stat-l">User types</div></div>
+  <div class="stat-item"><div class="stat-v">4-in-1</div><div class="stat-l">AI expertise (PT + Nutritionist + Doctor + Physio)</div></div>
+  <div class="stat-item"><div class="stat-v">37+</div><div class="stat-l">Exercises with pro GIF demos</div></div>
+  <div class="stat-item"><div class="stat-v">$8/mo</div><div class="stat-l">Total running cost</div></div>
+</div>
+
+<!-- Who is it for -->
+<section id="features">
+  <div class="section-inner">
+    <div class="section-tag">Who it's for</div>
+    <h2 class="section-title">Three ways to use GYMprogrm</h2>
+    <p class="section-sub">One platform. Three completely different experiences, each built specifically for its user.</p>
+
+    <div class="user-cards">
+
+      <!-- Trainer -->
+      <div class="user-card">
+        <div class="user-card-badge badge-trainer">Trainer</div>
+        <div class="user-ico">👩‍💼</div>
+        <div class="user-name">Personal Trainer</div>
+        <div class="user-desc">Run your coaching business from one dashboard. AI does the heavy analysis work — you review and confirm before clients see anything.</div>
+        <ul class="user-features">
+          <li>Invite clients by email, manage intake forms</li>
+          <li>AI program generation (blood test aware)</li>
+          <li>Blood test PDF analysis with exercise modifications</li>
+          <li>Exercise library with AI illustrations</li>
+          <li>Billing: plans, payment reminders, overdue tracking</li>
+          <li>Doctor referral cards on client portals</li>
+          <li>Payment reminder emails (automated daily cron)</li>
+        </ul>
+        <a class="user-cta" href="/login/">Trainer Login →</a>
+      </div>
+
+      <!-- Client -->
+      <div class="user-card">
+        <div class="user-card-badge badge-client">Client</div>
+        <div class="user-ico">🏃‍♀️</div>
+        <div class="user-name">Trainer's Client</div>
+        <div class="user-desc">Your trainer sets up your program. You follow it, log workouts, and track progress — all from your phone like a native app.</div>
+        <ul class="user-features">
+          <li>Invite link or Google login — no app store</li>
+          <li>PWA: install on iPhone or Android home screen</li>
+          <li>Program with exercise photos, sets, reps, rest timer</li>
+          <li>Workout logging with previous session reference</li>
+          <li>Progress history and body measurements</li>
+          <li>Billing: view plan, pay via Venmo/PayPal/Zelle</li>
+          <li>10-language interface</li>
+        </ul>
+        <a class="user-cta" href="/portal/">Client Portal →</a>
+      </div>
+
+      <!-- Member -->
+      <div class="user-card featured">
+        <div class="user-card-badge badge-new">New</div>
+        <div class="user-ico">✨</div>
+        <div class="user-name">Independent Member</div>
+        <div class="user-desc">No trainer needed. Register yourself, describe your goals, upload your blood test — and get a program designed by AI that thinks like 4 professionals at once.</div>
+        <ul class="user-features">
+          <li>Self-register — no invite, no trainer required</li>
+          <li>AI Coach Alex: PT + nutritionist + doctor + physio</li>
+          <li>Programs tailored to your exact aesthetic goal</li>
+          <li>Cortisol & hormonal awareness in program design</li>
+          <li>Blood test & prescription-aware exercise selection</li>
+          <li>Automatic nutrition logging via chat</li>
+          <li>Daily calorie & macro targets from your profile</li>
+          <li>Posture analysis from photo</li>
+          <li>Professional exercise GIFs for every exercise</li>
+        </ul>
+        <a class="user-cta" href="/members/register/">Join Free →</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- AI section -->
+<section id="ai" style="background: #0d1020;">
+  <div class="section-inner">
+    <div class="section-tag">AI Coaching</div>
+    <h2 class="section-title">Not a chatbot. Four professionals in one.</h2>
+    <p class="section-sub">The AI Coach Alex combines knowledge that typically requires four separate appointments — and applies all of it to your specific body and goals at once.</p>
+
+    <div class="ai-grid">
+      <div class="ai-card">
+        <div class="ai-card-ico">🏋️</div>
+        <div class="ai-card-title">Elite Personal Trainer</div>
+        <div class="ai-card-desc">Understands the difference between aesthetic shaping and fitness training. Knows which exercises build the look you want — and which ones work against it. Considers exercise order, rep ranges, and rest periods for your specific goal.</div>
+      </div>
+      <div class="ai-card">
+        <div class="ai-card-ico">🥗</div>
+        <div class="ai-card-title">Registered Sports Dietitian</div>
+        <div class="ai-card-desc">Automatically logs your food when you describe it in chat. Calculates exact macros from your profile using Mifflin-St Jeor with activity and goal adjustments. Knows how caloric deficit affects your training capacity.</div>
+      </div>
+      <div class="ai-card">
+        <div class="ai-card-ico">🩺</div>
+        <div class="ai-card-title">Sports Medicine Doctor</div>
+        <div class="ai-card-desc">Reads your blood test and doctor prescription. Extracts iron, B12, D3, thyroid markers, and hormonal values. Adjusts training volume and intensity based on what your blood work says about your recovery capacity.</div>
+      </div>
+      <div class="ai-card">
+        <div class="ai-card-ico">🧬</div>
+        <div class="ai-card-title">Functional Medicine + Physio</div>
+        <div class="ai-card-desc">Understands cortisol response: intense training in a stressed body causes fat retention and muscle breakdown. Identifies postural imbalances and prescribes corrective exercises. Flags contraindicated exercises for your body type and goals.</div>
+      </div>
+      <div class="ai-card span2">
+        <div class="ai-card-ico">⚡</div>
+        <div class="ai-card-title">How the program generation works</div>
+        <div class="ai-card-desc">When you ask Alex for a program, it performs an integrated assessment: classifies your goal (aesthetic shaping vs fitness vs fat loss), lists which muscles to GROW and which to CONTROL, evaluates your hormonal risk profile from age + activity + goal, reads your blood test for deficiencies, identifies exercises from the library that would work AGAINST your goal and excludes them — then designs the program. The reasoning behind every decision is shown on your program page.</div>
+      </div>
+    </div>
+
+    <div class="tech-strip" style="margin-top:2.5rem;">
+      <div class="tech-pill">Claude Sonnet 4.6 — Chat & Program Design</div>
+      <div class="tech-pill">Claude Opus 4.7 — When blood test attached</div>
+      <div class="tech-pill">Mifflin-St Jeor BMR</div>
+      <div class="tech-pill">USDA nutrition values</div>
+      <div class="tech-pill">Gymvisual.com exercise GIFs</div>
+    </div>
+  </div>
+</section>
+
+<!-- How it works for members -->
+<section>
+  <div class="section-inner">
+    <div class="section-tag">Getting started</div>
+    <h2 class="section-title">From zero to your personalized program in minutes</h2>
+    <p class="section-sub">No gym membership. No trainer appointment. No app store.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-title">Register</div>
+        <div class="step-desc">Create your account at /members/register/ — name, email, password. That's it. No invite needed.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-title">Onboarding</div>
+        <div class="step-desc">3 steps: your fitness goals → physical stats (age, weight, height) → optionally upload your blood test or doctor prescription.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-title">Talk to Alex</div>
+        <div class="step-desc">Open the AI Chat and describe what you want. Ask for a program, log your meals, ask about your blood test results — Alex handles all of it.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-title">Follow your program</div>
+        <div class="step-desc">Your program appears in the Program tab with animated GIF demonstrations for every exercise. Tick off exercises as you complete them.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-title">Track nutrition</div>
+        <div class="step-desc">Tell Alex what you ate — it logs calories and macros automatically. Your daily targets are calculated from your profile and goal.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-title">Posture & progress</div>
+        <div class="step-desc">Upload a standing photo for AI posture analysis. Track your weekly exercise count and 14-day calorie trend in the Progress tab.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Pricing -->
+<section id="pricing" style="background: #0d1020;">
+  <div class="section-inner">
+    <div class="section-tag">Pricing</div>
+    <h2 class="section-title">Running cost: ~$8/month total</h2>
+    <p class="section-sub">GYMprogrm is a platform I run for my own training business. Here's what it costs to operate.</p>
+
+    <div class="price-cards">
+      <div class="price-card highlight">
+        <div class="price-label">Hosting</div>
+        <div class="price-val">$5<span class="price-unit">/mo</span></div>
+        <div class="price-desc">Railway (Hobby plan) — Django app + managed PostgreSQL + automated deploys from GitHub + daily cron jobs.</div>
+      </div>
+      <div class="price-card">
+        <div class="price-label">AI (Anthropic)</div>
+        <div class="price-val">~$2–8<span class="price-unit">/mo</span></div>
+        <div class="price-desc">Claude Sonnet 4.6 for programs and chat. Claude Opus 4.7 when blood tests are attached. ~$0.05–0.15 per program generated.</div>
+      </div>
+      <div class="price-card">
+        <div class="price-label">Everything else</div>
+        <div class="price-val">$0</div>
+        <div class="price-desc">Cloudinary (media storage), Resend (email), Google OAuth — all on free tiers. Domain: ~$15/year.</div>
+      </div>
+    </div>
+
+    <div style="margin-top:2.5rem;padding:1.5rem;background:#111526;border-radius:16px;border:1px solid rgba(255,255,255,.08);">
+      <p style="font-size:.88rem;color:rgba(255,255,255,.55);line-height:1.7;">
+        <strong style="color:#fff;">Built with Claude Code</strong> — the entire platform (trainer dashboard, client portal, AI coach, member features) was built solo using Anthropic's Claude Code AI coding assistant. No agency, no freelancers. Development cost: the Claude Pro/Max subscription during the build period.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-logo">GYMprogrm</div>
+  <div class="footer-sub">AI-powered fitness platform · gymprogrm.org</div>
+  <div class="footer-links">
+    <a href="/members/register/">Join as Member</a>
+    <a href="/login/">Trainer Login</a>
+    <a href="/portal/">Client Portal</a>
+    <a href="https://github.com/Liliyalexx/GYMprogrm" target="_blank">GitHub</a>
+  </div>
+</footer>
+
+</body>
+</html>

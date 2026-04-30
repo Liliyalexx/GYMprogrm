@@ -3,8 +3,8 @@
 
   <h1>GYMprogrm</h1>
 
-  <p><strong>AI-powered web app for personal trainers.</strong><br/>
-  Manage clients · Generate programs · Analyze blood tests · Track progress · Installable on any phone.</p>
+  <p><strong>AI-powered web app for personal trainers — and self-serve AI coaching for independent members.</strong><br/>
+  Manage clients · Generate programs · Analyze blood tests · Track progress · AI Coach · Installable on any phone.</p>
 
   ![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python)
   ![Django](https://img.shields.io/badge/Django-5.2-green?logo=django)
@@ -24,9 +24,10 @@ GYMprogrm is a full-stack web application I built from scratch to run my persona
 
 The core idea: **the AI does the heavy analytical work** (reading blood tests, generating tailored programs, writing exercise descriptions) so I can focus on coaching. Every AI output passes through me before clients see it — I review, adjust, and confirm.
 
-The app has two sides:
+The app has three sides:
 - **Trainer dashboard** — only I can access this (password-protected). I manage all clients, generate programs, review AI analysis, and track payments.
 - **Client portal** — each client gets their own account via invite link or Google login. They see their program, log workouts, track progress, and pay — all from their phone.
+- **Independent Member portal** — anyone can self-register at `/members/register/` with no invite needed. They go through a 3-step onboarding, then get access to AI Coach Alex, an AI-generated workout program, a nutrition log, posture analysis, and a progress tracker — all without a human trainer involved.
 
 ---
 
@@ -49,6 +50,15 @@ The app has two sides:
 
 ### Client Login — Mobile View
 ![Client Portal](docs/screenshots/client_portal.png)
+
+### AI Coach Alex — Conversation
+![AI Coach Chat](docs/screenshots/member_chat.png)
+
+### Independent Member — Program with Exercise GIFs
+![Member Program](docs/screenshots/member_program.png)
+
+### Nutrition Log — Daily Targets & Macros
+![Nutrition Log](docs/screenshots/member_nutrition.png)
 
 ---
 
@@ -123,6 +133,36 @@ Each email is sent at most once per day per client (tracked with a `payment_remi
 
 The entire interface is translated into 10 languages: English, Russian, Spanish, French, German, Italian, Portuguese, Chinese, Arabic, Japanese. Clients pick their language from a dropdown in the header — it persists across sessions. Program names and day names are stored in both English and Russian so they display correctly regardless of language choice.
 
+### 8. Independent Member — self-serve AI coaching
+
+Anyone can sign up at `gymprogrm.org/members/register/` without an invite or a trainer. The flow:
+
+**Step 1 — Goals & activity level.** The member picks their primary goal (fat loss, muscle gain, body recomposition, athletic performance, etc.) and self-reported activity level. These drive every downstream AI decision.
+
+**Step 2 — Physical stats.** Height, weight, age, gender, and any injuries or health notes. The app calculates daily calorie and macro targets using the Mifflin-St Jeor equation adjusted for the chosen goal.
+
+**Step 3 — Medical documents.** The member optionally uploads a doctor prescription and/or blood test results. When a blood test is uploaded, Claude Sonnet 4.6 reads it the same way it does for trainer-managed clients. These documents are stored and automatically included whenever the AI generates or updates a program.
+
+**AI Coach Alex.** After onboarding, members get access to a conversational AI coach named Alex — a single integrated professional combining the knowledge of a personal trainer, nutritionist, and sports doctor. Alex does more than answer questions:
+
+- When the member describes what they ate, Alex automatically logs it to the Nutrition Log (triggered by a `NUTRITION_LOG` signal detected in the response). No separate form needed.
+- When the member asks for a program, Alex generates a complete, database-backed workout program (triggered by a `CREATE_PROGRAM` signal). The program appears immediately in the Program tab.
+- Conversations support full message management: individual messages can be edited or deleted, and conversations can be bulk-selected and deleted.
+
+**Program generation.** When a program is generated — whether directly from the coach or from the program page — Claude acts simultaneously as PT, nutritionist, sports doctor, and physiotherapist. The prompt includes the member's uploaded blood test and doctor prescription. Claude:
+- Considers cortisol response and hormonal risk markers from the blood test
+- Flags contraindicated exercises based on the prescription and lab values
+- Identifies which muscle groups to grow, which to maintain/control, and which to avoid — mapped to the member's specific aesthetic or performance goal
+- Sources real exercise GIFs from gymvisual.com with a consistent dark-background style so the visual presentation is professional and uniform
+
+**Nutrition Log.** A dedicated tab shows today's calorie and macro progress against the calculated targets, with per-macro progress bars. Members can add food entries manually or let Alex log automatically from conversation. Past entries appear with an "Add again today" shortcut, and a 7-day calorie history chart visualizes the week at a glance.
+
+**Posture Analysis.** The member uploads a standing photo. Claude Sonnet 4.6 analyses posture, flags alignment concerns (e.g. anterior pelvic tilt, uneven shoulders), and recommends corrective exercises.
+
+**Progress page.** Shows weekly exercise count, a 14-day calorie chart, and a summary of the blood test analysis findings — so the member can see how their training, nutrition, and health markers fit together over time.
+
+**Bottom navigation.** Five tabs: Home · Program · Alex (Coach) · Nutrition · Progress.
+
 ---
 
 ## Features
@@ -149,6 +189,24 @@ The entire interface is translated into 10 languages: English, Russian, Spanish,
 - Direct payment links (Venmo / PayPal / Zelle)
 - 10-language interface
 
+### Independent Member side
+- Self-registration at `/members/register/` — no invite, no trainer required
+- 3-step onboarding: goals & activity level → physical stats → medical document upload (prescription + blood test)
+- Daily calorie and macro targets calculated from profile (Mifflin-St Jeor + goal adjustment)
+- AI Coach Alex — conversational coaching integrating PT, nutritionist, and sports doctor knowledge
+  - Automatic nutrition logging from natural conversation (`NUTRITION_LOG` signal)
+  - Automatic full program generation from conversation (`CREATE_PROGRAM` signal)
+  - Message edit and delete; bulk conversation delete
+- AI program generation reads uploaded blood test and doctor prescription
+  - Cortisol response and hormonal risk considered
+  - Contraindicated exercises identified and excluded
+  - Muscle groups categorized as GROW / CONTROL / AVOID per the member's aesthetic goal
+  - Real animated GIF demos from gymvisual.com (consistent dark-background style) for every exercise
+- Nutrition Log: daily macro progress bars, 7-day calorie chart, "Add again today" shortcut from history
+- Posture Analysis: photo upload → AI flags alignment issues and recommends corrective exercises
+- Progress page: weekly exercise count, 14-day calorie chart, blood test analysis summary
+- Bottom tab navigation: Home · Program · Alex (Coach) · Nutrition · Progress
+
 ---
 
 ## Tech stack
@@ -158,6 +216,7 @@ The entire interface is translated into 10 languages: English, Russian, Spanish,
 | Backend | Django 5.2 + Python 3.11 | Mature, batteries-included, great ORM, fast to build with |
 | Database | PostgreSQL (prod) / SQLite (dev) | Relational data fits naturally; Railway provides managed Postgres |
 | AI — programs & blood analysis | Anthropic Claude Sonnet 4.6 | Best reasoning for complex, multi-step analysis tasks |
+| AI — integrated coaching | Anthropic Claude Sonnet 4.6 | Powers AI Coach Alex — conversational PT + nutritionist + sports doctor with signal detection |
 | AI — short text (posture tips) | Anthropic Claude Haiku 4.5 | 10× cheaper than Sonnet for simple generation tasks |
 | AI — exercise illustrations | OpenAI DALL-E 3 | Best image generation for realistic exercise form photos |
 | Auth | Django built-in + django-allauth | Google OAuth, email login, password reset — all in one library |
@@ -252,6 +311,11 @@ GYMprogrm/
 │   ├── models.py      # WorkoutProgram, ProgramDay, ProgramExercise, ExerciseLibrary
 │   ├── views.py       # Program CRUD + AI generation endpoint
 │   └── ai.py          # All Claude/OpenAI calls (program gen, blood analysis, illustrations)
+├── members/           # Independent member registration, onboarding, AI coach, nutrition, posture, progress
+│   ├── models.py      # Member, MemberProgram, Conversation, Message, NutritionLog, PostureAnalysis
+│   ├── views.py       # Registration, onboarding steps, coach chat, nutrition log, posture, progress
+│   ├── forms.py       # OnboardingForms (goals, stats, documents)
+│   └── ai.py          # Alex coach logic, signal detection (NUTRITION_LOG, CREATE_PROGRAM), program gen
 ├── progress/          # Workout logs per session
 │   └── models.py      # WorkoutLog, ExerciseLog
 ├── measurements/      # Body measurements over time
@@ -262,7 +326,8 @@ GYMprogrm/
 ├── templates/
 │   ├── base.html      # Base layout — trainer nav OR student bottom tab bar
 │   ├── students/      # Student portal pages + trainer billing pages
-│   └── programs/      # Program detail, exercise library
+│   ├── programs/      # Program detail, exercise library
+│   └── members/       # Member onboarding, coach chat, nutrition log, posture, progress
 ├── static/
 │   ├── css/base.css   # Global design system + responsive + bottom nav
 │   ├── images/        # Logo, exercise illustrations
@@ -289,6 +354,18 @@ Student
 
 TrainerPaymentSettings   # singleton — trainer's global Venmo/PayPal/Zelle handles
 DoctorProfile            # specialist referral cards shown on client portal
+
+Member                   # independent member (self-registered, no trainer)
+  ├── goal, activity_level, height, weight, age, gender
+  ├── daily_calories, protein_target, carb_target, fat_target  # calculated on onboarding
+  ├── doctor_prescription (file), blood_test (file)
+  ├── MemberProgram (FK)
+  │     └── MemberProgramDay (FK)
+  │           └── MemberProgramExercise (FK)  # includes gif_url from gymvisual.com
+  ├── Conversation (FK)
+  │     └── Message (FK)   # role (user/assistant), editable, deletable
+  ├── NutritionLog (FK)    # date, food_name, calories, protein, carbs, fat
+  └── PostureAnalysis (FK) # photo upload, AI analysis text, recommended exercises
 ```
 
 ---
@@ -311,6 +388,8 @@ Visit `http://localhost:8000` — log in as the superuser (trainer account).
 
 Students access their portal at `http://localhost:8000/portal/`.
 
+Independent members register at `http://localhost:8000/members/register/`.
+
 ---
 
 ## Environment variables
@@ -322,7 +401,7 @@ DATABASE_URL=                       # leave blank → uses SQLite locally
 ALLOWED_HOSTS=localhost,127.0.0.1
 CSRF_TRUSTED_ORIGINS=               # https://gymprogrm.org
 
-ANTHROPIC_API_KEY=                  # required — program generation & blood analysis
+ANTHROPIC_API_KEY=                  # required — program generation, blood analysis & AI Coach Alex
 OPENAI_API_KEY=                     # required — exercise illustrations (DALL-E 3)
 
 CLOUDINARY_URL=                     # optional — persistent media on Railway

@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% block title %}Set Up Your Profile{% endblock %}
+
+{% block extra_css %}
+<style>
+  body { background: #0f1119; }
+  .ob-wrap { max-width: 500px; margin: 0 auto; padding: 1.5rem 1rem 5rem; }
+  .ob-steps { display: flex; gap: .5rem; margin-bottom: 2rem; }
+  .ob-step {
+    flex: 1; height: 4px; border-radius: 99px;
+    background: rgba(255,255,255,.15);
+  }
+  .ob-step.done { background: #FF6B35; }
+  .ob-title { color: #fff; font-size: 1.4rem; font-weight: 800; margin-bottom: .4rem; }
+  .ob-sub { color: rgba(255,255,255,.55); font-size: .9rem; margin-bottom: 1.5rem; }
+  .ob-card { background: #1B1F3A; border-radius: 20px; padding: 1.5rem; border: 1px solid rgba(255,107,53,.15); }
+  .ob-field { margin-bottom: 1.1rem; }
+  .ob-field label { display: block; font-size: .8rem; font-weight: 600; color: rgba(255,255,255,.6); margin-bottom: .4rem; letter-spacing: .04em; }
+  .ob-field input, .ob-field textarea, .ob-field select {
+    width: 100%; box-sizing: border-box;
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
+    border-radius: 10px; padding: .7rem 1rem; color: #fff; font-size: .95rem;
+    outline: none; font-family: inherit;
+  }
+  .ob-field textarea { resize: vertical; min-height: 80px; }
+  .ob-field select option { color: #111; background: #fff; }
+  .ob-field input:focus, .ob-field textarea:focus, .ob-field select:focus { border-color: #FF6B35; }
+  .ob-btn {
+    width: 100%; padding: .85rem; border-radius: 12px; border: none;
+    background: linear-gradient(135deg, #FF6B35, #e0521e);
+    color: #fff; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: .5rem;
+  }
+  .ob-skip { text-align: center; margin-top: 1rem; }
+  .ob-skip a { color: rgba(255,255,255,.4); font-size: .85rem; text-decoration: none; }
+  .file-hint { font-size: .75rem; color: rgba(255,255,255,.4); margin-top: .3rem; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ob-wrap">
+  <div class="ob-steps">
+    <div class="ob-step {% if step >= 1 %}done{% endif %}"></div>
+    <div class="ob-step {% if step >= 2 %}done{% endif %}"></div>
+    <div class="ob-step {% if step >= 3 %}done{% endif %}"></div>
+  </div>
+
+  {% if step == 1 %}
+  <div class="ob-title">Your fitness goals 🎯</div>
+  <div class="ob-sub">Tell Alex what you're working towards</div>
+  <div class="ob-card">
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="step" value="1">
+      <div class="ob-field">
+        <label>What are your main goals?</label>
+        <textarea name="goals" placeholder="e.g. Lose 10kg, build muscle, improve posture, recover from back pain...">{{ member.goals }}</textarea>
+      </div>
+      <div class="ob-field">
+        <label>Any health conditions or injuries?</label>
+        <textarea name="health_conditions" placeholder="e.g. Lower back pain, knee injury, diabetes... or leave blank if none">{{ member.health_conditions }}</textarea>
+      </div>
+      <div class="ob-field">
+        <label>Current activity level</label>
+        <select name="activity_level">
+          <option value="">Select...</option>
+          <option value="sedentary" {% if member.activity_level == 'sedentary' %}selected{% endif %}>Sedentary (desk job, minimal exercise)</option>
+          <option value="light" {% if member.activity_level == 'light' %}selected{% endif %}>Light (1–2 workouts/week)</option>
+          <option value="moderate" {% if member.activity_level == 'moderate' %}selected{% endif %}>Moderate (3–4 workouts/week)</option>
+          <option value="active" {% if member.activity_level == 'active' %}selected{% endif %}>Active (5+ workouts/week)</option>
+          <option value="very_active" {% if member.activity_level == 'very_active' %}selected{% endif %}>Very Active / Athlete</option>
+        </select>
+      </div>
+      <button type="submit" class="ob-btn">Continue →</button>
+    </form>
+  </div>
+
+  {% elif step == 2 %}
+  <div class="ob-title">Your body stats 📏</div>
+  <div class="ob-sub">Helps Alex personalise your program</div>
+  <div class="ob-card">
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="step" value="2">
+      <div class="ob-field">
+        <label>Date of birth</label>
+        <input type="date" name="date_of_birth" value="{{ member.date_of_birth|date:'Y-m-d' }}">
+      </div>
+      <div class="ob-field">
+        <label>Gender</label>
+        <select name="gender">
+          <option value="">Prefer not to say</option>
+          <option value="M" {% if member.gender == 'M' %}selected{% endif %}>Male</option>
+          <option value="F" {% if member.gender == 'F' %}selected{% endif %}>Female</option>
+          <option value="O" {% if member.gender == 'O' %}selected{% endif %}>Other</option>
+        </select>
+      </div>
+      <div class="row2">
+        <div class="ob-field">
+          <label>Height (cm)</label>
+          <input type="number" name="height_cm" placeholder="175" step="0.1" value="{{ member.height_cm }}">
+        </div>
+        <div class="ob-field">
+          <label>Weight (kg)</label>
+          <input type="number" name="weight_kg" placeholder="70" step="0.1" value="{{ member.weight_kg }}">
+        </div>
+      </div>
+      <button type="submit" class="ob-btn">Continue →</button>
+    </form>
+  </div>
+
+  {% elif step == 3 %}
+  <div class="ob-title">Upload documents 📄</div>
+  <div class="ob-sub">Optional — helps Alex create a smarter program</div>
+  <div class="ob-card">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="hidden" name="step" value="3">
+      <div class="ob-field">
+        <label>Doctor's prescription / referral</label>
+        <input type="file" name="doctor_prescription_file" accept=".pdf,.jpg,.jpeg,.png">
+        <div class="file-hint">PDF or image • Alex will read it and adjust your program accordingly</div>
+      </div>
+      <div class="ob-field">
+        <label>Blood test results</label>
+        <input type="file" name="blood_test_file" accept=".pdf,.jpg,.jpeg,.png">
+        <div class="file-hint">PDF or image • Alex will analyse key markers for nutrition advice</div>
+      </div>
+      <button type="submit" class="ob-btn">Finish setup 🚀</button>
+    </form>
+    <div class="ob-skip"><a href="{% url 'members:onboarding' %}" onclick="document.querySelector('form input[name=step]').value='3'">Skip for now</a></div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

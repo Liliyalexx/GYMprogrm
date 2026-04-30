@@ -1,0 +1,264 @@
+{% extends 'base.html' %}
+{% block title %}Coach Chat — GymPro Coach{% endblock %}
+
+{% block extra_css %}
+<style>
+  body { background: #0f1119; }
+  .m-wrap { max-width: 640px; margin: 0 auto; padding: 1rem 1rem 5rem; }
+  .m-page-title { font-size: 1.3rem; font-weight: 800; color: #fff; margin-bottom: 1.25rem; }
+  .new-btn {
+    display: block; width: 100%; box-sizing: border-box;
+    background: linear-gradient(135deg, #FF6B35, #e0521e);
+    color: #fff; font-weight: 700; font-size: .95rem; padding: .85rem;
+    border-radius: 14px; text-align: center; text-decoration: none; margin-bottom: 1rem;
+  }
+
+  /* Toolbar row */
+  .toolbar {
+    display: flex; align-items: center; gap: .6rem; margin-bottom: 1rem;
+    min-height: 36px;
+  }
+  .select-all-wrap {
+    display: flex; align-items: center; gap: .5rem; cursor: pointer;
+    color: rgba(255,255,255,.5); font-size: .82rem; user-select: none;
+  }
+  .select-all-wrap input[type=checkbox] { display: none; }
+  .custom-cb {
+    width: 20px; height: 20px; border-radius: 6px;
+    border: 2px solid rgba(255,255,255,.2); background: transparent;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: border-color .15s, background .15s;
+  }
+  .custom-cb.checked { border-color: #FF6B35; background: #FF6B35; }
+  .custom-cb.indeterminate { border-color: #FF6B35; background: rgba(255,107,53,.25); }
+  .custom-cb svg { display: none; }
+  .custom-cb.checked svg { display: block; }
+
+  .toolbar-spacer { flex: 1; }
+
+  .bulk-del-btn {
+    display: none; align-items: center; gap: .4rem;
+    background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.25);
+    color: #f87171; font-size: .82rem; font-weight: 700; border-radius: 10px;
+    padding: .45rem .9rem; cursor: pointer; transition: background .15s;
+    white-space: nowrap;
+  }
+  .bulk-del-btn.visible { display: flex; }
+  .bulk-del-btn:hover { background: rgba(239,68,68,.22); }
+
+  /* Conversation rows */
+  .conv-row {
+    display: flex; align-items: center; gap: .5rem; margin-bottom: .6rem;
+  }
+
+  /* Row checkbox */
+  .row-cb-wrap { flex-shrink: 0; cursor: pointer; padding: .5rem .25rem; }
+  .row-cb-wrap input[type=checkbox] { display: none; }
+  .row-cb {
+    width: 20px; height: 20px; border-radius: 6px;
+    border: 2px solid rgba(255,255,255,.15); background: transparent;
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color .15s, background .15s;
+  }
+  .row-cb.checked { border-color: #FF6B35; background: #FF6B35; }
+  .row-cb svg { display: none; }
+  .row-cb.checked svg { display: block; }
+
+  .conv-item {
+    background: #1B1F3A; border-radius: 14px; padding: 1rem 1.1rem;
+    text-decoration: none; flex: 1;
+    border: 1px solid rgba(255,255,255,.07);
+    display: flex; align-items: center; gap: .85rem;
+    transition: border-color .15s;
+  }
+  .conv-item:hover { border-color: rgba(255,107,53,.3); }
+  .conv-item.selected { border-color: rgba(255,107,53,.4); background: rgba(255,107,53,.06); }
+  .conv-ico { font-size: 1.5rem; flex-shrink: 0; }
+  .conv-title { font-size: .92rem; font-weight: 600; color: #fff; }
+  .conv-time { font-size: .72rem; color: rgba(255,255,255,.4); margin-top: .2rem; }
+
+  .del-btn {
+    background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.2);
+    border-radius: 12px; padding: .75rem .7rem; cursor: pointer; color: rgba(239,68,68,.7);
+    font-size: .85rem; flex-shrink: 0; transition: background .15s, color .15s; line-height: 1;
+  }
+  .del-btn:hover { background: rgba(239,68,68,.2); color: #f87171; }
+
+  .empty-state { text-align: center; padding: 3rem 1rem; color: rgba(255,255,255,.35); }
+  .intro-card {
+    background: rgba(255,107,53,.07); border: 1px solid rgba(255,107,53,.2);
+    border-radius: 16px; padding: 1.25rem; margin-bottom: 1.25rem;
+  }
+  .intro-card h3 { color: #fff; font-size: .95rem; font-weight: 700; margin-bottom: .5rem; }
+  .intro-card p { font-size: .82rem; color: rgba(255,255,255,.6); line-height: 1.5; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="m-wrap">
+  <div class="m-page-title">Coach Alex 💬</div>
+
+  <div class="intro-card">
+    <h3>Your personal trainer & nutritionist</h3>
+    <p>Ask Alex anything — program advice, food tracking, injury modifications, motivation. Just type naturally, like texting a friend.</p>
+  </div>
+
+  <a href="{% url 'members:chat_new' %}" class="new-btn">+ New Conversation</a>
+
+  {% if convs %}
+  <!-- Toolbar: select all + bulk delete -->
+  <div class="toolbar">
+    <label class="select-all-wrap" onclick="toggleSelectAll()">
+      <div class="custom-cb" id="select-all-cb">
+        <svg viewBox="0 0 12 10" width="10" height="8" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="1 5 4.5 8.5 11 1"/>
+        </svg>
+      </div>
+      <span id="select-all-label">Select all</span>
+    </label>
+    <div class="toolbar-spacer"></div>
+    <button class="bulk-del-btn" id="bulk-del-btn" onclick="bulkDelete()">
+      🗑 Delete selected (<span id="sel-count">0</span>)
+    </button>
+  </div>
+
+  {% for conv in convs %}
+  <div class="conv-row" id="conv-row-{{ conv.pk }}">
+    <label class="row-cb-wrap" onclick="toggleRow({{ conv.pk }}, this)">
+      <input type="checkbox" class="conv-cb" data-pk="{{ conv.pk }}">
+      <div class="row-cb" id="cb-{{ conv.pk }}">
+        <svg viewBox="0 0 12 10" width="10" height="8" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="1 5 4.5 8.5 11 1"/>
+        </svg>
+      </div>
+    </label>
+    <a href="{% url 'members:chat_room' pk=conv.pk %}" class="conv-item" id="conv-item-{{ conv.pk }}">
+      <div class="conv-ico">💬</div>
+      <div>
+        <div class="conv-title">{{ conv.title|truncatechars:50 }}</div>
+        <div class="conv-time">{{ conv.updated_at|date:"M j, Y" }} · {{ conv.updated_at|time:"H:i" }}</div>
+      </div>
+    </a>
+    <button class="del-btn" title="Delete" onclick="deleteConv({{ conv.pk }}, this)">🗑</button>
+  </div>
+  {% endfor %}
+
+  {% else %}
+  <div class="empty-state" id="empty-state">
+    <div style="font-size:3rem;">🤝</div>
+    <p>Start your first conversation with Alex</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var CSRF = '{{ csrf_token }}';
+
+/* ── single delete ── */
+function deleteConv(pk, btn) {
+  if (!confirm('Delete this conversation?')) return;
+  btn.disabled = true;
+  fetch('/members/chat/' + pk + '/delete-conv/', {
+    method: 'POST', headers: {'X-CSRFToken': CSRF},
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.ok) { removeRow(pk); }
+    else { alert('Could not delete.'); btn.disabled = false; }
+  })
+  .catch(() => { alert('Error.'); btn.disabled = false; });
+}
+
+/* ── row checkbox ── */
+function toggleRow(pk, label) {
+  var cb = document.querySelector('.conv-cb[data-pk="' + pk + '"]');
+  cb.checked = !cb.checked;
+  document.getElementById('cb-' + pk).classList.toggle('checked', cb.checked);
+  document.getElementById('conv-item-' + pk).classList.toggle('selected', cb.checked);
+  updateToolbar();
+}
+
+/* ── select all ── */
+function toggleSelectAll() {
+  var cbs = document.querySelectorAll('.conv-cb');
+  var allChecked = Array.from(cbs).every(c => c.checked);
+  cbs.forEach(function(cb) {
+    cb.checked = !allChecked;
+    var pk = cb.dataset.pk;
+    document.getElementById('cb-' + pk).classList.toggle('checked', cb.checked);
+    document.getElementById('conv-item-' + pk).classList.toggle('selected', cb.checked);
+  });
+  updateToolbar();
+}
+
+function updateToolbar() {
+  var cbs = document.querySelectorAll('.conv-cb');
+  var checked = Array.from(cbs).filter(c => c.checked);
+  var allCb = document.getElementById('select-all-cb');
+  var bulkBtn = document.getElementById('bulk-del-btn');
+  var countEl = document.getElementById('sel-count');
+  var label = document.getElementById('select-all-label');
+
+  if (checked.length === 0) {
+    allCb.className = 'custom-cb';
+    label.textContent = 'Select all';
+    bulkBtn.classList.remove('visible');
+  } else if (checked.length === cbs.length) {
+    allCb.className = 'custom-cb checked';
+    label.textContent = 'Deselect all';
+    bulkBtn.classList.add('visible');
+  } else {
+    allCb.className = 'custom-cb indeterminate';
+    allCb.innerHTML = '<svg viewBox="0 0 12 2" width="10" height="2"><line x1="1" y1="1" x2="11" y2="1" stroke="#FF6B35" stroke-width="2.2" stroke-linecap="round"/></svg>';
+    label.textContent = 'Select all';
+    bulkBtn.classList.add('visible');
+  }
+  countEl.textContent = checked.length;
+}
+
+/* ── bulk delete ── */
+function bulkDelete() {
+  var checked = Array.from(document.querySelectorAll('.conv-cb:checked'));
+  if (!checked.length) return;
+  if (!confirm('Delete ' + checked.length + ' conversation' + (checked.length > 1 ? 's' : '') + '?')) return;
+
+  var btn = document.getElementById('bulk-del-btn');
+  btn.disabled = true;
+  var pks = checked.map(c => parseInt(c.dataset.pk));
+
+  fetch('/members/chat/bulk-delete/', {
+    method: 'POST',
+    headers: {'X-CSRFToken': CSRF, 'Content-Type': 'application/json'},
+    body: JSON.stringify({pks: pks}),
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.ok) {
+      pks.forEach(removeRow);
+    } else {
+      alert('Could not delete. Please try again.');
+    }
+    btn.disabled = false;
+    updateToolbar();
+  })
+  .catch(() => { alert('Error.'); btn.disabled = false; });
+}
+
+/* ── helpers ── */
+function removeRow(pk) {
+  var row = document.getElementById('conv-row-' + pk);
+  if (row) row.remove();
+  if (!document.querySelector('.conv-row')) {
+    var wrap = document.querySelector('.m-wrap');
+    if (!document.getElementById('empty-state')) {
+      wrap.insertAdjacentHTML('beforeend',
+        '<div class="empty-state" id="empty-state"><div style="font-size:3rem;">🤝</div><p>Start your first conversation with Alex</p></div>');
+    }
+    var toolbar = document.querySelector('.toolbar');
+    if (toolbar) toolbar.remove();
+  }
+}
+</script>
+{% endblock %}

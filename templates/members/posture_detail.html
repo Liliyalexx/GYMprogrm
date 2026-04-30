@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block title %}Posture Analysis Result{% endblock %}
+
+{% block extra_css %}
+<style>
+  body { background: #0f1119; }
+  .m-wrap { max-width: 640px; margin: 0 auto; padding: 1rem 1rem 5rem; }
+  .back-link { color: #FF6B35; text-decoration: none; font-size: .85rem; font-weight: 600; display: inline-block; margin-bottom: 1rem; }
+  .m-page-title { font-size: 1.3rem; font-weight: 800; color: #fff; margin-bottom: 1.25rem; }
+  .photo-frame { border-radius: 18px; overflow: hidden; margin-bottom: 1.25rem; max-height: 400px; }
+  .photo-frame img { width: 100%; object-fit: cover; display: block; }
+  .analysis-card {
+    background: #1B1F3A; border-radius: 18px; padding: 1.4rem;
+    border: 1px solid rgba(255,107,53,.2);
+  }
+  .analysis-header {
+    display: flex; align-items: center; gap: .75rem; margin-bottom: 1rem;
+    padding-bottom: .85rem; border-bottom: 1px solid rgba(255,255,255,.08);
+  }
+  .alex-avatar {
+    width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg, #FF6B35, #e0521e);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; font-weight: 800; color: #fff;
+  }
+  .analysis-by { font-size: .8rem; color: rgba(255,255,255,.5); }
+  .analysis-name { font-size: .9rem; font-weight: 700; color: #fff; }
+  .analysis-text {
+    font-size: .88rem; color: rgba(255,255,255,.8); line-height: 1.65;
+    white-space: pre-wrap;
+  }
+  .analysis-text strong, .analysis-text b { color: #FF6B35; }
+  .pending { text-align: center; padding: 2rem; color: rgba(255,255,255,.45); }
+  .pending .ico { font-size: 2.5rem; margin-bottom: .75rem; }
+  .meta { font-size: .72rem; color: rgba(255,255,255,.35); margin-top: 1rem; }
+  .refresh-link { color: #FF6B35; font-size: .8rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="m-wrap">
+  <a href="{% url 'members:posture_list' %}" class="back-link">← All Analyses</a>
+  <div class="m-page-title">Posture Analysis</div>
+
+  {% if obj.photo %}
+  <div class="photo-frame">
+    <img src="{{ obj.photo.url }}" alt="Your posture photo">
+  </div>
+  {% endif %}
+
+  <div class="analysis-card">
+    <div class="analysis-header">
+      <div class="alex-avatar">A</div>
+      <div>
+        <div class="analysis-name">Alex</div>
+        <div class="analysis-by">Certified Personal Trainer & Physiotherapist</div>
+      </div>
+    </div>
+
+    {% if obj.ai_analysis %}
+    <div class="analysis-text">{{ obj.ai_analysis }}</div>
+    {% else %}
+    <div class="pending">
+      <div class="ico">⏳</div>
+      <p>Alex is reviewing your photo...</p>
+      <p style="margin-top:.5rem;font-size:.8rem;">This usually takes 10–15 seconds.</p>
+      <a href="" class="refresh-link" style="display:inline-block;margin-top:.75rem;">Refresh ↻</a>
+    </div>
+    {% endif %}
+
+    <div class="meta">Submitted {{ obj.created_at|date:"M j, Y" }} at {{ obj.created_at|date:"H:i" }}</div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if not obj.ai_analysis %}
+<script>
+  setTimeout(function() { location.reload(); }, 8000);
+</script>
+{% endif %}
+{% endblock %}

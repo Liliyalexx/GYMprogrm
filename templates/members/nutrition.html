@@ -1,0 +1,281 @@
+{% extends 'base.html' %}
+{% block title %}Nutrition Log — GymPro Coach{% endblock %}
+
+{% block extra_css %}
+<style>
+  body { background: #0f1119; }
+  .m-wrap { max-width: 640px; margin: 0 auto; padding: 1rem 1rem 5rem; }
+  .m-page-title { font-size: 1.3rem; font-weight: 800; color: #fff; margin-bottom: .25rem; }
+  .m-page-date { font-size: .85rem; color: rgba(255,255,255,.45); margin-bottom: 1.25rem; }
+
+  /* Date navigation */
+  .date-nav {
+    display: flex; align-items: center; gap: .5rem; margin-bottom: 1.25rem;
+    background: #1B1F3A; border-radius: 14px; padding: .5rem .75rem;
+    border: 1px solid rgba(255,255,255,.08);
+  }
+  .date-nav input[type=date] {
+    background: none; border: none; color: #fff; font-family: inherit;
+    font-size: .9rem; font-weight: 600; outline: none; flex: 1; cursor: pointer;
+  }
+  .date-nav input[type=date]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: .4; cursor: pointer; }
+  .date-btn {
+    color: #FF6B35; font-size: 1.3rem; cursor: pointer; background: none; border: none;
+    padding: .1rem .4rem; line-height: 1; border-radius: 8px; transition: background .15s;
+  }
+  .date-btn:hover { background: rgba(255,107,53,.15); }
+  .today-btn {
+    font-size: .72rem; font-weight: 700; color: #FF6B35; background: rgba(255,107,53,.1);
+    border: 1px solid rgba(255,107,53,.25); border-radius: 8px; padding: .25rem .6rem;
+    cursor: pointer; white-space: nowrap;
+  }
+
+  /* Totals card */
+  .total-card {
+    background: linear-gradient(135deg, #1B1F3A, #252a4a);
+    border-radius: 18px; padding: 1.4rem; margin-bottom: 1.25rem;
+    border: 1px solid rgba(255,107,53,.25);
+  }
+  .total-cal { font-size: 2.8rem; font-weight: 900; color: #FF6B35; line-height: 1; }
+  .total-unit { font-size: .82rem; color: rgba(255,255,255,.45); margin-top: .2rem; }
+  .cal-target { font-size: .78rem; color: rgba(255,255,255,.35); margin-top: .15rem; }
+  .cal-bar-bg { background: rgba(255,255,255,.08); border-radius: 99px; height: 5px; margin-top: .65rem; }
+  .cal-bar-fill { height: 5px; border-radius: 99px; background: #FF6B35; transition: width .4s; max-width: 100%; }
+  .cal-bar-fill.over { background: #f87171; }
+  .macro-row { display: flex; gap: .6rem; margin-top: 1rem; }
+  .macro-item { flex: 1; text-align: center; background: rgba(255,255,255,.05); border-radius: 12px; padding: .7rem .4rem; }
+  .macro-item .v { font-size: .95rem; font-weight: 700; color: #fff; }
+  .macro-item .t { font-size: .65rem; color: rgba(255,107,53,.6); margin-top: .1rem; }
+  .macro-item .l { font-size: .65rem; color: rgba(255,255,255,.35); margin-top: .1rem; }
+  .macro-bar-bg { background: rgba(255,255,255,.08); border-radius: 99px; height: 3px; margin-top: .35rem; }
+  .macro-bar-fill { height: 3px; border-radius: 99px; background: rgba(255,107,53,.6); max-width: 100%; }
+
+  /* 7-day chart */
+  .chart-card { background: #1B1F3A; border-radius: 18px; padding: 1.1rem; margin-bottom: 1.25rem; border: 1px solid rgba(255,255,255,.08); }
+  .chart-title { font-size: .75rem; font-weight: 700; color: rgba(255,255,255,.4); margin-bottom: .75rem; letter-spacing: .07em; text-transform: uppercase; }
+  .chart-bars { display: flex; align-items: flex-end; gap: .35rem; height: 70px; }
+  .chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: .3rem; }
+  .chart-bar { width: 100%; background: rgba(255,107,53,.25); border-radius: 4px 4px 0 0; min-height: 3px; }
+  .chart-bar.today { background: #FF6B35; }
+  .chart-day { font-size: .6rem; color: rgba(255,255,255,.3); }
+
+  /* CTA */
+  .cta-card {
+    background: rgba(255,107,53,.07); border: 1px solid rgba(255,107,53,.2);
+    border-radius: 16px; padding: 1rem 1.1rem; margin-bottom: 1.25rem;
+    display: flex; align-items: center; gap: .85rem;
+  }
+  .cta-ico { font-size: 1.75rem; flex-shrink: 0; }
+  .cta-text { flex: 1; }
+  .cta-text p { font-size: .82rem; color: rgba(255,255,255,.6); margin: 0 0 .5rem; }
+  .cta-text a {
+    display: inline-block; background: linear-gradient(135deg, #FF6B35, #e0521e);
+    color: #fff; border-radius: 10px; padding: .5rem 1rem;
+    text-decoration: none; font-weight: 700; font-size: .85rem;
+  }
+
+  /* Section labels */
+  .section-label {
+    font-size: .72rem; font-weight: 700; letter-spacing: .08em;
+    color: rgba(255,255,255,.35); text-transform: uppercase; margin-bottom: .65rem;
+  }
+
+  /* Log cards */
+  .log-card {
+    background: #1B1F3A; border-radius: 14px; padding: 1rem 1.1rem;
+    margin-bottom: .65rem; border: 1px solid rgba(255,255,255,.07);
+  }
+  .log-time { font-size: .7rem; color: rgba(255,255,255,.3); margin-bottom: .5rem; }
+  .log-items-list { list-style: none; padding: 0; margin: 0 0 .6rem; }
+  .log-items-list li {
+    font-size: .83rem; color: rgba(255,255,255,.75); padding: .22rem 0;
+    border-bottom: 1px solid rgba(255,255,255,.04); display: flex; justify-content: space-between;
+  }
+  .log-items-list li:last-child { border: none; }
+  .log-item-kcal { color: rgba(255,107,53,.7); font-size: .78rem; }
+  .log-macros { display: flex; gap: .85rem; flex-wrap: wrap; }
+  .log-macro { font-size: .74rem; color: rgba(255,255,255,.45); }
+  .log-macro strong { color: #FF6B35; }
+
+  /* Add again section */
+  .suggest-card {
+    background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07);
+    border-radius: 14px; padding: .85rem 1rem; margin-bottom: .6rem;
+    display: flex; align-items: center; gap: .85rem;
+  }
+  .suggest-info { flex: 1; min-width: 0; }
+  .suggest-name { font-size: .85rem; color: rgba(255,255,255,.7); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .suggest-meta { font-size: .72rem; color: rgba(255,255,255,.35); margin-top: .15rem; }
+  .suggest-kcal { font-size: .85rem; font-weight: 700; color: rgba(255,107,53,.8); flex-shrink: 0; }
+  .add-again-btn {
+    background: rgba(255,107,53,.1); border: 1px solid rgba(255,107,53,.25);
+    color: #FF6B35; font-size: .78rem; font-weight: 700; border-radius: 9px;
+    padding: .4rem .8rem; cursor: pointer; flex-shrink: 0; white-space: nowrap;
+    transition: background .15s;
+  }
+  .add-again-btn:hover { background: rgba(255,107,53,.2); }
+
+  .empty-state { text-align: center; padding: 2.5rem 1rem; color: rgba(255,255,255,.35); font-size: .85rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="m-wrap">
+
+  <div class="m-page-title">Nutrition Log</div>
+  <div class="m-page-date">
+    {% if selected_date == today %}Today, {{ today|date:"F j, Y" }}{% else %}{{ selected_date|date:"F j, Y" }}{% endif %}
+  </div>
+
+  <!-- Date navigation -->
+  <div class="date-nav">
+    <button class="date-btn" onclick="shiftDate(-1)">‹</button>
+    <input type="date" id="date-input" value="{{ selected_date|date:'Y-m-d' }}" onchange="goDate(this.value)">
+    {% if selected_date != today %}
+    <button class="today-btn" onclick="goDate('{{ today|date:'Y-m-d' }}')">Today</button>
+    {% endif %}
+    <button class="date-btn" onclick="shiftDate(1)">›</button>
+  </div>
+
+  <!-- Totals -->
+  <div class="total-card">
+    <div class="total-cal">{{ totals.calories|floatformat:0 }}</div>
+    <div class="total-unit">kcal {% if selected_date == today %}today{% else %}on {{ selected_date|date:"M j" }}{% endif %}</div>
+    {% if targets %}
+    <div class="cal-target">Goal: {{ targets.calories }} kcal · {{ totals.calories|floatformat:0 }} eaten · {% widthratio totals.calories targets.calories 100 as pct %}{{ targets.calories|add:"-0"|floatformat:0|default:"0" }} remaining</div>
+    {% with remaining=targets.calories|add:"-0" %}
+    {% endwith %}
+    <div class="cal-bar-bg">
+      <div class="cal-bar-fill {% if totals.calories > targets.calories %}over{% endif %}"
+           style="width:{% widthratio totals.calories targets.calories 100 %}%"></div>
+    </div>
+    {% endif %}
+    <div class="macro-row">
+      <div class="macro-item">
+        <div class="v">{{ totals.protein|floatformat:0 }}g</div>
+        {% if targets %}<div class="t">/ {{ targets.protein }}g</div>{% endif %}
+        <div class="l">Protein</div>
+        {% if targets %}
+        <div class="macro-bar-bg"><div class="macro-bar-fill" style="width:{% widthratio totals.protein targets.protein 100 %}%"></div></div>
+        {% endif %}
+      </div>
+      <div class="macro-item">
+        <div class="v">{{ totals.carbs|floatformat:0 }}g</div>
+        {% if targets %}<div class="t">/ {{ targets.carbs }}g</div>{% endif %}
+        <div class="l">Carbs</div>
+        {% if targets %}
+        <div class="macro-bar-bg"><div class="macro-bar-fill" style="width:{% widthratio totals.carbs targets.carbs 100 %}%"></div></div>
+        {% endif %}
+      </div>
+      <div class="macro-item">
+        <div class="v">{{ totals.fat|floatformat:0 }}g</div>
+        {% if targets %}<div class="t">/ {{ targets.fat }}g</div>{% endif %}
+        <div class="l">Fat</div>
+        {% if targets %}
+        <div class="macro-bar-bg"><div class="macro-bar-fill" style="width:{% widthratio totals.fat targets.fat 100 %}%"></div></div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- 7-day chart -->
+  <div class="chart-card">
+    <div class="chart-title">Last 7 Days</div>
+    <div class="chart-bars" id="cal-chart"></div>
+  </div>
+
+  <!-- CTA: log via Alex -->
+  <div class="cta-card">
+    <div class="cta-ico">🤖</div>
+    <div class="cta-text">
+      <p>Tell Alex what you ate and calories are logged automatically</p>
+      <a href="{% url 'members:chat_new' %}">Open Alex chat →</a>
+    </div>
+  </div>
+
+  <!-- Log entries for selected day -->
+  {% if logs %}
+  <div class="section-label">Entries for {{ selected_date|date:"M j" }}</div>
+  {% for log in logs %}
+  <div class="log-card">
+    <div class="log-time">{{ log.created_at|date:"H:i" }}</div>
+    {% if log.items %}
+    <ul class="log-items-list">
+      {% for item in log.items %}
+      <li>
+        <span>{{ item.food }}{% if item.quantity_g %} · {{ item.quantity_g }}g{% endif %}</span>
+        <span class="log-item-kcal">{{ item.calories_kcal|floatformat:0 }} kcal</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p style="font-size:.83rem;color:rgba(255,255,255,.5);margin:0 0 .6rem;">{{ log.raw_input|truncatechars:100 }}</p>
+    {% endif %}
+    <div class="log-macros">
+      <div class="log-macro"><strong>{{ log.total_calories|floatformat:0 }}</strong> kcal</div>
+      <div class="log-macro"><strong>{{ log.total_protein_g|floatformat:0 }}</strong>g protein</div>
+      <div class="log-macro"><strong>{{ log.total_carbs_g|floatformat:0 }}</strong>g carbs</div>
+      <div class="log-macro"><strong>{{ log.total_fat_g|floatformat:0 }}</strong>g fat</div>
+    </div>
+  </div>
+  {% endfor %}
+
+  {% else %}
+  <div class="empty-state">
+    <div style="font-size:2.5rem;">🥗</div>
+    <p style="margin-top:.5rem;">No food logged {% if selected_date == today %}today{% else %}on this day{% endif %}.<br>Tell Alex what you ate in the chat!</p>
+  </div>
+  {% endif %}
+
+  <!-- Add-again suggestions (only shown when viewing today) -->
+  {% if suggestions %}
+  <div class="section-label" style="margin-top:1.5rem;">Add again from recent logs</div>
+  {% for log in suggestions %}
+  <div class="suggest-card">
+    <div class="suggest-info">
+      {% if log.items %}
+      <div class="suggest-name">{{ log.items.0.food }}{% if log.items|length > 1 %} + {{ log.items|length|add:"-1" }} more{% endif %}</div>
+      {% else %}
+      <div class="suggest-name">{{ log.raw_input|truncatechars:50 }}</div>
+      {% endif %}
+      <div class="suggest-meta">{{ log.logged_date|date:"M j" }}</div>
+    </div>
+    <div class="suggest-kcal">{{ log.total_calories|floatformat:0 }} kcal</div>
+    <form method="post" action="{% url 'members:nutrition_add_again' log_id=log.pk %}">
+      {% csrf_token %}
+      <button type="submit" class="add-again-btn">+ Add today</button>
+    </form>
+  </div>
+  {% endfor %}
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function goDate(val) { window.location = '?date=' + val; }
+function shiftDate(delta) {
+  var d = new Date(document.getElementById('date-input').value + 'T00:00:00');
+  d.setDate(d.getDate() + delta);
+  var shifted = d.toISOString().slice(0, 10);
+  // Don't go past today
+  var todayStr = '{{ today|date:"Y-m-d" }}';
+  if (shifted <= todayStr) goDate(shifted);
+}
+
+var week = {{ week|safe }};
+var max = Math.max.apply(null, week.map(function(d){ return d.calories; }).concat([1]));
+var selectedDate = '{{ selected_date|date:"Y-m-d" }}';
+var chart = document.getElementById('cal-chart');
+week.forEach(function(d) {
+  var pct = Math.max(Math.round((d.calories / max) * 60), d.calories > 0 ? 4 : 3);
+  var isSelected = d.date === selectedDate;
+  var dayName = new Date(d.date + 'T00:00:00').toLocaleDateString('en', {weekday: 'short'});
+  var wrap = document.createElement('div');
+  wrap.className = 'chart-bar-wrap';
+  wrap.innerHTML = '<div class="chart-bar' + (isSelected ? ' today' : '') + '" style="height:' + pct + 'px"></div><div class="chart-day">' + dayName + '</div>';
+  chart.appendChild(wrap);
+});
+</script>
+{% endblock %}
