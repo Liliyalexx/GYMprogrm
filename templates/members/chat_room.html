@@ -125,6 +125,18 @@
     display: flex; align-items: center; justify-content: center;
   }
   .chat-send:disabled { opacity: .4; cursor: default; }
+  .gen-prog-bar {
+    background: rgba(255,107,53,.07); border-top: 1px solid rgba(255,107,53,.15);
+    padding: .55rem 1rem; display: flex; align-items: center; gap: .75rem; flex-shrink: 0;
+  }
+  .gen-prog-bar span { font-size: .75rem; color: rgba(255,255,255,.4); flex: 1; }
+  .gen-prog-btn {
+    background: rgba(255,107,53,.15); border: 1px solid rgba(255,107,53,.35);
+    color: #FF6B35; font-size: .78rem; font-weight: 700; border-radius: 9px;
+    padding: .4rem .85rem; cursor: pointer; white-space: nowrap; transition: background .15s;
+  }
+  .gen-prog-btn:hover { background: rgba(255,107,53,.25); }
+  .gen-prog-btn:disabled { opacity: .45; cursor: default; }
 </style>
 {% endblock %}
 
@@ -147,7 +159,8 @@
     {% for msg in msgs %}
     {% ifchanged msg.created_at|date:"Y-m-d" %}
     <div style="text-align:center;margin:.5rem 0;">
-      <span style="background:rgba(255,255,255,.07);border-radius:99px;padding:.25rem .85rem;font-size:.7rem;color:rgba(255,255,255,.4);">
+      <span style="background:rgba(255,255,255,.07);border-radius:99px;padding:.25rem .85rem;font-size:.7rem;color:rgba(255,255,255,.4);"
+            data-localdate="{{ msg.created_at|date:'c' }}">
         {{ msg.created_at|date:"M j, Y" }}
       </span>
     </div>
@@ -161,7 +174,7 @@
       {% endif %}
       <div class="msg-body">
         <div class="msg-bubble">{{ msg.content }}</div>
-        <div class="msg-time">{{ msg.created_at|date:"H:i" }}</div>
+        <div class="msg-time" data-ts="{{ msg.created_at|date:'c' }}">{{ msg.created_at|date:"H:i" }}</div>
         {% if msg.role == 'user' %}
         <div class="edit-form" id="edit-form-{{ msg.pk }}">
           <textarea class="edit-textarea" rows="1" oninput="autoResize(this)"></textarea>
@@ -182,6 +195,11 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <div class="gen-prog-bar">
+    <span>Alex discussed a program but it didn't generate?</span>
+    <button class="gen-prog-btn" id="gen-prog-btn" onclick="generateProgramNow()">⚡ Generate Program Now</button>
   </div>
 
   <div class="chat-input-wrap">
@@ -208,6 +226,21 @@ const CSRF     = '{{ csrf_token }}';
 const CONV_PK  = {{ conv.pk }};
 
 function scrollBottom() { msgsEl.scrollTop = msgsEl.scrollHeight; }
+
+// Convert all server-rendered UTC timestamps to browser local time
+function localTime(isoStr) {
+  return new Date(isoStr).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+}
+function localDate(isoStr) {
+  return new Date(isoStr).toLocaleDateString([], {month: 'short', day: 'numeric', year: 'numeric'});
+}
+document.querySelectorAll('[data-ts]').forEach(function(el) {
+  el.textContent = localTime(el.dataset.ts);
+});
+document.querySelectorAll('[data-localdate]').forEach(function(el) {
+  el.textContent = localDate(el.dataset.localdate);
+});
+
 scrollBottom();
 inputEl.focus();
 
@@ -264,7 +297,7 @@ function appendRow(role, content, opts) {
 
   var time = document.createElement('div');
   time.className = 'msg-time';
-  time.textContent = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  time.textContent = localTime(new Date().toISOString());
   body.appendChild(time);
 
   if (role === 'user') {
@@ -410,6 +443,35 @@ function deleteFromHere(msgId) {
     else alert(data.error || 'Delete failed.');
   })
   .catch(() => alert('Error deleting message.'));
+}
+
+function generateProgramNow() {
+  var btn = document.getElementById('gen-prog-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Generating…';
+
+  // Pull the last conversation context from visible messages to pass as notes
+  var bubbles = document.querySelectorAll('.msg-row.user .msg-bubble');
+  var lastMsg = bubbles.length ? bubbles[bubbles.length - 1].textContent.trim().slice(0, 300) : '';
+
+  fetch('/members/chat/' + CONV_PK + '/generate-program/', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF},
+    body: JSON.stringify({context: lastMsg}),
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.ok) {
+      appendRow('assistant',
+        '✅ Your program is ready! ' + (data.name || '') + '\n\nHead to the Program tab to see it.',
+        {programCard: {name: data.name, focus: data.focus, status: 'ready', url: data.url}}
+      );
+    } else {
+      appendRow('assistant', '⚠️ Could not generate program: ' + (data.error || 'Please try again.'));
+    }
+  })
+  .catch(() => appendRow('assistant', '⚠️ Connection error. Please try again.'))
+  .finally(() => { btn.disabled = false; btn.textContent = '⚡ Generate Program Now'; });
 }
 
 function removeFromMsg(msgId) {

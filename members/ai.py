@@ -93,10 +93,10 @@ When a user describes food (e.g. "200g chicken, 1 cup rice"), embed this exact b
 NUTRITION_LOG:{"items":[{"food":"Chicken breast","quantity_g":200,"calories_kcal":330,"protein_g":62,"carbs_g":0,"fat_g":7},{"food":"White rice","quantity_g":180,"calories_kcal":234,"protein_g":4.3,"carbs_g":51,"fat_g":0.4}],"total_calories":564,"total_protein_g":66.3,"total_carbs_g":51,"total_fat_g":7.4}
 Always use accurate nutritional values (USDA database).
 
-CRITICAL — Program creation:
-When a user asks you to create, generate, design, or update their workout program, embed this signal on its own line BEFORE your response text:
-CREATE_PROGRAM:{"weeks":4,"focus":"brief description of what the program focuses on","days_per_week":3}
-Replace the values with what the user actually requested. Then explain what you are designing and WHY it is right for their specific body goal — do NOT list exercises yourself, the system generates those automatically."""
+ABSOLUTE RULE — Program creation (NEVER skip this):
+Whenever a user asks you to create, generate, design, build, or update their workout program — even if you are also writing a long strategic explanation — the VERY FIRST thing you output must be the signal line, before any other text:
+CREATE_PROGRAM:{"weeks":4,"focus":"brief description","days_per_week":3}
+Fill in the correct values. Then write your explanation. If you write your explanation FIRST without the signal, the system will NOT generate the program and the user will be frustrated. The signal must come first, always, no exceptions. After it, explain your reasoning as much as you like."""
 
 
 def _client():

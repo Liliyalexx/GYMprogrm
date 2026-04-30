@@ -136,7 +136,7 @@
       <div class="conv-ico">💬</div>
       <div>
         <div class="conv-title">{{ conv.title|truncatechars:50 }}</div>
-        <div class="conv-time">{{ conv.updated_at|date:"M j, Y" }} · {{ conv.updated_at|time:"H:i" }}</div>
+        <div class="conv-time" data-ts="{{ conv.updated_at|date:'c' }}">{{ conv.updated_at|date:"M j, Y" }} · {{ conv.updated_at|time:"H:i" }}</div>
       </div>
     </a>
     <button class="del-btn" title="Delete" onclick="deleteConv({{ conv.pk }}, this)">🗑</button>
@@ -155,6 +155,13 @@
 {% block extra_js %}
 <script>
 var CSRF = '{{ csrf_token }}';
+
+// Convert UTC timestamps to browser local time
+document.querySelectorAll('[data-ts]').forEach(function(el) {
+  var d = new Date(el.dataset.ts);
+  el.textContent = d.toLocaleDateString([], {month:'short', day:'numeric', year:'numeric'}) +
+    ' · ' + d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+});
 
 /* ── single delete ── */
 function deleteConv(pk, btn) {

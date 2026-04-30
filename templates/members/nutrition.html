@@ -198,7 +198,7 @@
   <div class="section-label">Entries for {{ selected_date|date:"M j" }}</div>
   {% for log in logs %}
   <div class="log-card">
-    <div class="log-time">{{ log.created_at|date:"H:i" }}</div>
+    <div class="log-time" data-ts="{{ log.created_at|date:'c' }}">{{ log.created_at|date:"H:i" }}</div>
     {% if log.items %}
     <ul class="log-items-list">
       {% for item in log.items %}
@@ -254,6 +254,10 @@
 
 {% block extra_js %}
 <script>
+document.querySelectorAll('[data-ts]').forEach(function(el) {
+  el.textContent = new Date(el.dataset.ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+});
+
 function goDate(val) { window.location = '?date=' + val; }
 function shiftDate(delta) {
   var d = new Date(document.getElementById('date-input').value + 'T00:00:00');

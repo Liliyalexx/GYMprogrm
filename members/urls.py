@@ -23,6 +23,7 @@ urlpatterns = [
     path('chat/new/', views.chat_new, name='chat_new'),
     path('chat/<int:pk>/', views.chat_room, name='chat_room'),
     path('chat/<int:pk>/send/', views.chat_send, name='chat_send'),
+    path('chat/<int:pk>/generate-program/', views.chat_generate_program, name='chat_generate_program'),
     path('chat/<int:pk>/delete-conv/', views.chat_delete_conv, name='chat_delete_conv'),
     path('chat/bulk-delete/', views.chat_bulk_delete, name='chat_bulk_delete'),
     path('chat/<int:pk>/edit/<int:msg_id>/', views.chat_edit, name='chat_edit'),

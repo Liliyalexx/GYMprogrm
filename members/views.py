@@ -469,6 +469,34 @@ def chat_send(request, pk):
 
 @member_required
 @require_POST
+def chat_generate_program(request, pk):
+    """Generate a program directly from within a conversation context."""
+    member = request.user.member
+    get_object_or_404(CoachConversation, pk=pk, member=member)
+
+    try:
+        body = json.loads(request.body)
+        context = body.get('context', '')
+    except (json.JSONDecodeError, AttributeError):
+        context = ''
+
+    try:
+        prog = _build_program_from_ai(member, extra_notes=context[:300])
+        threading.Thread(
+            target=_generate_demo_images_for_program, args=(prog,), daemon=True
+        ).start()
+        return JsonResponse({
+            'ok': True,
+            'name': prog.name,
+            'focus': '',
+            'url': f'/members/program/{prog.pk}/',
+        })
+    except Exception as e:
+        return JsonResponse({'ok': False, 'error': str(e)}, status=500)
+
+
+@member_required
+@require_POST
 def chat_edit(request, pk, msg_id):
     """Edit a user message: delete it + all subsequent messages, resend with new text."""
     member = request.user.member
