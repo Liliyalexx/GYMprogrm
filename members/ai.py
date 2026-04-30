@@ -156,7 +156,10 @@ def generate_program(member, exercise_library: list, extra_notes: str = '') -> d
         (member.blood_test_file, 'Blood Test Results'),
     ]:
         if file_field:
-            b64, mime = _encode_file(file_field)
+            try:
+                b64, mime = _encode_file(file_field)
+            except (FileNotFoundError, OSError):
+                continue  # file was lost on server redeploy — skip silently
             if mime == 'application/pdf':
                 content.append({'type': 'document', 'source': {'type': 'base64', 'media_type': mime, 'data': b64}, 'title': label})
             else:
@@ -330,7 +333,10 @@ def analyse_blood_test(member) -> dict:
     """Returns JSON dict."""
     if not member.blood_test_file:
         return {}
-    b64, mime = _encode_file(member.blood_test_file)
+    try:
+        b64, mime = _encode_file(member.blood_test_file)
+    except (FileNotFoundError, OSError):
+        return {}
     content = [
         {'type': 'document' if mime == 'application/pdf' else 'image',
          'source': {'type': 'base64', 'media_type': mime, 'data': b64}},
