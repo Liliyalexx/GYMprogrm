@@ -11,6 +11,7 @@ import anthropic
 import openai as openai_lib
 from django.conf import settings
 from django.core.files.base import ContentFile
+from json_repair import repair_json
 
 def _find_json_extent(text: str, start: int) -> int | None:
     """Walk from `start` (a '{') and return the index of its matching '}'."""
@@ -230,9 +231,30 @@ def generate_program(member, exercise_library: list, extra_notes: str = '') -> d
         text = text.split('\n', 1)[1].rsplit('```', 1)[0].strip()
     # Guard against truncated JSON (stop_reason == max_tokens)
     if resp.stop_reason == 'max_tokens':
-        # Try to salvage by closing any open structure
         text = _repair_truncated_json(text)
-    return json.loads(text)
+    return _parse_program_json(text)
+
+
+def _parse_program_json(text: str) -> dict:
+    """Parse program JSON — falls back to json_repair on any parse error."""
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        repaired = repair_json(text, return_objects=True)
+        if isinstance(repaired, dict) and 'days' in repaired:
+            return repaired
+        # Last resort: try to extract JSON object from surrounding text
+        start = text.find('{')
+        if start != -1:
+            end = _find_json_extent(text, start)
+            if end is not None:
+                try:
+                    return json.loads(text[start:end + 1])
+                except json.JSONDecodeError:
+                    repaired2 = repair_json(text[start:end + 1], return_objects=True)
+                    if isinstance(repaired2, dict):
+                        return repaired2
+        raise
 
 
 def _repair_truncated_json(text: str) -> str:
