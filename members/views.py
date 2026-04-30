@@ -92,25 +92,8 @@ def _build_program_from_ai(member, extra_notes=''):
 
 
 def _generate_demo_images_for_program(prog):
-    """Background task: generate DALL-E images for each exercise in a program."""
-    gender = prog.member.gender or 'F'
-    seen = set()
-    for day in prog.days.prefetch_related('exercises__exercise').all():
-        for item in day.exercises.all():
-            ex = item.exercise
-            if ex.pk in seen:
-                continue
-            seen.add(ex.pk)
-            if ExerciseDemo.objects.filter(exercise=ex).exists():
-                continue
-            try:
-                start_bytes, mid_bytes = generate_exercise_images(ex.name, gender)
-                demo = ExerciseDemo(exercise=ex)
-                demo.image_start.save(f'{ex.pk}_start.png', ContentFile(start_bytes), save=False)
-                demo.image_mid.save(f'{ex.pk}_mid.png', ContentFile(mid_bytes), save=False)
-                demo.save()
-            except Exception:
-                pass
+    """No-op: exercise demos now use gymvisual.com GIFs from ExerciseLibrary.photo_url."""
+    pass
 
 
 # ---------------------------------------------------------------------------
