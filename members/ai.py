@@ -214,20 +214,37 @@ def generate_program(member, exercise_library: list, extra_notes: str = '') -> d
 
     resp = _client().messages.create(
         model=model,
-        max_tokens=4000,
+        max_tokens=8000,
         system=(
             'You are an integrated health and performance specialist combining elite personal training, '
             'sports nutrition, sports medicine, and functional medicine. '
             'You design programs based on the WHOLE person — goals, hormones, blood work, body type, and lifestyle. '
             'You know which exercises work AGAINST specific aesthetic goals and you never include them. '
-            'Return ONLY valid JSON, nothing else.'
+            'Return ONLY valid JSON, nothing else. '
+            'Keep the "reasoning" field under 400 words — be concise and precise, not verbose.'
         ),
         messages=[{'role': 'user', 'content': content}],
     )
     text = resp.content[0].text.strip()
     if text.startswith('```'):
         text = text.split('\n', 1)[1].rsplit('```', 1)[0].strip()
+    # Guard against truncated JSON (stop_reason == max_tokens)
+    if resp.stop_reason == 'max_tokens':
+        # Try to salvage by closing any open structure
+        text = _repair_truncated_json(text)
     return json.loads(text)
+
+
+def _repair_truncated_json(text: str) -> str:
+    """Best-effort repair of JSON truncated by token limit."""
+    # Drop any incomplete trailing token (unclosed string, partial key, etc.)
+    for end in range(len(text) - 1, 0, -1):
+        try:
+            json.loads(text[:end + 1])
+            return text[:end + 1]
+        except json.JSONDecodeError:
+            continue
+    return text
 
 
 def generate_exercise_images(exercise_name: str, gender: str = 'F') -> tuple:
