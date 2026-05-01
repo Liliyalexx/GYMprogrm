@@ -3,366 +3,463 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GYMprogrm — AI-Powered Fitness Platform</title>
-  <meta name="description" content="AI-powered fitness platform for personal trainers, their clients, and independent members. Programs, nutrition, posture analysis — all in one place.">
-  <link rel="icon" href="/static/images/logo.png">
+  <title>GYMprogrm — Build habits that change your body</title>
+  <meta name="description" content="Personalized workouts, food guidance, posture insights, and progress tracking — all in one daily system.">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0d16; color: #fff; line-height: 1.6; }
+    body {
+      background: #0a0d16;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      line-height: 1.6;
+    }
 
-    /* ── Nav ── */
+    /* NAV */
     .nav {
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      background: rgba(10,13,22,.85); backdrop-filter: blur(14px);
-      border-bottom: 1px solid rgba(255,255,255,.07);
-      padding: .85rem 1.5rem; display: flex; align-items: center; gap: 1rem;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: .9rem 2rem;
+      background: rgba(10,13,22,.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,.06);
     }
-    .nav-logo { display: flex; align-items: center; gap: .6rem; text-decoration: none; }
-    .nav-logo img { width: 32px; height: 32px; border-radius: 8px; }
-    .nav-logo span { font-size: 1.1rem; font-weight: 800; color: #fff; }
-    .nav-spacer { flex: 1; }
-    .nav-link { color: rgba(255,255,255,.6); text-decoration: none; font-size: .88rem; font-weight: 500; padding: .4rem .75rem; border-radius: 8px; transition: color .15s, background .15s; }
-    .nav-link:hover { color: #fff; background: rgba(255,255,255,.07); }
-    .nav-cta { background: linear-gradient(135deg, #FF6B35, #e0521e); color: #fff; font-weight: 700; font-size: .88rem; padding: .45rem 1.1rem; border-radius: 10px; text-decoration: none; transition: opacity .15s; }
+    .nav-brand { display: flex; align-items: center; gap: .6rem; text-decoration: none; }
+    .nav-brand span { font-size: 1.1rem; font-weight: 800; color: #fff; letter-spacing: -.02em; }
+    .nav-brand em { color: #FF6B35; font-style: normal; }
+    .nav-links { display: flex; align-items: center; gap: 2rem; }
+    .nav-links a { color: rgba(255,255,255,.6); text-decoration: none; font-size: .9rem; font-weight: 500; transition: color .15s; }
+    .nav-links a:hover { color: #fff; }
+    .nav-cta {
+      background: linear-gradient(135deg, #FF6B35, #e0521e);
+      color: #fff; text-decoration: none; font-weight: 700; font-size: .88rem;
+      padding: .55rem 1.25rem; border-radius: 10px; transition: opacity .15s;
+    }
     .nav-cta:hover { opacity: .88; }
+    @media (max-width: 640px) { .nav-links { display: none; } .nav { padding: .85rem 1.25rem; } }
 
-    /* ── Hero ── */
-    .hero {
-      padding: 9rem 1.5rem 5rem; text-align: center; max-width: 800px; margin: 0 auto;
+    /* LAYOUT */
+    .section { padding: 5rem 1.5rem; max-width: 900px; margin: 0 auto; }
+    .section-label {
+      font-size: .72rem; font-weight: 700; letter-spacing: .1em;
+      text-transform: uppercase; color: #FF6B35; margin-bottom: .75rem;
     }
-    .hero-badge {
-      display: inline-flex; align-items: center; gap: .5rem;
-      background: rgba(255,107,53,.12); border: 1px solid rgba(255,107,53,.3);
-      border-radius: 99px; padding: .35rem 1rem; font-size: .8rem; color: #FF6B35; font-weight: 600;
-      margin-bottom: 1.5rem;
+    h1 { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 900; line-height: 1.1; letter-spacing: -.03em; }
+    h2 { font-size: clamp(1.5rem, 3.5vw, 2.2rem); font-weight: 800; line-height: 1.2; letter-spacing: -.02em; }
+    h3 { font-size: 1.05rem; font-weight: 700; }
+    p { color: rgba(255,255,255,.65); }
+
+    /* HERO */
+    .hero { padding: 9rem 1.5rem 5rem; max-width: 900px; margin: 0 auto; }
+    .hero h1 { margin-bottom: 1.1rem; }
+    .hero h1 span { color: #FF6B35; }
+    .hero .sub { font-size: 1.1rem; color: rgba(255,255,255,.6); max-width: 540px; margin-bottom: 2rem; line-height: 1.65; }
+    .hero-btns { display: flex; gap: .85rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .btn-primary {
+      background: linear-gradient(135deg, #FF6B35, #e0521e);
+      color: #fff; text-decoration: none; font-weight: 700; font-size: 1rem;
+      padding: .85rem 2rem; border-radius: 12px; transition: opacity .15s; display: inline-block;
     }
-    .hero h1 { font-size: clamp(2.2rem, 6vw, 3.8rem); font-weight: 900; line-height: 1.1; margin-bottom: 1.25rem; }
-    .hero h1 span { background: linear-gradient(135deg, #FF6B35, #ff9a6e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-    .hero-sub { font-size: 1.1rem; color: rgba(255,255,255,.6); max-width: 560px; margin: 0 auto 2.5rem; line-height: 1.65; }
-    .hero-actions { display: flex; gap: .85rem; justify-content: center; flex-wrap: wrap; }
-    .btn-primary { background: linear-gradient(135deg, #FF6B35, #e0521e); color: #fff; font-weight: 700; font-size: 1rem; padding: .85rem 2rem; border-radius: 14px; text-decoration: none; transition: opacity .15s; }
     .btn-primary:hover { opacity: .88; }
-    .btn-outline { border: 1.5px solid rgba(255,255,255,.2); color: rgba(255,255,255,.85); font-weight: 600; font-size: 1rem; padding: .85rem 2rem; border-radius: 14px; text-decoration: none; transition: border-color .15s, color .15s; }
-    .btn-outline:hover { border-color: rgba(255,107,53,.5); color: #FF6B35; }
-
-    /* ── Stats strip ── */
-    .stats {
-      display: flex; justify-content: center; gap: 3rem; flex-wrap: wrap;
-      padding: 3rem 1.5rem; border-top: 1px solid rgba(255,255,255,.06); border-bottom: 1px solid rgba(255,255,255,.06);
+    .btn-outline {
+      border: 1.5px solid rgba(255,255,255,.2); color: rgba(255,255,255,.75);
+      text-decoration: none; font-weight: 600; font-size: .95rem;
+      padding: .85rem 1.75rem; border-radius: 12px; transition: border-color .15s, color .15s; display: inline-block;
     }
-    .stat-item { text-align: center; }
-    .stat-v { font-size: 2rem; font-weight: 900; color: #FF6B35; }
-    .stat-l { font-size: .78rem; color: rgba(255,255,255,.45); margin-top: .2rem; }
+    .btn-outline:hover { border-color: rgba(255,255,255,.5); color: #fff; }
+    .hero-trust { font-size: .82rem; color: rgba(255,255,255,.35); }
 
-    /* ── Section ── */
-    section { padding: 5rem 1.5rem; }
-    .section-inner { max-width: 1100px; margin: 0 auto; }
-    .section-tag { font-size: .75rem; font-weight: 700; letter-spacing: .1em; color: #FF6B35; text-transform: uppercase; margin-bottom: .75rem; }
-    .section-title { font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 900; margin-bottom: 1rem; }
-    .section-sub { font-size: 1rem; color: rgba(255,255,255,.55); max-width: 580px; line-height: 1.65; }
+    /* TRUST STRIP */
+    .trust-strip { background: rgba(255,107,53,.05); border-top: 1px solid rgba(255,107,53,.12); border-bottom: 1px solid rgba(255,107,53,.12); padding: 2rem 1.5rem; }
+    .trust-inner { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .85rem; }
+    .trust-item { display: flex; align-items: center; gap: .6rem; font-size: .88rem; color: rgba(255,255,255,.75); }
+    .trust-item .chk { color: #FF6B35; flex-shrink: 0; }
 
-    /* ── 3 user cards ── */
-    .user-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.25rem; margin-top: 3rem; }
-    .user-card {
-      background: #111526; border-radius: 22px; padding: 2rem;
-      border: 1px solid rgba(255,255,255,.08); position: relative; overflow: hidden;
-      transition: border-color .2s, transform .2s;
-    }
-    .user-card:hover { border-color: rgba(255,107,53,.35); transform: translateY(-3px); }
-    .user-card.featured { border-color: rgba(255,107,53,.4); background: linear-gradient(135deg, #111526, #1a1f3a); }
-    .user-card-badge {
-      position: absolute; top: 1.25rem; right: 1.25rem;
-      font-size: .65rem; font-weight: 800; padding: .25rem .6rem; border-radius: 99px; letter-spacing: .06em; text-transform: uppercase;
-    }
-    .badge-new { background: rgba(255,107,53,.2); color: #FF6B35; border: 1px solid rgba(255,107,53,.4); }
-    .badge-trainer { background: rgba(99,102,241,.2); color: #a5b4fc; border: 1px solid rgba(99,102,241,.3); }
-    .badge-client { background: rgba(34,197,94,.15); color: #4ade80; border: 1px solid rgba(34,197,94,.3); }
-    .user-ico { font-size: 2.5rem; margin-bottom: 1rem; }
-    .user-name { font-size: 1.25rem; font-weight: 800; margin-bottom: .5rem; }
-    .user-desc { font-size: .88rem; color: rgba(255,255,255,.55); margin-bottom: 1.5rem; line-height: 1.6; }
-    .user-features { list-style: none; }
-    .user-features li { font-size: .83rem; color: rgba(255,255,255,.7); padding: .3rem 0; padding-left: 1.4rem; position: relative; }
-    .user-features li::before { content: '✓'; position: absolute; left: 0; color: #FF6B35; font-weight: 700; }
-    .user-cta { display: inline-block; margin-top: 1.5rem; font-size: .85rem; font-weight: 700; color: #FF6B35; text-decoration: none; border: 1px solid rgba(255,107,53,.35); border-radius: 10px; padding: .55rem 1.1rem; transition: background .15s; }
-    .user-cta:hover { background: rgba(255,107,53,.1); }
+    /* POSITIONING */
+    .positioning { text-align: center; }
+    .positioning h2 { margin-bottom: 1rem; }
+    .positioning > p { max-width: 560px; margin: 0 auto; font-size: 1rem; }
 
-    /* ── How it works ── */
-    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-top: 3rem; }
-    .step { background: #111526; border-radius: 18px; padding: 1.5rem; border: 1px solid rgba(255,255,255,.07); }
-    .step-num { width: 36px; height: 36px; border-radius: 10px; background: rgba(255,107,53,.15); border: 1px solid rgba(255,107,53,.3); display: flex; align-items: center; justify-content: center; font-size: .85rem; font-weight: 800; color: #FF6B35; margin-bottom: 1rem; }
-    .step-title { font-size: .95rem; font-weight: 700; margin-bottom: .4rem; }
-    .step-desc { font-size: .82rem; color: rgba(255,255,255,.5); line-height: 1.55; }
+    /* USER CARDS */
+    .user-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem; }
+    .user-card { background: #111527; border: 1px solid rgba(255,255,255,.07); border-radius: 20px; padding: 1.75rem 1.5rem; }
+    .user-card.featured { border-color: rgba(255,107,53,.35); background: linear-gradient(135deg, rgba(255,107,53,.08), #111527); }
+    .badge { display: inline-block; font-size: .65rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; padding: .25rem .65rem; border-radius: 99px; margin-bottom: 1rem; }
+    .badge-new { background: rgba(255,107,53,.2); color: #FF6B35; border: 1px solid rgba(255,107,53,.3); }
+    .badge-plain { background: rgba(255,255,255,.07); color: rgba(255,255,255,.5); }
+    .user-card h3 { margin-bottom: .4rem; }
+    .user-card > p { font-size: .85rem; margin-bottom: 1.1rem; }
+    .feat-list { list-style: none; margin-bottom: 1.5rem; display: grid; gap: .35rem; }
+    .feat-list li { font-size: .85rem; color: rgba(255,255,255,.7); display: flex; align-items: center; gap: .5rem; }
+    .feat-list li::before { content: '✔'; color: #FF6B35; flex-shrink: 0; }
+    .card-btn { display: block; text-align: center; text-decoration: none; font-weight: 700; font-size: .88rem; padding: .7rem; border-radius: 11px; transition: opacity .15s; }
+    .card-btn.primary { background: linear-gradient(135deg, #FF6B35, #e0521e); color: #fff; }
+    .card-btn.secondary { border: 1px solid rgba(255,255,255,.15); color: rgba(255,255,255,.55); }
+    .card-btn:hover { opacity: .85; }
 
-    /* ── AI section ── */
-    .ai-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-top: 3rem; }
-    @media (max-width: 640px) { .ai-grid { grid-template-columns: 1fr; } }
-    .ai-card { background: #111526; border-radius: 18px; padding: 1.5rem; border: 1px solid rgba(255,255,255,.07); }
-    .ai-card-ico { font-size: 1.75rem; margin-bottom: .75rem; }
-    .ai-card-title { font-size: .95rem; font-weight: 700; margin-bottom: .4rem; }
-    .ai-card-desc { font-size: .83rem; color: rgba(255,255,255,.5); line-height: 1.55; }
-    .ai-card.span2 { grid-column: span 2; }
-    @media (max-width: 640px) { .ai-card.span2 { grid-column: span 1; } }
+    /* HOW IT WORKS */
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 1.25rem; margin-top: 2rem; }
+    .step { text-align: center; }
+    .step-num { width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #FF6B35, #e0521e); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 900; margin: 0 auto 1rem; }
+    .step h3 { font-size: .95rem; margin-bottom: .35rem; }
+    .step p { font-size: .82rem; }
 
-    /* ── Tech strip ── */
-    .tech-strip { display: flex; flex-wrap: wrap; gap: .65rem; margin-top: 2rem; }
-    .tech-pill { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 99px; padding: .3rem .85rem; font-size: .78rem; color: rgba(255,255,255,.65); }
+    /* HABITS */
+    .habit-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 2rem; }
+    .habit-card { background: #111527; border: 1px solid rgba(255,255,255,.07); border-radius: 16px; padding: 1.4rem; }
+    .habit-icon { font-size: 1.75rem; margin-bottom: .75rem; }
+    .habit-card h3 { margin-bottom: .35rem; font-size: 1rem; }
+    .habit-card p { font-size: .83rem; }
+    .habit-note { margin-top: 1.5rem; padding: 1.1rem 1.4rem; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07); border-radius: 14px; text-align: center; font-size: .88rem; color: rgba(255,255,255,.5); }
+    .habit-note strong { color: rgba(255,255,255,.8); }
 
-    /* ── Pricing ── */
-    .price-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; margin-top: 3rem; }
-    .price-card { background: #111526; border-radius: 18px; padding: 1.75rem; border: 1px solid rgba(255,255,255,.08); }
-    .price-card.highlight { border-color: rgba(255,107,53,.4); background: linear-gradient(135deg, #111526, #1a1f3a); }
-    .price-label { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: rgba(255,255,255,.4); margin-bottom: .5rem; }
-    .price-val { font-size: 2.2rem; font-weight: 900; color: #FF6B35; }
-    .price-unit { font-size: .8rem; color: rgba(255,255,255,.4); }
-    .price-desc { font-size: .83rem; color: rgba(255,255,255,.55); margin-top: .65rem; line-height: 1.55; }
+    /* MOMENTUM */
+    .momentum-card { background: #111527; border: 1px solid rgba(255,107,53,.2); border-radius: 20px; padding: 2rem; margin-top: 2rem; }
+    .momentum-rules { list-style: none; display: grid; gap: .7rem; margin-top: 1.25rem; }
+    .momentum-rules li { display: flex; align-items: flex-start; gap: .75rem; font-size: .9rem; color: rgba(255,255,255,.75); }
+    .momentum-rules li .ico { flex-shrink: 0; }
 
-    /* ── Footer ── */
-    footer { border-top: 1px solid rgba(255,255,255,.07); padding: 2.5rem 1.5rem; text-align: center; }
-    .footer-logo { font-size: 1.1rem; font-weight: 800; color: #fff; margin-bottom: .5rem; }
-    .footer-sub { font-size: .82rem; color: rgba(255,255,255,.35); }
-    .footer-links { display: flex; gap: 1.5rem; justify-content: center; margin-top: 1rem; flex-wrap: wrap; }
-    .footer-links a { font-size: .82rem; color: rgba(255,255,255,.4); text-decoration: none; transition: color .15s; }
-    .footer-links a:hover { color: #FF6B35; }
+    /* REWARDS */
+    .rewards-table { width: 100%; border-collapse: collapse; margin-top: 2rem; }
+    .rewards-table th { text-align: left; font-size: .72rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: rgba(255,255,255,.35); padding: .6rem 1rem; border-bottom: 1px solid rgba(255,255,255,.07); }
+    .rewards-table td { padding: .85rem 1rem; border-bottom: 1px solid rgba(255,255,255,.05); font-size: .88rem; color: rgba(255,255,255,.7); }
+    .rewards-table td:first-child { color: #FF6B35; font-weight: 700; white-space: nowrap; }
+    .rewards-table tr:last-child td { border: none; }
 
-    @media (max-width: 600px) {
-      .nav-link { display: none; }
-      .stats { gap: 2rem; }
-    }
+    /* COACH */
+    .coach-card { background: #111527; border: 1px solid rgba(255,255,255,.07); border-radius: 20px; padding: 2rem; margin-top: 2rem; }
+    .coach-topics { display: flex; flex-wrap: wrap; gap: .5rem; margin: 1rem 0 1.5rem; }
+    .coach-topic { background: rgba(255,107,53,.1); border: 1px solid rgba(255,107,53,.2); color: #FF6B35; font-size: .78rem; font-weight: 600; padding: .3rem .75rem; border-radius: 99px; }
+    .chat-examples { display: grid; gap: .65rem; margin-bottom: 1.5rem; }
+    .chat-bubble { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); border-radius: 12px; padding: .7rem 1rem; font-size: .85rem; color: rgba(255,255,255,.7); font-style: italic; }
+    .coach-note { font-size: .78rem; color: rgba(255,255,255,.35); padding-top: 1rem; border-top: 1px solid rgba(255,255,255,.07); }
+
+    /* PRICING */
+    .pricing-bg { background: #0d1020; padding: 5rem 0; }
+    .pricing-inner { max-width: 900px; margin: 0 auto; padding: 0 1.5rem; }
+    .price-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; margin-top: 2rem; }
+    .price-card { background: #111527; border: 1px solid rgba(255,255,255,.07); border-radius: 20px; padding: 1.75rem 1.5rem; }
+    .price-card.featured { border-color: rgba(255,107,53,.4); background: linear-gradient(135deg, rgba(255,107,53,.1), #111527); }
+    .plan-name { font-size: .72rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.4); margin-bottom: .5rem; }
+    .price-card.featured .plan-name { color: #FF6B35; }
+    .price-amount { font-size: 2.4rem; font-weight: 900; color: #fff; line-height: 1; margin-bottom: .2rem; }
+    .price-amount span { font-size: 1rem; font-weight: 500; color: rgba(255,255,255,.4); }
+    .price-note { font-size: .78rem; color: rgba(255,255,255,.35); margin-bottom: 1.25rem; }
+    .price-card ul { list-style: none; margin-bottom: 1.5rem; display: grid; gap: .45rem; }
+    .price-card ul li { font-size: .85rem; color: rgba(255,255,255,.65); display: flex; align-items: center; gap: .5rem; }
+    .price-card ul li::before { content: '✔'; color: #FF6B35; flex-shrink: 0; }
+    .price-btn { display: block; text-align: center; text-decoration: none; font-weight: 700; font-size: .9rem; padding: .75rem; border-radius: 11px; transition: opacity .15s; }
+    .price-btn.primary { background: linear-gradient(135deg, #FF6B35, #e0521e); color: #fff; }
+    .price-btn.secondary { border: 1px solid rgba(255,255,255,.15); color: rgba(255,255,255,.55); }
+    .price-btn:hover { opacity: .85; }
+    .addons { margin-top: 2.5rem; }
+    .addon-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: .75rem; margin-top: 1rem; }
+    .addon-card { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07); border-radius: 14px; padding: 1rem 1.1rem; display: flex; justify-content: space-between; align-items: center; }
+    .addon-name { font-size: .85rem; color: rgba(255,255,255,.7); }
+    .addon-price { font-size: .95rem; font-weight: 700; color: #FF6B35; }
+    .trainer-pricing { margin-top: 3rem; }
+    .trainer-tiers { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: .75rem; margin-top: 1rem; }
+    .trainer-tier { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07); border-radius: 14px; padding: 1.1rem; }
+    .t-price { font-size: 1.2rem; font-weight: 800; color: #FF6B35; margin-bottom: .2rem; }
+    .t-desc { font-size: .82rem; color: rgba(255,255,255,.5); }
+
+    /* FINAL CTA */
+    .final-cta { text-align: center; padding: 6rem 1.5rem; }
+    .final-cta h2 { margin-bottom: .75rem; }
+    .final-cta p { max-width: 400px; margin: 0 auto 2rem; }
+
+    /* SAFETY */
+    .safety { border-top: 1px solid rgba(255,255,255,.06); padding: 2rem 1.5rem; text-align: center; }
+    .safety p { font-size: .78rem; color: rgba(255,255,255,.3); max-width: 600px; margin: 0 auto; line-height: 1.7; }
+
+    /* FOOTER */
+    .footer { border-top: 1px solid rgba(255,255,255,.06); padding: 2.5rem 1.5rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; max-width: 900px; margin: 0 auto; }
+    .footer-brand { font-size: .95rem; font-weight: 800; color: #fff; }
+    .footer-brand em { color: #FF6B35; font-style: normal; }
+    .footer-links { display: flex; flex-wrap: wrap; gap: 1.25rem; }
+    .footer-links a { color: rgba(255,255,255,.35); text-decoration: none; font-size: .82rem; transition: color .15s; }
+    .footer-links a:hover { color: rgba(255,255,255,.7); }
   </style>
 </head>
 <body>
 
-<!-- Nav -->
+<!-- NAV -->
 <nav class="nav">
-  <a class="nav-logo" href="/">
-    <img src="/static/images/logo.png" alt="GYMprogrm">
-    <span>GYMprogrm</span>
-  </a>
-  <div class="nav-spacer"></div>
-  <a class="nav-link" href="#features">Features</a>
-  <a class="nav-link" href="#ai">AI</a>
-  <a class="nav-link" href="#pricing">Pricing</a>
-  <a class="nav-cta" href="/members/register/">Join Free</a>
+  <a href="/" class="nav-brand"><span>GYMPR<em>O</em>GRM</span></a>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#pricing">Pricing</a>
+    <a href="/login/">For Trainers</a>
+    <a href="/members/register/" class="nav-cta">Join Free</a>
+  </div>
 </nav>
 
-<!-- Hero -->
+<!-- HERO -->
 <div class="hero">
-  <div class="hero-badge">🚀 Now with AI Coach & Independent Member access</div>
-  <h1>Your fitness,<br><span>powered by AI</span></h1>
-  <p class="hero-sub">The complete platform for personal trainers, their clients, and independent members who want professional-grade AI coaching — without needing a trainer.</p>
-  <div class="hero-actions">
-    <a class="btn-primary" href="/members/register/">Start as Independent Member</a>
-    <a class="btn-outline" href="/login/">Trainer Login</a>
+  <h1>Build habits that<br><span>change your body.</span></h1>
+  <p class="sub">Personalized workouts, food guidance, posture insights, and progress tracking — all in one daily system.</p>
+  <div class="hero-btns">
+    <a href="/members/register/" class="btn-primary">Start My Plan</a>
+    <a href="/login/" class="btn-outline">For Trainers</a>
+  </div>
+  <p class="hero-trust">No downloads. No confusion. Just structure and results.</p>
+</div>
+
+<!-- TRUST STRIP -->
+<div class="trust-strip">
+  <div class="trust-inner">
+    <div class="trust-item"><span class="chk">✔</span> Personalized to your goals and body</div>
+    <div class="trust-item"><span class="chk">✔</span> Adjusts as you progress</div>
+    <div class="trust-item"><span class="chk">✔</span> Designed to avoid injuries and burnout</div>
+    <div class="trust-item"><span class="chk">✔</span> Works on your phone anytime</div>
   </div>
 </div>
 
-<!-- Stats -->
-<div class="stats">
-  <div class="stat-item"><div class="stat-v">3</div><div class="stat-l">User types</div></div>
-  <div class="stat-item"><div class="stat-v">4-in-1</div><div class="stat-l">AI expertise (PT + Nutritionist + Doctor + Physio)</div></div>
-  <div class="stat-item"><div class="stat-v">37+</div><div class="stat-l">Exercises with pro GIF demos</div></div>
-  <div class="stat-item"><div class="stat-v">$8/mo</div><div class="stat-l">Total running cost</div></div>
+<!-- POSITIONING -->
+<div class="section positioning">
+  <div class="section-label">What it is</div>
+  <h2>GYMprogrm is not just a workout app.</h2>
+  <p>It is a daily habit system for your body — combining training, nutrition, recovery, and progress into one structured flow. Start with small actions. Stay consistent. See real change.</p>
 </div>
 
-<!-- Who is it for -->
-<section id="features">
-  <div class="section-inner">
-    <div class="section-tag">Who it's for</div>
-    <h2 class="section-title">Three ways to use GYMprogrm</h2>
-    <p class="section-sub">One platform. Three completely different experiences, each built specifically for its user.</p>
+<!-- WHO IT'S FOR -->
+<div class="section" id="features">
+  <div class="section-label">Who it's for</div>
+  <h2 style="margin-bottom:1.75rem;">Built for every kind of user</h2>
+  <div class="user-grid">
 
-    <div class="user-cards">
+    <div class="user-card featured">
+      <span class="badge badge-new">Independent Member</span>
+      <h3>Your personal fitness system</h3>
+      <p>A clear daily path: what to train, how to eat, what to track, and how to stay consistent.</p>
+      <ul class="feat-list">
+        <li>Personalized workouts</li>
+        <li>Food and protein guidance</li>
+        <li>Daily habit checklist</li>
+        <li>Progress tracking</li>
+        <li>Adjustments based on goals, injuries &amp; health notes</li>
+      </ul>
+      <a href="/members/register/" class="card-btn primary">Start My Daily Plan</a>
+    </div>
 
-      <!-- Trainer -->
-      <div class="user-card">
-        <div class="user-card-badge badge-trainer">Trainer</div>
-        <div class="user-ico">👩‍💼</div>
-        <div class="user-name">Personal Trainer</div>
-        <div class="user-desc">Run your coaching business from one dashboard. AI does the heavy analysis work — you review and confirm before clients see anything.</div>
-        <ul class="user-features">
-          <li>Invite clients by email, manage intake forms</li>
-          <li>AI program generation (blood test aware)</li>
-          <li>Blood test PDF analysis with exercise modifications</li>
-          <li>Exercise library with AI illustrations</li>
-          <li>Billing: plans, payment reminders, overdue tracking</li>
-          <li>Doctor referral cards on client portals</li>
-          <li>Payment reminder emails (automated daily cron)</li>
-        </ul>
-        <a class="user-cta" href="/login/">Trainer Login →</a>
-      </div>
+    <div class="user-card">
+      <span class="badge badge-plain">Client</span>
+      <h3>Everything from your trainer in one place</h3>
+      <p>Follow your program, log workouts, and stay accountable.</p>
+      <ul class="feat-list">
+        <li>Follow your program step-by-step</li>
+        <li>Log workouts</li>
+        <li>Track progress</li>
+        <li>Stay accountable</li>
+      </ul>
+      <a href="/portal/login/" class="card-btn secondary">Client Login</a>
+    </div>
 
-      <!-- Client -->
-      <div class="user-card">
-        <div class="user-card-badge badge-client">Client</div>
-        <div class="user-ico">🏃‍♀️</div>
-        <div class="user-name">Trainer's Client</div>
-        <div class="user-desc">Your trainer sets up your program. You follow it, log workouts, and track progress — all from your phone like a native app.</div>
-        <ul class="user-features">
-          <li>Invite link or Google login — no app store</li>
-          <li>PWA: install on iPhone or Android home screen</li>
-          <li>Program with exercise photos, sets, reps, rest timer</li>
-          <li>Workout logging with previous session reference</li>
-          <li>Progress history and body measurements</li>
-          <li>Billing: view plan, pay via Venmo/PayPal/Zelle</li>
-          <li>10-language interface</li>
-        </ul>
-        <a class="user-cta" href="/portal/">Client Portal →</a>
-      </div>
+    <div class="user-card">
+      <span class="badge badge-plain">Trainer</span>
+      <h3>Run your coaching business like a system</h3>
+      <p>Manage clients, deliver programs, and scale without burnout.</p>
+      <ul class="feat-list">
+        <li>Manage clients</li>
+        <li>Deliver structured programs</li>
+        <li>Track progress</li>
+        <li>Automate reminders</li>
+        <li>Scale without burnout</li>
+      </ul>
+      <a href="/login/" class="card-btn secondary">Trainer Login</a>
+    </div>
 
-      <!-- Member -->
-      <div class="user-card featured">
-        <div class="user-card-badge badge-new">New</div>
-        <div class="user-ico">✨</div>
-        <div class="user-name">Independent Member</div>
-        <div class="user-desc">No trainer needed. Register yourself, describe your goals, upload your blood test — and get a program designed by AI that thinks like 4 professionals at once.</div>
-        <ul class="user-features">
-          <li>Self-register — no invite, no trainer required</li>
-          <li>AI Coach Alex: PT + nutritionist + doctor + physio</li>
-          <li>Programs tailored to your exact aesthetic goal</li>
-          <li>Cortisol & hormonal awareness in program design</li>
-          <li>Blood test & prescription-aware exercise selection</li>
-          <li>Automatic nutrition logging via chat</li>
-          <li>Daily calorie & macro targets from your profile</li>
-          <li>Posture analysis from photo</li>
-          <li>Professional exercise GIFs for every exercise</li>
-        </ul>
-        <a class="user-cta" href="/members/register/">Join Free →</a>
-      </div>
+  </div>
+</div>
 
+<!-- HOW IT WORKS -->
+<div class="section">
+  <div class="section-label">How it works</div>
+  <h2>From zero to structure in minutes</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <h3>Tell us your goal</h3>
+      <p>Weight loss, shaping, strength, or rehab — we start from where you are.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <h3>Get your daily plan</h3>
+      <p>A personalized workout and nutrition structure built for your body.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <h3>Complete simple actions</h3>
+      <p>Move. Eat with intention. Track. Just two actions a day keeps you on track.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <h3>Track and stay consistent</h3>
+      <p>No guesswork. No chaos. Just structure that builds real results over time.</p>
     </div>
   </div>
-</section>
+</div>
 
-<!-- AI section -->
-<section id="ai" style="background: #0d1020;">
-  <div class="section-inner">
-    <div class="section-tag">AI Coaching</div>
-    <h2 class="section-title">Not a chatbot. Four professionals in one.</h2>
-    <p class="section-sub">The AI Coach Alex combines knowledge that typically requires four separate appointments — and applies all of it to your specific body and goals at once.</p>
-
-    <div class="ai-grid">
-      <div class="ai-card">
-        <div class="ai-card-ico">🏋️</div>
-        <div class="ai-card-title">Elite Personal Trainer</div>
-        <div class="ai-card-desc">Understands the difference between aesthetic shaping and fitness training. Knows which exercises build the look you want — and which ones work against it. Considers exercise order, rep ranges, and rest periods for your specific goal.</div>
-      </div>
-      <div class="ai-card">
-        <div class="ai-card-ico">🥗</div>
-        <div class="ai-card-title">Registered Sports Dietitian</div>
-        <div class="ai-card-desc">Automatically logs your food when you describe it in chat. Calculates exact macros from your profile using Mifflin-St Jeor with activity and goal adjustments. Knows how caloric deficit affects your training capacity.</div>
-      </div>
-      <div class="ai-card">
-        <div class="ai-card-ico">🩺</div>
-        <div class="ai-card-title">Sports Medicine Doctor</div>
-        <div class="ai-card-desc">Reads your blood test and doctor prescription. Extracts iron, B12, D3, thyroid markers, and hormonal values. Adjusts training volume and intensity based on what your blood work says about your recovery capacity.</div>
-      </div>
-      <div class="ai-card">
-        <div class="ai-card-ico">🧬</div>
-        <div class="ai-card-title">Functional Medicine + Physio</div>
-        <div class="ai-card-desc">Understands cortisol response: intense training in a stressed body causes fat retention and muscle breakdown. Identifies postural imbalances and prescribes corrective exercises. Flags contraindicated exercises for your body type and goals.</div>
-      </div>
-      <div class="ai-card span2">
-        <div class="ai-card-ico">⚡</div>
-        <div class="ai-card-title">How the program generation works</div>
-        <div class="ai-card-desc">When you ask Alex for a program, it performs an integrated assessment: classifies your goal (aesthetic shaping vs fitness vs fat loss), lists which muscles to GROW and which to CONTROL, evaluates your hormonal risk profile from age + activity + goal, reads your blood test for deficiencies, identifies exercises from the library that would work AGAINST your goal and excludes them — then designs the program. The reasoning behind every decision is shown on your program page.</div>
-      </div>
+<!-- DAILY HABIT SYSTEM -->
+<div class="section">
+  <div class="section-label">Daily habit system</div>
+  <h2>Small daily actions. Real results.</h2>
+  <p style="max-width:520px;margin-top:.5rem;">Every day, you focus on three things. You do not need perfection. Consistency builds results.</p>
+  <div class="habit-grid">
+    <div class="habit-card">
+      <div class="habit-icon">🏃</div>
+      <h3>Move your body</h3>
+      <p>Workout or any physical activity. Done is better than perfect.</p>
     </div>
-
-    <div class="tech-strip" style="margin-top:2.5rem;">
-      <div class="tech-pill">Claude Sonnet 4.6 — Chat & Program Design</div>
-      <div class="tech-pill">Claude Opus 4.7 — When blood test attached</div>
-      <div class="tech-pill">Mifflin-St Jeor BMR</div>
-      <div class="tech-pill">USDA nutrition values</div>
-      <div class="tech-pill">Gymvisual.com exercise GIFs</div>
+    <div class="habit-card">
+      <div class="habit-icon">🥗</div>
+      <h3>Eat with intention</h3>
+      <p>Protein first. Simple food choices. Log what you eat.</p>
+    </div>
+    <div class="habit-card">
+      <div class="habit-icon">📊</div>
+      <h3>Track your progress</h3>
+      <p>Log your workout or meal. One entry is enough to count the day.</p>
     </div>
   </div>
-</section>
+  <div class="habit-note">Complete any <strong>2 of 3</strong> to count the day. Rest days count too.</div>
+</div>
 
-<!-- How it works for members -->
-<section>
-  <div class="section-inner">
-    <div class="section-tag">Getting started</div>
-    <h2 class="section-title">From zero to your personalized program in minutes</h2>
-    <p class="section-sub">No gym membership. No trainer appointment. No app store.</p>
-
-    <div class="steps">
-      <div class="step">
-        <div class="step-num">1</div>
-        <div class="step-title">Register</div>
-        <div class="step-desc">Create your account at /members/register/ — name, email, password. That's it. No invite needed.</div>
-      </div>
-      <div class="step">
-        <div class="step-num">2</div>
-        <div class="step-title">Onboarding</div>
-        <div class="step-desc">3 steps: your fitness goals → physical stats (age, weight, height) → optionally upload your blood test or doctor prescription.</div>
-      </div>
-      <div class="step">
-        <div class="step-num">3</div>
-        <div class="step-title">Talk to Alex</div>
-        <div class="step-desc">Open the AI Chat and describe what you want. Ask for a program, log your meals, ask about your blood test results — Alex handles all of it.</div>
-      </div>
-      <div class="step">
-        <div class="step-num">4</div>
-        <div class="step-title">Follow your program</div>
-        <div class="step-desc">Your program appears in the Program tab with animated GIF demonstrations for every exercise. Tick off exercises as you complete them.</div>
-      </div>
-      <div class="step">
-        <div class="step-num">5</div>
-        <div class="step-title">Track nutrition</div>
-        <div class="step-desc">Tell Alex what you ate — it logs calories and macros automatically. Your daily targets are calculated from your profile and goal.</div>
-      </div>
-      <div class="step">
-        <div class="step-num">6</div>
-        <div class="step-title">Posture & progress</div>
-        <div class="step-desc">Upload a standing photo for AI posture analysis. Track your weekly exercise count and 14-day calorie trend in the Progress tab.</div>
-      </div>
-    </div>
+<!-- MOMENTUM -->
+<div class="section">
+  <div class="section-label">Momentum</div>
+  <h2>Consistency builds results</h2>
+  <p style="max-width:480px;margin-top:.5rem;">A simple streak system that rewards effort, not perfection.</p>
+  <div class="momentum-card">
+    <h3>🔥 How momentum works</h3>
+    <p style="font-size:.85rem;color:rgba(255,255,255,.45);margin-top:.25rem;">Simple rules, forgiving by design</p>
+    <ul class="momentum-rules">
+      <li><span class="ico">✔</span> Complete 2 daily actions → the day counts</li>
+      <li><span class="ico">✔</span> Rest day → counts automatically</li>
+      <li><span class="ico">✔</span> Skip 1 day → no penalty, streak continues</li>
+      <li><span class="ico">⚠️</span> Skip 2 days in a row → streak resets</li>
+    </ul>
   </div>
-</section>
+</div>
 
-<!-- Pricing -->
-<section id="pricing" style="background: #0d1020;">
-  <div class="section-inner">
-    <div class="section-tag">Pricing</div>
-    <h2 class="section-title">Running cost: ~$8/month total</h2>
-    <p class="section-sub">GYMprogrm is a platform I run for my own training business. Here's what it costs to operate.</p>
+<!-- REWARDS -->
+<div class="section">
+  <div class="section-label">Rewards</div>
+  <h2>Hit milestones. Unlock rewards.</h2>
+  <p style="max-width:480px;margin-top:.5rem;">Consistency earns you real benefits — not just badges.</p>
+  <table class="rewards-table">
+    <thead>
+      <tr><th>Milestone</th><th>Reward</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>🔥 7 days</td><td>Free Plan Adjustment</td></tr>
+      <tr><td>💪 14 days</td><td>Free Posture Check</td></tr>
+      <tr><td>🏆 30 days</td><td>Progress Review with Alex</td></tr>
+      <tr><td>⚡ 60 days</td><td>Advanced Program Upgrade</td></tr>
+    </tbody>
+  </table>
+</div>
 
-    <div class="price-cards">
-      <div class="price-card highlight">
-        <div class="price-label">Hosting</div>
-        <div class="price-val">$5<span class="price-unit">/mo</span></div>
-        <div class="price-desc">Railway (Hobby plan) — Django app + managed PostgreSQL + automated deploys from GitHub + daily cron jobs.</div>
-      </div>
+<!-- COACH ALEX -->
+<div class="section">
+  <div class="section-label">Coach Alex</div>
+  <h2>Ask anything. Get real answers.</h2>
+  <p style="max-width:480px;margin-top:.5rem;">Your AI coach is always available — no appointments, no waiting.</p>
+  <div class="coach-card">
+    <p style="font-size:.85rem;color:rgba(255,255,255,.45);margin-bottom:.75rem;">Ask about:</p>
+    <div class="coach-topics">
+      <span class="coach-topic">Workouts</span>
+      <span class="coach-topic">Food &amp; nutrition</span>
+      <span class="coach-topic">Recovery</span>
+      <span class="coach-topic">Adjusting your plan</span>
+      <span class="coach-topic">Injuries</span>
+    </div>
+    <div class="chat-examples">
+      <div class="chat-bubble">"I have knee pain today, what should I do?"</div>
+      <div class="chat-bubble">"Log my breakfast — 2 eggs, toast, coffee"</div>
+      <div class="chat-bubble">"Can you adjust my program for 4 days a week?"</div>
+    </div>
+    <p class="coach-note">This is fitness and wellness guidance, not medical advice. For medical decisions, consult a qualified professional.</p>
+  </div>
+</div>
+
+<!-- PRICING -->
+<div class="pricing-bg" id="pricing">
+  <div class="pricing-inner">
+    <div class="section-label">Pricing</div>
+    <h2>Simple and flexible</h2>
+    <p style="margin-top:.5rem;">Start free. Upgrade anytime. No contracts.</p>
+
+    <div class="price-grid">
       <div class="price-card">
-        <div class="price-label">AI (Anthropic)</div>
-        <div class="price-val">~$2–8<span class="price-unit">/mo</span></div>
-        <div class="price-desc">Claude Sonnet 4.6 for programs and chat. Claude Opus 4.7 when blood tests are attached. ~$0.05–0.15 per program generated.</div>
+        <div class="plan-name">Free</div>
+        <div class="price-amount">$0</div>
+        <div class="price-note">Forever free</div>
+        <ul>
+          <li>Basic workout plan</li>
+          <li>Daily habit system</li>
+          <li>Limited coach guidance</li>
+        </ul>
+        <a href="/members/register/" class="price-btn secondary">Get Started</a>
       </div>
-      <div class="price-card">
-        <div class="price-label">Everything else</div>
-        <div class="price-val">$0</div>
-        <div class="price-desc">Cloudinary (media storage), Resend (email), Google OAuth — all on free tiers. Domain: ~$15/year.</div>
+
+      <div class="price-card featured">
+        <div class="plan-name">Pro</div>
+        <div class="price-amount">$12<span>/mo</span></div>
+        <div class="price-note">or $8/month billed yearly</div>
+        <ul>
+          <li>Full personalized workouts</li>
+          <li>Nutrition guidance</li>
+          <li>Progress tracking</li>
+          <li>Unlimited coach support</li>
+          <li>Plan adjustments</li>
+          <li>Posture insights</li>
+        </ul>
+        <a href="/members/register/" class="price-btn primary">Start Pro</a>
       </div>
     </div>
 
-    <div style="margin-top:2.5rem;padding:1.5rem;background:#111526;border-radius:16px;border:1px solid rgba(255,255,255,.08);">
-      <p style="font-size:.88rem;color:rgba(255,255,255,.55);line-height:1.7;">
-        <strong style="color:#fff;">Built with Claude Code</strong> — the entire platform (trainer dashboard, client portal, AI coach, member features) was built solo using Anthropic's Claude Code AI coding assistant. No agency, no freelancers. Development cost: the Claude Pro/Max subscription during the build period.
-      </p>
+    <div class="addons">
+      <h3 style="font-size:.95rem;margin-bottom:.25rem;">Add-ons — pay only when you need them</h3>
+      <div class="addon-grid">
+        <div class="addon-card"><span class="addon-name">Plan Adjustment</span><span class="addon-price">$3</span></div>
+        <div class="addon-card"><span class="addon-name">Posture Check</span><span class="addon-price">$2</span></div>
+        <div class="addon-card"><span class="addon-name">Blood Insight</span><span class="addon-price">$5</span></div>
+      </div>
+    </div>
+
+    <div class="trainer-pricing">
+      <h3 style="font-size:.95rem;margin-bottom:.25rem;">For Trainers</h3>
+      <p style="font-size:.82rem;color:rgba(255,255,255,.4);margin-bottom:.85rem;">Manage your clients and grow your business</p>
+      <div class="trainer-tiers">
+        <div class="trainer-tier"><div class="t-price">Free</div><div class="t-desc">Up to 3 clients</div></div>
+        <div class="trainer-tier"><div class="t-price">$20/mo</div><div class="t-desc">Growing — up to 20 clients</div></div>
+        <div class="trainer-tier"><div class="t-price">$50/mo</div><div class="t-desc">Unlimited clients</div></div>
+      </div>
     </div>
   </div>
-</section>
+</div>
 
-<!-- Footer -->
-<footer>
-  <div class="footer-logo">GYMprogrm</div>
-  <div class="footer-sub">AI-powered fitness platform · gymprogrm.org</div>
+<!-- FINAL CTA -->
+<div class="final-cta">
+  <h2>Start building your body today</h2>
+  <p>No pressure. No confusion. Just a system that works.</p>
+  <a href="/members/register/" class="btn-primary">Start My Plan</a>
+</div>
+
+<!-- SAFETY -->
+<div class="safety">
+  <p>GYMprogrm provides fitness and wellness guidance only. It does not diagnose or treat medical conditions. For any medical decisions, consult a qualified healthcare professional.</p>
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-brand">GYMPR<em>O</em>GRM</div>
   <div class="footer-links">
     <a href="/members/register/">Join as Member</a>
     <a href="/login/">Trainer Login</a>
-    <a href="/portal/">Client Portal</a>
-    <a href="https://github.com/Liliyalexx/GYMprogrm" target="_blank">GitHub</a>
+    <a href="/portal/login/">Client Portal</a>
+    <a href="#pricing">Pricing</a>
   </div>
 </footer>
 
