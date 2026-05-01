@@ -4,14 +4,16 @@ import threading
 from datetime import date, timedelta
 from functools import wraps
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Avg, Sum
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET
 
 from django.core.files.base import ContentFile
@@ -24,8 +26,9 @@ from .ai import (
 from .models import (
     IndependentMember, MemberProgram, MemberProgramDay, MemberExercise,
     CoachConversation, CoachMessage, NutritionLog, PostureAnalysis,
-    ExerciseDemo,
+    ExerciseDemo, TrainerBilling,
 )
+from . import billing as stripe_billing
 
 
 # ---------------------------------------------------------------------------
@@ -293,6 +296,7 @@ def program_detail(request, pk):
         'member': member,
         'program': program,
         'days': days,
+        'is_free': not member.is_pro,
         'total': total,
         'done': done,
     })
@@ -809,3 +813,254 @@ def progress(request):
         'nutrition_days': json.dumps(nutrition_days),
         'blood_analysis': member.blood_analysis,
     })
+
+
+# ---------------------------------------------------------------------------
+# Billing — Member
+# ---------------------------------------------------------------------------
+
+@member_required
+def billing_page(request):
+    member = request.user.member
+    return render(request, 'members/billing.html', {
+        'member': member,
+        'STRIPE_PUBLISHABLE_KEY': settings.STRIPE_PUBLISHABLE_KEY,
+    })
+
+
+@member_required
+@require_POST
+def create_checkout_session(request):
+    member = request.user.member
+    try:
+        body = json.loads(request.body)
+        price_type = body.get('price_type', 'monthly')
+    except Exception:
+        price_type = 'monthly'
+
+    price_id = (
+        settings.STRIPE_PRICE_PRO_YEARLY
+        if price_type == 'yearly'
+        else settings.STRIPE_PRICE_PRO_MONTHLY
+    )
+
+    if not member.stripe_customer_id:
+        customer_id = stripe_billing.get_or_create_customer(
+            email=member.email or member.user.email,
+            name=member.name,
+            metadata={'member_id': str(member.pk)},
+        )
+        member.stripe_customer_id = customer_id
+        member.save(update_fields=['stripe_customer_id'])
+
+    base = 'https://gymprogrm.org' if not settings.DEBUG else 'http://localhost:8000'
+    session = stripe_billing.create_checkout_session(
+        customer_id=member.stripe_customer_id,
+        price_id=price_id,
+        mode='subscription',
+        success_url=f'{base}/members/billing/success/?session_id={{CHECKOUT_SESSION_ID}}',
+        cancel_url=f'{base}/members/billing/cancel/',
+        metadata={'member_id': str(member.pk), 'type': 'member_pro'},
+    )
+    return JsonResponse({'url': session.url})
+
+
+@member_required
+@require_POST
+def addon_checkout(request):
+    member = request.user.member
+    try:
+        body = json.loads(request.body)
+        addon = body.get('addon', '')
+    except Exception:
+        addon = ''
+
+    price_map = {
+        'adjustment': settings.STRIPE_PRICE_ADDON_ADJUSTMENT,
+        'posture': settings.STRIPE_PRICE_ADDON_POSTURE,
+        'blood': settings.STRIPE_PRICE_ADDON_BLOOD,
+    }
+    price_id = price_map.get(addon)
+    if not price_id:
+        return JsonResponse({'error': 'Invalid add-on'}, status=400)
+
+    if not member.stripe_customer_id:
+        customer_id = stripe_billing.get_or_create_customer(
+            email=member.email or member.user.email,
+            name=member.name,
+        )
+        member.stripe_customer_id = customer_id
+        member.save(update_fields=['stripe_customer_id'])
+
+    base = 'https://gymprogrm.org' if not settings.DEBUG else 'http://localhost:8000'
+    session = stripe_billing.create_checkout_session(
+        customer_id=member.stripe_customer_id,
+        price_id=price_id,
+        mode='payment',
+        success_url=f'{base}/members/billing/success/?session_id={{CHECKOUT_SESSION_ID}}',
+        cancel_url=f'{base}/members/billing/cancel/',
+        metadata={'member_id': str(member.pk), 'type': f'addon_{addon}'},
+    )
+    return JsonResponse({'url': session.url})
+
+
+@member_required
+@require_POST
+def cancel_subscription(request):
+    member = request.user.member
+    if member.stripe_subscription_id:
+        stripe_billing.cancel_subscription(member.stripe_subscription_id)
+        member.subscription_status = 'cancel_at_period_end'
+        member.save(update_fields=['subscription_status'])
+    return JsonResponse({'ok': True})
+
+
+@member_required
+def checkout_success(request):
+    return render(request, 'members/checkout_success.html')
+
+
+@member_required
+def checkout_cancel(request):
+    return render(request, 'members/checkout_cancel.html')
+
+
+@csrf_exempt
+def stripe_webhook(request):
+    payload = request.body
+    sig_header = request.META.get('HTTP_STRIPE_SIGNATURE', '')
+    try:
+        event = stripe_billing.construct_event(payload, sig_header)
+    except Exception:
+        return HttpResponse(status=400)
+
+    data = event['data']['object']
+    event_type = event['type']
+
+    if event_type == 'checkout.session.completed':
+        meta = data.get('metadata', {})
+        member_id = meta.get('member_id')
+        session_type = meta.get('type', '')
+
+        if member_id and session_type == 'member_pro':
+            try:
+                member = IndependentMember.objects.get(pk=member_id)
+                import stripe as stripe_lib
+                stripe_lib.api_key = settings.STRIPE_SECRET_KEY
+                sub = stripe_lib.Subscription.retrieve(data['subscription'])
+                stripe_billing.activate_member_pro(member, sub)
+            except IndependentMember.DoesNotExist:
+                pass
+
+        elif member_id and session_type.startswith('addon_'):
+            # Add-ons are one-time — mark as paid (no plan change needed)
+            pass
+
+        # Trainer checkout
+        trainer_id = meta.get('trainer_id')
+        trainer_plan = meta.get('trainer_plan')
+        if trainer_id and trainer_plan:
+            try:
+                billing_obj, _ = TrainerBilling.objects.get_or_create(user_id=trainer_id)
+                import stripe as stripe_lib
+                stripe_lib.api_key = settings.STRIPE_SECRET_KEY
+                sub = stripe_lib.Subscription.retrieve(data['subscription'])
+                stripe_billing.activate_trainer_plan(billing_obj, trainer_plan, sub)
+            except Exception:
+                pass
+
+    elif event_type in ('customer.subscription.updated', 'customer.subscription.deleted'):
+        sub_id = data['id']
+        status = data['status']
+
+        member = IndependentMember.objects.filter(stripe_subscription_id=sub_id).first()
+        if member:
+            if status in ('canceled', 'unpaid', 'incomplete_expired'):
+                stripe_billing.deactivate_member_pro(member)
+            else:
+                from datetime import datetime
+                from django.utils import timezone as tz
+                member.subscription_status = status
+                member.subscription_current_period_end = datetime.fromtimestamp(
+                    data['current_period_end'], tz=tz.utc
+                )
+                member.save(update_fields=['subscription_status', 'subscription_current_period_end'])
+
+        tb = TrainerBilling.objects.filter(stripe_subscription_id=sub_id).first()
+        if tb:
+            if status in ('canceled', 'unpaid', 'incomplete_expired'):
+                stripe_billing.deactivate_trainer_plan(tb)
+            else:
+                tb.subscription_status = status
+                tb.save(update_fields=['subscription_status'])
+
+    elif event_type == 'invoice.payment_failed':
+        customer_id = data.get('customer')
+        member = IndependentMember.objects.filter(stripe_customer_id=customer_id).first()
+        if member:
+            member.subscription_status = 'past_due'
+            member.save(update_fields=['subscription_status'])
+
+    return HttpResponse(status=200)
+
+
+# ---------------------------------------------------------------------------
+# Billing — Trainer
+# ---------------------------------------------------------------------------
+
+@login_required
+def trainer_billing_page(request):
+    if hasattr(request.user, 'member'):
+        return redirect('members:dashboard')
+    billing_obj, _ = TrainerBilling.objects.get_or_create(user=request.user)
+    from students.models import Student
+    client_count = Student.objects.filter(is_active=True).count()
+    return render(request, 'members/trainer_billing.html', {
+        'billing': billing_obj,
+        'client_count': client_count,
+        'STRIPE_PUBLISHABLE_KEY': settings.STRIPE_PUBLISHABLE_KEY,
+    })
+
+
+@login_required
+@require_POST
+def trainer_create_checkout(request):
+    if hasattr(request.user, 'member'):
+        return JsonResponse({'error': 'Not a trainer'}, status=403)
+    try:
+        body = json.loads(request.body)
+        plan = body.get('plan', 'growing')
+    except Exception:
+        plan = 'growing'
+
+    price_map = {
+        'growing': settings.STRIPE_PRICE_TRAINER_GROWING,
+        'unlimited': settings.STRIPE_PRICE_TRAINER_UNLIMITED,
+    }
+    price_id = price_map.get(plan)
+    if not price_id:
+        return JsonResponse({'error': 'Invalid plan'}, status=400)
+
+    billing_obj, _ = TrainerBilling.objects.get_or_create(user=request.user)
+    if not billing_obj.stripe_customer_id:
+        customer_id = stripe_billing.get_or_create_customer(
+            email=request.user.email,
+            name=request.user.get_full_name() or request.user.username,
+            metadata={'trainer_id': str(request.user.pk)},
+        )
+        billing_obj.stripe_customer_id = customer_id
+        billing_obj.save(update_fields=['stripe_customer_id'])
+
+    base = 'https://gymprogrm.org' if not settings.DEBUG else 'http://localhost:8000'
+    session = stripe_billing.create_checkout_session(
+        customer_id=billing_obj.stripe_customer_id,
+        price_id=price_id,
+        mode='subscription',
+        success_url=f'{base}/members/billing/trainer/success/',
+        cancel_url=f'{base}/members/billing/trainer/',
+        metadata={
+            'trainer_id': str(request.user.pk),
+            'trainer_plan': plan,
+        },
+    )
+    return JsonResponse({'url': session.url})

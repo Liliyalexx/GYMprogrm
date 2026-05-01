@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+{% block title %}My Plan — GYMprogrm{% endblock %}
+
+{% block extra_css %}
+<style>
+  body { background: #0f1119; }
+  .wrap { max-width: 600px; margin: 0 auto; padding: 1.5rem 1rem 5rem; }
+  .page-title { font-size: 1.3rem; font-weight: 800; color: #fff; margin-bottom: 1.5rem; }
+
+  .plan-card {
+    background: #1B1F3A; border-radius: 18px; padding: 1.5rem;
+    border: 1px solid rgba(255,255,255,.08); margin-bottom: 1.25rem;
+  }
+  .plan-badge {
+    display: inline-block; font-size: .7rem; font-weight: 700; letter-spacing: .08em;
+    text-transform: uppercase; padding: .3rem .75rem; border-radius: 99px; margin-bottom: .75rem;
+  }
+  .badge-free { background: rgba(255,255,255,.08); color: rgba(255,255,255,.5); }
+  .badge-pro { background: rgba(255,107,53,.2); color: #FF6B35; border: 1px solid rgba(255,107,53,.3); }
+  .plan-name { font-size: 1.4rem; font-weight: 900; color: #fff; margin-bottom: .25rem; }
+  .plan-status { font-size: .82rem; color: rgba(255,255,255,.4); }
+  .plan-status.warn { color: #f87171; }
+  .plan-period { font-size: .82rem; color: rgba(255,255,255,.4); margin-top: .25rem; }
+  .divider { border: none; border-top: 1px solid rgba(255,255,255,.07); margin: 1rem 0; }
+  .feat-list { list-style: none; display: grid; gap: .45rem; }
+  .feat-list li { font-size: .85rem; color: rgba(255,255,255,.65); display: flex; align-items: center; gap: .5rem; }
+  .feat-list li::before { content: '✔'; color: #FF6B35; }
+  .feat-list li.locked { color: rgba(255,255,255,.3); }
+  .feat-list li.locked::before { content: '🔒'; }
+
+  .upgrade-card {
+    background: linear-gradient(135deg, rgba(255,107,53,.12), #1B1F3A);
+    border: 1px solid rgba(255,107,53,.3); border-radius: 18px; padding: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+  .upgrade-card h3 { color: #fff; font-size: 1rem; margin-bottom: .5rem; }
+  .upgrade-card p { font-size: .85rem; color: rgba(255,255,255,.5); margin-bottom: 1.1rem; }
+  .price-options { display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: 1.1rem; }
+  .price-opt {
+    flex: 1; min-width: 130px; background: rgba(255,255,255,.05);
+    border: 2px solid rgba(255,255,255,.1); border-radius: 12px;
+    padding: .85rem 1rem; cursor: pointer; transition: border-color .15s;
+  }
+  .price-opt.selected { border-color: #FF6B35; background: rgba(255,107,53,.08); }
+  .price-opt .opt-price { font-size: 1.2rem; font-weight: 800; color: #fff; }
+  .price-opt .opt-label { font-size: .72rem; color: rgba(255,255,255,.45); margin-top: .15rem; }
+  .price-opt .opt-save { font-size: .68rem; color: #FF6B35; font-weight: 700; margin-top: .15rem; }
+  .btn-upgrade {
+    display: block; width: 100%; background: linear-gradient(135deg, #FF6B35, #e0521e);
+    color: #fff; font-weight: 700; font-size: .95rem; padding: .85rem;
+    border-radius: 12px; border: none; cursor: pointer; transition: opacity .15s; text-align: center;
+  }
+  .btn-upgrade:hover { opacity: .88; }
+
+  .section-label { font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.35); margin-bottom: .75rem; }
+  .addon-grid { display: grid; gap: .65rem; }
+  .addon-card {
+    background: #1B1F3A; border: 1px solid rgba(255,255,255,.07);
+    border-radius: 14px; padding: 1rem 1.1rem;
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  }
+  .addon-info h4 { font-size: .88rem; color: #fff; margin-bottom: .15rem; }
+  .addon-info p { font-size: .75rem; color: rgba(255,255,255,.4); }
+  .addon-right { display: flex; align-items: center; gap: .75rem; flex-shrink: 0; }
+  .addon-price { font-size: .95rem; font-weight: 700; color: #FF6B35; }
+  .btn-addon {
+    background: rgba(255,107,53,.12); border: 1px solid rgba(255,107,53,.25);
+    color: #FF6B35; font-size: .78rem; font-weight: 700; border-radius: 9px;
+    padding: .45rem .9rem; cursor: pointer; transition: background .15s; white-space: nowrap;
+  }
+  .btn-addon:hover { background: rgba(255,107,53,.22); }
+
+  .cancel-wrap { margin-top: 1.5rem; text-align: center; }
+  .btn-cancel { background: none; border: none; color: rgba(255,255,255,.3); font-size: .8rem; cursor: pointer; text-decoration: underline; }
+  .btn-cancel:hover { color: #f87171; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wrap">
+  <div class="page-title">My Plan</div>
+
+  <!-- Current plan -->
+  <div class="plan-card">
+    {% if member.is_pro %}
+      <span class="plan-badge badge-pro">Pro</span>
+      <div class="plan-name">Pro Plan</div>
+      {% if member.subscription_status == 'cancel_at_period_end' %}
+        <div class="plan-status warn">Cancels at period end</div>
+      {% else %}
+        <div class="plan-status">Active</div>
+      {% endif %}
+      {% if member.subscription_current_period_end %}
+        <div class="plan-period">Next billing: {{ member.subscription_current_period_end|date:"M j, Y" }}</div>
+      {% endif %}
+      <hr class="divider">
+      <ul class="feat-list">
+        <li>Full multi-day program</li>
+        <li>Progress tracking</li>
+        <li>Nutrition guidance</li>
+        <li>Unlimited coach support</li>
+        <li>Plan adjustments</li>
+        <li>Posture insights</li>
+      </ul>
+      {% if member.stripe_subscription_id and member.subscription_status != 'cancel_at_period_end' %}
+      <div class="cancel-wrap">
+        <button class="btn-cancel" onclick="cancelSub()">Cancel subscription</button>
+      </div>
+      {% endif %}
+    {% else %}
+      <span class="plan-badge badge-free">Free</span>
+      <div class="plan-name">Free Plan</div>
+      <div class="plan-status">Day 1 access only</div>
+      <hr class="divider">
+      <ul class="feat-list">
+        <li>Day 1 workout</li>
+        <li>Nutrition logging</li>
+        <li>Coach chat (limited)</li>
+        <li class="locked">Full program (Days 2+)</li>
+        <li class="locked">Progress tracking</li>
+        <li class="locked">Plan adjustments</li>
+        <li class="locked">Posture analysis</li>
+      </ul>
+    {% endif %}
+  </div>
+
+  <!-- Upgrade (only for free users) -->
+  {% if not member.is_pro %}
+  <div class="upgrade-card">
+    <h3>Upgrade to Pro</h3>
+    <p>Unlock your full program, progress tracking, and everything Alex can do for you.</p>
+    <div class="price-options">
+      <div class="price-opt selected" id="opt-monthly" onclick="selectPlan('monthly')">
+        <div class="opt-price">$12<span style="font-size:.8rem;font-weight:500;color:rgba(255,255,255,.4)">/mo</span></div>
+        <div class="opt-label">Monthly</div>
+      </div>
+      <div class="price-opt" id="opt-yearly" onclick="selectPlan('yearly')">
+        <div class="opt-price">$100<span style="font-size:.8rem;font-weight:500;color:rgba(255,255,255,.4)">/yr</span></div>
+        <div class="opt-label">Yearly</div>
+        <div class="opt-save">Save $44</div>
+      </div>
+    </div>
+    <button class="btn-upgrade" onclick="startCheckout()">Unlock My Program →</button>
+  </div>
+  {% endif %}
+
+  <!-- Add-ons -->
+  <div class="section-label" style="margin-top:1.5rem;">Add-ons</div>
+  <div class="addon-grid">
+    <div class="addon-card">
+      <div class="addon-info">
+        <h4>Plan Adjustment</h4>
+        <p>Alex redesigns your program based on current progress</p>
+      </div>
+      <div class="addon-right">
+        <span class="addon-price">$3</span>
+        <button class="btn-addon" onclick="buyAddon('adjustment')">Buy</button>
+      </div>
+    </div>
+    <div class="addon-card">
+      <div class="addon-info">
+        <h4>Posture Check</h4>
+        <p>Upload a photo for a full posture analysis</p>
+      </div>
+      <div class="addon-right">
+        <span class="addon-price">$2</span>
+        <button class="btn-addon" onclick="buyAddon('posture')">Buy</button>
+      </div>
+    </div>
+    <div class="addon-card">
+      <div class="addon-info">
+        <h4>Blood Insight</h4>
+        <p>AI analysis of your blood test with training recommendations</p>
+      </div>
+      <div class="addon-right">
+        <span class="addon-price">$5</span>
+        <button class="btn-addon" onclick="buyAddon('blood')">Buy</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var CSRF = '{{ csrf_token }}';
+var selectedPlan = 'monthly';
+
+function selectPlan(plan) {
+  selectedPlan = plan;
+  document.getElementById('opt-monthly').classList.toggle('selected', plan === 'monthly');
+  document.getElementById('opt-yearly').classList.toggle('selected', plan === 'yearly');
+}
+
+function startCheckout() {
+  fetch('{% url "members:billing_checkout" %}', {
+    method: 'POST',
+    headers: {'X-CSRFToken': CSRF, 'Content-Type': 'application/json'},
+    body: JSON.stringify({price_type: selectedPlan}),
+  })
+  .then(r => r.json())
+  .then(data => { if (data.url) window.location.href = data.url; });
+}
+
+function buyAddon(addon) {
+  fetch('{% url "members:billing_addon" %}', {
+    method: 'POST',
+    headers: {'X-CSRFToken': CSRF, 'Content-Type': 'application/json'},
+    body: JSON.stringify({addon: addon}),
+  })
+  .then(r => r.json())
+  .then(data => { if (data.url) window.location.href = data.url; });
+}
+
+function cancelSub() {
+  if (!confirm('Cancel your subscription? You keep Pro access until the end of your billing period.')) return;
+  fetch('{% url "members:billing_cancel_sub" %}', {
+    method: 'POST', headers: {'X-CSRFToken': CSRF},
+  })
+  .then(r => r.json())
+  .then(data => { if (data.ok) location.reload(); });
+}
+</script>
+{% endblock %}

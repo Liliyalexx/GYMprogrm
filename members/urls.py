@@ -40,4 +40,17 @@ urlpatterns = [
 
     # Progress
     path('progress/', views.progress, name='progress'),
+
+    # Billing — Member
+    path('billing/', views.billing_page, name='billing'),
+    path('billing/checkout/', views.create_checkout_session, name='billing_checkout'),
+    path('billing/addon/', views.addon_checkout, name='billing_addon'),
+    path('billing/cancel-sub/', views.cancel_subscription, name='billing_cancel_sub'),
+    path('billing/success/', views.checkout_success, name='billing_success'),
+    path('billing/cancel/', views.checkout_cancel, name='billing_cancel'),
+
+    # Billing — Trainer
+    path('billing/trainer/', views.trainer_billing_page, name='trainer_billing'),
+    path('billing/trainer/checkout/', views.trainer_create_checkout, name='trainer_billing_checkout'),
+    path('billing/trainer/success/', views.checkout_success, name='trainer_billing_success'),
 ]

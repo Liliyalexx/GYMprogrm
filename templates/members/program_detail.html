@@ -90,6 +90,22 @@
   {% endif %}
 
   {% for day in days %}
+  {% if is_free and day.day_number > 1 %}
+  <div class="day-card" style="position:relative;overflow:hidden;">
+    <div class="day-header" style="opacity:.35;">Day {{ day.day_number }} — {{ day.name }}</div>
+    <div style="filter:blur(3px);opacity:.25;padding:.5rem 1.1rem;pointer-events:none;">
+      {% for ex in day.exercises.all %}
+      <div style="padding:.4rem 0;font-size:.85rem;color:#fff;border-bottom:1px solid rgba(255,255,255,.05);">{{ ex.exercise.name }} · {{ ex.sets }} × {{ ex.reps }}</div>
+      {% endfor %}
+    </div>
+    <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(15,17,25,.7);backdrop-filter:blur(2px);padding:1.5rem;text-align:center;">
+      <div style="font-size:1.5rem;margin-bottom:.5rem;">🔒</div>
+      <div style="font-size:.95rem;font-weight:700;color:#fff;margin-bottom:.35rem;">Day {{ day.day_number }} is locked</div>
+      <div style="font-size:.82rem;color:rgba(255,255,255,.5);margin-bottom:1.1rem;">Upgrade to Pro to unlock your full program</div>
+      <a href="{% url 'members:billing' %}" style="background:linear-gradient(135deg,#FF6B35,#e0521e);color:#fff;font-weight:700;font-size:.88rem;padding:.65rem 1.5rem;border-radius:11px;text-decoration:none;">Unlock My Program</a>
+    </div>
+  </div>
+  {% else %}
   <div class="day-card">
     <div class="day-header">Day {{ day.day_number }} — {{ day.name }}</div>
     {% for ex in day.exercises.all %}
@@ -134,6 +150,7 @@
     <div style="padding:1rem;color:rgba(255,255,255,.35);font-size:.85rem;">No exercises assigned</div>
     {% endfor %}
   </div>
+  {% endif %}
   {% empty %}
   <div style="text-align:center;padding:2rem;color:rgba(255,255,255,.35);">No days in this program</div>
   {% endfor %}

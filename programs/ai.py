@@ -58,8 +58,8 @@ def translate_program_section(program, section):
     if section == 'nutrition' and program.nutrition_plan and not program.nutrition_plan_en:
         plan_str = json.dumps(program.nutrition_plan, ensure_ascii=False)
         msg = client.messages.create(
-            model='claude-sonnet-4-6',
-            max_tokens=8000,
+            model='claude-haiku-4-5-20251001',
+            max_tokens=2500,
             messages=[{
                 'role': 'user',
                 'content': (
@@ -189,21 +189,27 @@ def generate_exercise_illustration(exercise_name, muscle_group, description=''):
     client_ant = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
 
     base_style = (
-        f"Flat-design cartoon illustration of a fit woman. "
-        f"Style: clean vector art, soft pastel colours, white background, similar to 30 Day Fitness app. "
-        f"Show full body, correct exercise form. "
-        f"Highlight the {muscle_group} muscles with a warm accent colour. "
-        f"No text, no labels. Friendly, motivational look."
+        f"Flat-design vector illustration of a fit athletic woman performing '{exercise_name}'. "
+        f"Style: clean 2D vector art, soft pastel colour palette, pure white background. "
+        f"Full body visible, anatomically correct posture and form for this specific exercise. "
+        f"The {muscle_group} area subtly highlighted with a warm coral/orange accent. "
+        f"No text, no labels, no equipment labels. Simple, friendly, motivational fitness app style."
     )
 
+    desc_hint = f" Exercise description: {description}." if description else ""
+
     prompt_start = (
-        f"STARTING POSITION of '{exercise_name}'. "
-        f"Show the athlete at the very beginning of the movement, body fully extended or at rest position. "
+        f"Fitness illustration — STARTING / RESTING POSITION of the exercise called '{exercise_name}' "
+        f"(targets: {muscle_group}).{desc_hint} "
+        f"Show the woman BEFORE the movement begins: body in the initial setup stance for THIS specific exercise. "
+        f"The pose must be anatomically correct and clearly recognisable as the starting position of '{exercise_name}'. "
         + base_style
     )
     prompt_peak = (
-        f"PEAK / MID-MOVEMENT POSITION of '{exercise_name}'. "
-        f"Show the athlete at the top of the contraction or halfway through the movement, muscles visibly engaged. "
+        f"Fitness illustration — PEAK CONTRACTION POSITION of the exercise called '{exercise_name}' "
+        f"(targets: {muscle_group}).{desc_hint} "
+        f"Show the woman AT THE TOP of the movement: muscles fully engaged, maximum range of motion for THIS specific exercise. "
+        f"The pose must be anatomically correct and clearly recognisable as the peak/finish of '{exercise_name}'. "
         + base_style
     )
 
@@ -364,7 +370,7 @@ def _analyze_photo(client, student, photo_blocks):
     )
 
     msg = client.messages.create(
-        model='claude-sonnet-4-6',
+        model='claude-haiku-4-5-20251001',
         max_tokens=512,
         messages=[{'role': 'user', 'content': photo_blocks + [{'type': 'text', 'text': prompt}]}],
     )
@@ -630,9 +636,10 @@ def suggest_nutrition(student, findings_summary='', language='ru'):
 {_lang_suffix(language)}"""
 
     content = blood_blocks + [{'type': 'text', 'text': prompt}]
+    # Nutrition JSON is short and templated — Haiku is sufficient and far cheaper
     msg = client.messages.create(
-        model='claude-sonnet-4-6',
-        max_tokens=8096,
+        model='claude-haiku-4-5-20251001',
+        max_tokens=2000,
         messages=[{'role': 'user', 'content': content}],
     )
     return _parse_json(msg.content[0].text, msg)
@@ -839,15 +846,19 @@ def suggest_program(student, training_days=3, training_location='gym', language=
     result = _parse_json(msg1.content[0].text, msg1)
 
     # ── CALL 2: nutrition plan ───────────────────────────────────────────────
+    # Use cached blood text summary instead of re-attaching the full PDF (saves ~$0.50)
     findings_summary = ' '.join(result.get('key_findings', []))
+    blood_note_text = (
+        f"Краткие выводы по анализу крови из программы тренировок:\n{findings_summary}"
+        if blood_attached else
+        "Анализ крови не загружен — рекомендации по профилю клиента."
+    )
     prompt2 = f"""Ты — спортивный диетолог. Составь краткий план питания.
 
 ПРОФИЛЬ:
 {profile}
 {hormone_note}
-{blood_note}
-
-ВЫВОДЫ: {findings_summary}
+{blood_note_text}
 
 Верни ТОЛЬКО валидный JSON (без markdown):
 {{
@@ -885,11 +896,11 @@ def suggest_program(student, training_days=3, training_location='gym', language=
 - Все строки — краткие (макс 15 слов)
 {_lang_suffix(language)}"""
 
-    content2 = blood_blocks + [{'type': 'text', 'text': prompt2}]
+    # Nutrition is templated JSON — Haiku is sufficient and 12× cheaper than Sonnet
     msg2 = client.messages.create(
-        model='claude-sonnet-4-6',
-        max_tokens=8096,
-        messages=[{'role': 'user', 'content': content2}],
+        model='claude-haiku-4-5-20251001',
+        max_tokens=2000,
+        messages=[{'role': 'user', 'content': prompt2}],
     )
     nutrition = _parse_json(msg2.content[0].text, msg2)
     result['nutrition'] = nutrition

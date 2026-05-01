@@ -1,0 +1,9 @@
+html, body {
+    overflow-x: clip !important;
+}
+
+body.adthrive-device-desktop .adthrive-player-position.adthrive-collapse-float.adthrive-collapse-bottom-right,
+body.adthrive-device-desktop .adthrive-sticky-outstream {
+    left: 5px;
+    right: auto;
+}

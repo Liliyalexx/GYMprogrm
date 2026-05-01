@@ -538,6 +538,12 @@ def auth_redirect(request):
             student.user = user
             student.save(update_fields=['user'])
 
+    if hasattr(request.user, 'member'):
+        from members.models import IndependentMember
+        m = request.user.member
+        if not m.onboarding_complete:
+            return redirect('members:onboarding')
+        return redirect('members:dashboard')
     if hasattr(request.user, 'student'):
         return redirect('students:portal_dashboard')
     if request.user.is_staff:

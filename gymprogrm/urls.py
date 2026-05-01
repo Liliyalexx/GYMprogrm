@@ -6,6 +6,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import TemplateView
 from students import views as student_views
+from members import views as member_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -27,6 +28,7 @@ urlpatterns = [
     path('send-intake-email/', student_views.send_intake_email, name='send_intake_email'),
     path('i18n/', include('django.conf.urls.i18n')),
     path('members/', include('members.urls', namespace='members')),
+    path('webhook/stripe/', member_views.stripe_webhook, name='stripe_webhook'),
     path('students/', include('students.urls', namespace='students')),
     path('programs/', include('programs.urls', namespace='programs')),
     path('', TemplateView.as_view(template_name='home.html'), name='home'),

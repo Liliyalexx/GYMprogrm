@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}Payment Successful — GYMprogrm{% endblock %}
+{% block extra_css %}
+<style>
+  body { background: #0f1119; }
+  .wrap { max-width: 480px; margin: 0 auto; padding: 4rem 1.5rem; text-align: center; }
+  .icon { font-size: 3.5rem; margin-bottom: 1rem; }
+  h1 { font-size: 1.6rem; font-weight: 900; color: #fff; margin-bottom: .75rem; }
+  p { color: rgba(255,255,255,.55); font-size: .95rem; margin-bottom: 2rem; line-height: 1.6; }
+  .btn {
+    display: inline-block; background: linear-gradient(135deg, #FF6B35, #e0521e);
+    color: #fff; text-decoration: none; font-weight: 700; font-size: .95rem;
+    padding: .85rem 2rem; border-radius: 12px;
+  }
+</style>
+{% endblock %}
+{% block content %}
+<div class="wrap">
+  <div class="icon">🔥</div>
+  <h1>You're in.</h1>
+  <p>Your plan is active. Your full program is unlocked and ready to go.</p>
+  <a href="{% url 'members:program_list' %}" class="btn">View My Program</a>
+</div>
+{% endblock %}

@@ -3,6 +3,10 @@ from django.contrib.auth.models import User
 
 
 class IndependentMember(models.Model):
+    PLAN_FREE = 'free'
+    PLAN_PRO = 'pro'
+    PLAN_CHOICES = [(PLAN_FREE, 'Free'), (PLAN_PRO, 'Pro')]
+
     GENDER_CHOICES = [('M', 'Male'), ('F', 'Female'), ('O', 'Other')]
     ACTIVITY_CHOICES = [
         ('sedentary', 'Sedentary'),
@@ -30,6 +34,17 @@ class IndependentMember(models.Model):
     photo_analysis = models.TextField(blank=True)
     onboarding_complete = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    # Billing
+    plan = models.CharField(max_length=10, choices=PLAN_CHOICES, default=PLAN_FREE)
+    stripe_customer_id = models.CharField(max_length=100, blank=True)
+    stripe_subscription_id = models.CharField(max_length=100, blank=True)
+    subscription_status = models.CharField(max_length=30, blank=True)
+    subscription_current_period_end = models.DateTimeField(null=True, blank=True)
+
+    @property
+    def is_pro(self):
+        return self.plan == self.PLAN_PRO
 
     class Meta:
         ordering = ['-created_at']
@@ -142,6 +157,33 @@ class PostureAnalysis(models.Model):
 
     def __str__(self):
         return f'Posture — {self.member.name} — {self.created_at.date()}'
+
+
+class TrainerBilling(models.Model):
+    PLAN_FREE = 'free'
+    PLAN_GROWING = 'growing'
+    PLAN_UNLIMITED = 'unlimited'
+    PLAN_CHOICES = [
+        (PLAN_FREE, 'Free (up to 3 clients)'),
+        (PLAN_GROWING, 'Growing ($20/mo)'),
+        (PLAN_UNLIMITED, 'Unlimited ($50/mo)'),
+    ]
+    CLIENT_LIMITS = {PLAN_FREE: 3, PLAN_GROWING: 20, PLAN_UNLIMITED: 999999}
+
+    user = models.OneToOneField('auth.User', on_delete=models.CASCADE, related_name='trainer_billing')
+    plan = models.CharField(max_length=20, choices=PLAN_CHOICES, default=PLAN_FREE)
+    stripe_customer_id = models.CharField(max_length=100, blank=True)
+    stripe_subscription_id = models.CharField(max_length=100, blank=True)
+    subscription_status = models.CharField(max_length=30, blank=True)
+    subscription_current_period_end = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'TrainerBilling — {self.user.username} — {self.plan}'
+
+    @property
+    def client_limit(self):
+        return self.CLIENT_LIMITS.get(self.plan, 3)
 
 
 class ExerciseDemo(models.Model):
