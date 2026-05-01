@@ -93,10 +93,13 @@
   <!-- Hero -->
   <div class="m-hero">
     <div class="m-avatar">{{ member.name|first|upper }}</div>
-    <div>
+    <div style="flex:1;">
       <div class="m-hero-name">Hey, {{ member.name|truncatechars:20 }} 👋</div>
       <div class="m-hero-sub">Your personal coach Alex is ready</div>
     </div>
+    <a href="{% url 'members:billing' %}" style="flex-shrink:0;background:{% if member.is_pro %}rgba(255,107,53,.2);border:1px solid rgba(255,107,53,.4);color:#FF6B35{% else %}rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.6){% endif %};font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:.3rem .7rem;border-radius:99px;text-decoration:none;">
+      {% if member.is_pro %}Pro{% else %}Free{% endif %}
+    </a>
   </div>
 
   <!-- Quick actions -->
@@ -122,6 +125,18 @@
         <div class="ico">📊</div>
         <div class="qa-label">Progress</div>
         <div class="qa-sub">See your stats</div>
+      </a>
+      <a href="{% url 'members:billing' %}" class="qa-card {% if not member.is_pro %}accent{% endif %}" style="grid-column:1/-1;">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:.6rem;">
+            <div class="ico">{% if member.is_pro %}⭐{% else %}🔒{% endif %}</div>
+            <div>
+              <div class="qa-label">{% if member.is_pro %}Pro Plan Active{% else %}Upgrade to Pro{% endif %}</div>
+              <div class="qa-sub">{% if member.is_pro %}Manage subscription{% else %}Unlock your full program{% endif %}</div>
+            </div>
+          </div>
+          <span style="font-size:.8rem;color:#FF6B35;font-weight:700;">{% if not member.is_pro %}$12/mo →{% else %}Manage →{% endif %}</span>
+        </div>
       </a>
     </div>
   </div>

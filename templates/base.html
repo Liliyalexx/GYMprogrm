@@ -90,6 +90,7 @@
     <a href="{% url 'programs:exercise_library' %}"><span>Exercises</span></a>
     <a href="{% url 'programs:template_list' %}"><span>Templates</span></a>
     <a href="{% url 'students:doctor_list' %}"><span>Doctors</span></a>
+    <a href="{% url 'members:trainer_billing' %}"><span>My Plan</span></a>
     <form method="post" action="{% url 'logout' %}" style="margin:0;">
       {% csrf_token %}
       <button type="submit" style="background:none;border:none;cursor:pointer;color:inherit;font:inherit;padding:.3rem .6rem;">

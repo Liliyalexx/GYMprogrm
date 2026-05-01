@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+{% block title %}My Plan — GYMprogrm Trainer{% endblock %}
+
+{% block extra_css %}
+<style>
+  body { background: #0f1119; }
+  .wrap { max-width: 600px; margin: 0 auto; padding: 1.5rem 1rem 5rem; }
+  .page-title { font-size: 1.3rem; font-weight: 800; color: #fff; margin-bottom: 1.5rem; }
+
+  .plan-card {
+    background: #1B1F3A; border-radius: 18px; padding: 1.5rem;
+    border: 1px solid rgba(255,255,255,.08); margin-bottom: 1.25rem;
+  }
+  .plan-badge {
+    display: inline-block; font-size: .7rem; font-weight: 700; letter-spacing: .08em;
+    text-transform: uppercase; padding: .3rem .75rem; border-radius: 99px; margin-bottom: .75rem;
+  }
+  .badge-free { background: rgba(255,255,255,.08); color: rgba(255,255,255,.5); }
+  .badge-growing { background: rgba(255,107,53,.2); color: #FF6B35; border: 1px solid rgba(255,107,53,.3); }
+  .badge-unlimited { background: rgba(255,215,0,.15); color: #FFD700; border: 1px solid rgba(255,215,0,.3); }
+  .plan-name { font-size: 1.4rem; font-weight: 900; color: #fff; margin-bottom: .25rem; }
+  .plan-status { font-size: .82rem; color: rgba(255,255,255,.4); }
+  .plan-status.warn { color: #f87171; }
+  .plan-period { font-size: .82rem; color: rgba(255,255,255,.4); margin-top: .25rem; }
+  .divider { border: none; border-top: 1px solid rgba(255,255,255,.07); margin: 1rem 0; }
+
+  .stat-row { display: flex; align-items: center; justify-content: space-between; }
+  .stat-label { font-size: .82rem; color: rgba(255,255,255,.5); }
+  .stat-val { font-size: .88rem; font-weight: 700; color: #fff; }
+  .stat-val.warn { color: #f87171; }
+
+  .feat-list { list-style: none; display: grid; gap: .45rem; margin-top: .75rem; }
+  .feat-list li { font-size: .85rem; color: rgba(255,255,255,.65); display: flex; align-items: center; gap: .5rem; }
+  .feat-list li::before { content: '✔'; color: #FF6B35; }
+  .feat-list li.locked { color: rgba(255,255,255,.3); }
+  .feat-list li.locked::before { content: '🔒'; }
+
+  .upgrade-card {
+    background: linear-gradient(135deg, rgba(255,107,53,.12), #1B1F3A);
+    border: 1px solid rgba(255,107,53,.3); border-radius: 18px; padding: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+  .upgrade-card h3 { color: #fff; font-size: 1rem; margin-bottom: .5rem; }
+  .upgrade-card p { font-size: .85rem; color: rgba(255,255,255,.5); margin-bottom: 1.1rem; }
+
+  .price-options { display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: 1.1rem; }
+  .price-opt {
+    flex: 1; min-width: 130px; background: rgba(255,255,255,.05);
+    border: 2px solid rgba(255,255,255,.1); border-radius: 12px;
+    padding: .85rem 1rem; cursor: pointer; transition: border-color .15s;
+  }
+  .price-opt.selected { border-color: #FF6B35; background: rgba(255,107,53,.08); }
+  .price-opt .opt-price { font-size: 1.2rem; font-weight: 800; color: #fff; }
+  .price-opt .opt-label { font-size: .72rem; color: rgba(255,255,255,.45); margin-top: .15rem; }
+  .price-opt .opt-sub { font-size: .7rem; color: rgba(255,255,255,.35); margin-top: .1rem; }
+
+  .btn-upgrade {
+    display: block; width: 100%; background: linear-gradient(135deg, #FF6B35, #e0521e);
+    color: #fff; font-weight: 700; font-size: .95rem; padding: .85rem;
+    border-radius: 12px; border: none; cursor: pointer; transition: opacity .15s; text-align: center;
+  }
+  .btn-upgrade:hover { opacity: .88; }
+
+  .cancel-wrap { margin-top: 1.5rem; text-align: center; }
+  .btn-cancel { background: none; border: none; color: rgba(255,255,255,.3); font-size: .8rem; cursor: pointer; text-decoration: underline; }
+  .btn-cancel:hover { color: #f87171; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wrap">
+  <div class="page-title">My Plan</div>
+
+  <!-- Current plan -->
+  <div class="plan-card">
+    {% if billing.plan == 'unlimited' %}
+      <span class="plan-badge badge-unlimited">Unlimited</span>
+      <div class="plan-name">Unlimited Plan</div>
+      {% if billing.subscription_status == 'cancel_at_period_end' %}
+        <div class="plan-status warn">Cancels at period end</div>
+      {% else %}
+        <div class="plan-status">Active</div>
+      {% endif %}
+      {% if billing.subscription_current_period_end %}
+        <div class="plan-period">Next billing: {{ billing.subscription_current_period_end|date:"M j, Y" }}</div>
+      {% endif %}
+    {% elif billing.plan == 'growing' %}
+      <span class="plan-badge badge-growing">Growing</span>
+      <div class="plan-name">Growing Plan</div>
+      {% if billing.subscription_status == 'cancel_at_period_end' %}
+        <div class="plan-status warn">Cancels at period end</div>
+      {% else %}
+        <div class="plan-status">Active</div>
+      {% endif %}
+      {% if billing.subscription_current_period_end %}
+        <div class="plan-period">Next billing: {{ billing.subscription_current_period_end|date:"M j, Y" }}</div>
+      {% endif %}
+    {% else %}
+      <span class="plan-badge badge-free">Free</span>
+      <div class="plan-name">Free Plan</div>
+      <div class="plan-status">Limited to 3 active clients</div>
+    {% endif %}
+
+    <hr class="divider">
+
+    <div class="stat-row" style="margin-bottom:.65rem;">
+      <span class="stat-label">Active clients</span>
+      <span class="stat-val {% if client_count >= billing.client_limit %}warn{% endif %}">
+        {{ client_count }} / {% if billing.client_limit >= 999999 %}∞{% else %}{{ billing.client_limit }}{% endif %}
+      </span>
+    </div>
+
+    {% if billing.plan == 'free' %}
+    <ul class="feat-list">
+      <li>Up to 3 active clients</li>
+      <li>Program builder</li>
+      <li>Client portal</li>
+      <li class="locked">Up to 20 clients</li>
+      <li class="locked">Unlimited clients</li>
+    </ul>
+    {% elif billing.plan == 'growing' %}
+    <ul class="feat-list">
+      <li>Up to 20 active clients</li>
+      <li>Program builder</li>
+      <li>Client portal</li>
+      <li class="locked">Unlimited clients</li>
+    </ul>
+    {% else %}
+    <ul class="feat-list">
+      <li>Unlimited clients</li>
+      <li>Program builder</li>
+      <li>Client portal</li>
+    </ul>
+    {% endif %}
+
+    {% if billing.stripe_subscription_id and billing.subscription_status != 'cancel_at_period_end' %}
+    <div class="cancel-wrap">
+      <button class="btn-cancel" onclick="cancelSub()">Cancel subscription</button>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Upgrade options (only for non-unlimited) -->
+  {% if billing.plan != 'unlimited' %}
+  <div class="upgrade-card">
+    <h3>{% if billing.plan == 'free' %}Upgrade Your Plan{% else %}Upgrade to Unlimited{% endif %}</h3>
+    <p>Add more clients and grow your coaching business.</p>
+
+    <div class="price-options">
+      {% if billing.plan == 'free' %}
+      <div class="price-opt selected" id="opt-growing" onclick="selectPlan('growing')">
+        <div class="opt-price">$20<span style="font-size:.8rem;font-weight:500;color:rgba(255,255,255,.4)">/mo</span></div>
+        <div class="opt-label">Growing</div>
+        <div class="opt-sub">Up to 20 clients</div>
+      </div>
+      {% endif %}
+      <div class="price-opt {% if billing.plan != 'free' %}selected{% endif %}" id="opt-unlimited" onclick="selectPlan('unlimited')">
+        <div class="opt-price">$50<span style="font-size:.8rem;font-weight:500;color:rgba(255,255,255,.4)">/mo</span></div>
+        <div class="opt-label">Unlimited</div>
+        <div class="opt-sub">No client limit</div>
+      </div>
+    </div>
+    <button class="btn-upgrade" onclick="startCheckout()">Upgrade Now →</button>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var CSRF = '{{ csrf_token }}';
+var selectedPlan = '{% if billing.plan == "free" %}growing{% else %}unlimited{% endif %}';
+
+function selectPlan(plan) {
+  selectedPlan = plan;
+  ['growing', 'unlimited'].forEach(function(p) {
+    var el = document.getElementById('opt-' + p);
+    if (el) el.classList.toggle('selected', p === plan);
+  });
+}
+
+function startCheckout() {
+  fetch('{% url "members:trainer_billing_checkout" %}', {
+    method: 'POST',
+    headers: {'X-CSRFToken': CSRF, 'Content-Type': 'application/json'},
+    body: JSON.stringify({plan: selectedPlan}),
+  })
+  .then(r => r.json())
+  .then(data => { if (data.url) window.location.href = data.url; });
+}
+
+function cancelSub() {
+  if (!confirm('Cancel your subscription? You keep your plan until the end of the billing period.')) return;
+  fetch('{% url "members:billing_cancel_sub" %}', {
+    method: 'POST', headers: {'X-CSRFToken': CSRF},
+  })
+  .then(r => r.json())
+  .then(data => { if (data.ok) location.reload(); });
+}
+</script>
+{% endblock %}
